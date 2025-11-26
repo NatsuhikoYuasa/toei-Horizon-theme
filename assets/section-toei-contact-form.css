@@ -30,17 +30,17 @@
 }
 
 .toei-contact__card {
-  background: #f6f7fa;
+  background: #f5f6f8;
   border: 1px solid #e5e5e5;
-  border-radius: 8px;
+  border-radius: 0;
   padding: 36px;
   box-shadow: none;
 }
 
 .toei-contact__cardHeader {
-  background: #f3f4f6;
+  background: #f5f6f8;
   border-bottom: 1px solid #dadde2;
-  border-radius: 6px;
+  border-radius: 0;
   color: #111;
   font-weight: 600;
   padding: 14px 16px;
@@ -50,7 +50,6 @@
 .toei-contact__rows {
   display: flex;
   flex-direction: column;
-  gap: 24px;
 }
 
 .toei-contact__row {
@@ -58,6 +57,12 @@
   grid-template-columns: 220px 1fr;
   column-gap: 24px;
   align-items: start;
+}
+
+.toei-contact__row + .toei-contact__row {
+  border-top: 1px solid #e5e5e5;
+  margin-top: 16px;
+  padding-top: 16px;
 }
 
 .toei-contact__labelWrap {
@@ -68,7 +73,9 @@
 }
 
 .toei-contact__badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 4px 10px;
   background: #000;
   color: #fff;
@@ -95,6 +102,10 @@
   font-size: 14px;
   line-height: 1.4;
   background: #fff;
+}
+
+.toei-contact__field select.toei-contact__input {
+  background-position: calc(100% - 20px) center;
 }
 
 .toei-contact__input:focus {
