@@ -1,0 +1,263 @@
+{% comment %}
+  sections/popular-tags-menu-custom.liquid
+  人気タグメニュー（Custom）
+{% endcomment %}
+
+{% assign menu = linklists[section.settings.menu] %}
+
+<section
+  id="ptm-{{ section.id }}"
+  class="ptm section page-width color-{{ section.settings.color_scheme }}"
+  style="
+    {% render 'spacing-style', settings: section.settings %}
+    --ptm-gap-pc: {{ section.settings.gap_pc | default: 12 }}px;
+    --ptm-gap-sp: {{ section.settings.gap_sp | default: 8 }}px;
+    --ptm-accent: {{ section.settings.accent_color | default: '#E63946' }};
+    padding-block-start: {{ section.settings['padding-block-start'] | default: 36 }}px;
+    padding-block-end:   {{ section.settings['padding-block-end']   | default: 36 }}px;
+    {% if section.settings.bg_color != blank %}background: {{ section.settings.bg_color }};{% endif %}
+  "
+>
+  {% if menu and menu.links.size > 0 %}
+    <!-- 見出し（汎用コレクションと同じスタイル） -->
+    <div class="ptm-head">
+      <h2 class="ptm-title">{{ section.settings.heading }}</h2>
+    </div>
+
+    <!-- タグメニュー -->
+    <div class="ptm-grid">
+      {% for link in menu.links limit: section.settings.max_items %}
+        <a href="{{ link.url }}" class="ptm-item">
+          <span class="ptm-label">{{ link.title }}</span>
+          <span class="ptm-icon" aria-hidden="true">›</span>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="ptm-empty">メニューが未設定です。セクション設定からメニューを選択してください。</p>
+  {% endif %}
+
+  <style>
+    /* ===== 見出し（汎用コレクションと揃える） ===== */
+    #ptm-{{ section.id }} .ptm-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:16px;
+    }
+    #ptm-{{ section.id }} .ptm-title{
+      position:relative;
+      margin:0;
+      font-size:18px;
+      font-weight:700;
+      padding-left:14px;
+    }
+    #ptm-{{ section.id }} .ptm-title::before{
+      content:"";
+      position:absolute;
+      left:0;
+      top:0;
+      width:3px;
+      height:1.1em;
+      background: var(--ptm-accent, #E63946);
+      border-radius:2px;
+    }
+
+    /* ===== 共通：グリッド基礎 ===== */
+    #ptm-{{ section.id }} .ptm-grid{
+      display:flex;
+      flex-wrap:wrap;
+      gap: var(--ptm-gap-pc);
+    }
+
+    #ptm-{{ section.id }} .ptm-item{
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:16px 18px;
+      border-radius:8px;
+      background:#ffffff;
+      border:1px solid #eee;
+      text-decoration:none;
+      color:#111;
+      font-size:0.95rem;
+      line-height:1.4;
+      transition:
+        background-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.1s ease;
+      box-sizing:border-box;
+      flex:0 0 100%;
+      max-width:100%;
+    }
+
+    #ptm-{{ section.id }} .ptm-label{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    /* ＞アイコンは赤で統一 */
+    #ptm-{{ section.id }} .ptm-icon{
+      margin-left:12px;
+      font-size:1.1rem;
+      color: var(--ptm-accent, #E63946);
+    }
+
+    #ptm-{{ section.id }} .ptm-item:hover{
+      background-color:#fafafa;
+      box-shadow:0 2px 6px rgb(0 0 0 / 8%);
+      transform:translateY(-1px);
+    }
+
+    #ptm-{{ section.id }} .ptm-empty{
+      font-size:0.9rem;
+      color:#777;
+    }
+
+    /* ===== PCレイアウト =====
+       1行目：1〜2番目 → 2列（50%）
+       2行目：3〜5番目 → 3列（33.333%）
+       3行目：6〜10番目 → 5列（20%）
+    ------------------------------------------------- */
+    @media (min-width: 990px){
+  /* デフォルト：5列（ギャップ4つ） */
+  #ptm-{{ section.id }} .ptm-item{
+    flex-basis: calc((100% - (var(--ptm-gap-pc) * 4)) / 5);
+    max-width: calc((100% - (var(--ptm-gap-pc) * 4)) / 5);
+  }
+
+  /* 1行目：1〜2番目 → 2列（ギャップ1つ） */
+  #ptm-{{ section.id }} .ptm-item:nth-child(1),
+  #ptm-{{ section.id }} .ptm-item:nth-child(2){
+    flex-basis: calc((100% - var(--ptm-gap-pc)) / 2);
+    max-width: calc((100% - var(--ptm-gap-pc)) / 2);
+  }
+
+  /* 2行目：3〜5番目 → 3列（ギャップ2つ） */
+  #ptm-{{ section.id }} .ptm-item:nth-child(3),
+  #ptm-{{ section.id }} .ptm-item:nth-child(4),
+  #ptm-{{ section.id }} .ptm-item:nth-child(5){
+    flex-basis: calc((100% - (var(--ptm-gap-pc) * 2)) / 3);
+    max-width: calc((100% - (var(--ptm-gap-pc) * 2)) / 3);
+  }
+}
+
+
+    /* ===== タブレット：2列 ===== */
+    @media (max-width: 989px){
+      #ptm-{{ section.id }} .ptm-grid{
+        gap: var(--ptm-gap-sp);
+      }
+      #ptm-{{ section.id }} .ptm-item{
+        flex:1 1 calc(50% - var(--ptm-gap-sp));
+        max-width:calc(50% - var(--ptm-gap-sp));
+      }
+    }
+
+    /* ===== スマホ：1列 ===== */
+    @media (max-width: 749px){
+      #ptm-{{ section.id }} .ptm-item{
+        flex:1 1 100%;
+        max-width:100%;
+        padding:14px 16px;
+      }
+    }
+  </style>
+</section>
+
+{% schema %}
+{
+  "name": "人気タグメニュー（Custom）",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "見出し",
+      "default": "人気のタグから探す"
+    },
+    {
+      "type": "link_list",
+      "id": "menu",
+      "label": "表示するメニュー",
+      "default": "main-menu"
+    },
+    {
+      "type": "range",
+      "id": "max_items",
+      "label": "最大表示件数",
+      "min": 1,
+      "max": 30,
+      "step": 1,
+      "default": 10
+    },
+
+    { "type": "header", "content": "レイアウト" },
+    {
+      "type": "range",
+      "id": "gap_pc",
+      "label": "（PC）項目の間隔(px)",
+      "min": 4,
+      "max": 32,
+      "step": 1,
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "gap_sp",
+      "label": "（SP）項目の間隔(px)",
+      "min": 4,
+      "max": 24,
+      "step": 1,
+      "default": 8
+    },
+
+    { "type": "header", "content": "余白 / 背景" },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "上余白",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "下余白",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 36
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "背景色",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "配色（Horizonのスキーム）",
+      "default": "scheme-1"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "アクセントカラー（左線／＞）",
+      "default": "#E63946"
+    }
+  ],
+  "presets": [
+    {
+      "name": "人気タグメニュー（Custom）"
+    }
+  ]
+}
+{% endschema %}

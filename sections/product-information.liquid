@@ -1,0 +1,602 @@
+
+
+{% liquid
+  if section.settings.desktop_media_position == 'left'
+    assign render_order = 'media,product-details'
+  else
+    assign render_order = 'product-details,media'
+  endif
+
+  assign product_has_media = true
+  if closest.product.media.size == 0
+    assign product_has_media = false
+  endif
+
+  assign product_grid_class = 'product-information__grid'
+
+  if product_has_media == false
+    assign product_grid_class = product_grid_class | append: ' product-information--media-none'
+  elsif section.settings.desktop_media_position == 'right'
+    assign product_grid_class = product_grid_class | append: ' product-information--media-right'
+  else
+    assign product_grid_class = product_grid_class | append: ' product-information--media-left'
+  endif
+
+  if section.settings.equal_columns
+    assign product_grid_class = product_grid_class | append: ' product-information__grid--half'
+
+    if section.settings.limit_details_width
+      assign product_grid_class = product_grid_class | append: ' product-information__grid--limit-details'
+    endif
+  endif
+
+  case section.settings.content_width
+    when 'content-center-aligned'
+      assign content_width = 'page-width'
+    when 'content-full-width'
+      assign content_width = 'full-width'
+  endcase
+%}
+
+<script type="application/ld+json">
+  {{ closest.product | structured_data }}
+</script>
+
+<div class="section-background color-{{ section.settings.color_scheme }}"></div>
+<div
+  class="product-information section section--{{ content_width }} spacing-style color-{{ section.settings.color_scheme }} relative"
+  style="{% render 'spacing-style', settings: section.settings %} --gap: {{ section.settings.gap }}px;"
+>
+  {% if section.settings.desktop_media_position == 'left' and product_has_media %}
+    {% assign product_href = '#ProductInformation-' | append: section.id %}
+    {% render 'skip-to-content-link', href: product_href, text: 'accessibility.skip_to_product_info' %}
+  {% endif %}
+
+  {%- comment -%} wb03 add ★ここにパンくずを追加 {%- endcomment -%}
+  {% render 'Custom-product-breadcrumbs' %}
+
+  <div
+    class="{{ product_grid_class }}"
+    data-product-grid-content
+  >
+    {% assign render_order_array = render_order | split: ',' %}
+    {% capture media %}
+      <div
+        class="product-information__media"
+        data-testid="product-information-media"
+      >
+        {%- content_for 'block',
+          type: '_product-media-gallery',
+          id: 'media-gallery',
+          closest.product: closest.product
+        -%}
+      </div>
+    {% endcapture %}
+
+    {% capture details %}
+      {% content_for 'block',
+        type: '_product-details',
+        id: 'product-details',
+        closest.product: closest.product
+      %}
+    {% endcapture %}
+
+    {% for block in render_order_array %}
+      {% if block == 'media' and product_has_media %}
+        {{ media }}
+      {% elsif block == 'product-details' %}
+        {{ details }}
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  {% content_for 'blocks' %}
+  {% comment %} wb03 add 最近見た商品 {% endcomment %}
+  {% comment %} {% render 'Custom-recently-viewed-recorder' %} {% endcomment %}
+</div>
+
+{%- comment -%} wb03 add start 最近見た：拡張保存（template/tags/metafields/ロックフラグを保存） {%- endcomment -%}
+
+{%- liquid
+  assign display_start_raw = product.metafields.product.display_start_at
+  assign display_end_raw   = product.metafields.product.display_end_at
+  assign product_disabled  = false
+  assign display_lock      = false
+
+  if display_start_raw != blank or display_end_raw != blank
+    assign now_ts = 'now' | date: '%s'
+
+    if display_start_raw != blank
+      assign start_ts = display_start_raw | date: '%s'
+    endif
+
+    if display_end_raw != blank
+      assign end_ts = display_end_raw | date: '%s'
+    endif
+
+    if display_start_raw != blank and display_end_raw == blank
+      # start のみ → その日時より前は NG
+      if now_ts < start_ts
+        assign product_disabled = true
+        assign display_lock     = true
+      endif
+
+    elsif display_start_raw == blank and display_end_raw != blank
+      # end のみ → その日時より後は NG
+      if now_ts > end_ts
+        assign product_disabled = true
+        assign display_lock     = true
+      endif
+
+    elsif display_start_raw != blank and display_end_raw != blank
+      # start & end → 期間外は NG
+      if now_ts < start_ts or now_ts > end_ts
+        assign product_disabled = true
+        assign display_lock     = true
+      endif
+    endif
+  endif
+-%}
+
+<script>
+(function(){
+  try{
+    var ex = [];
+    try { ex = JSON.parse(localStorage.getItem('recentlyViewedEx')) || []; } catch(e){}
+
+    // 旧配列（handles のみ）から移行
+    if (!ex.length) {
+      try {
+        var old = JSON.parse(localStorage.getItem('recentlyViewed')) || [];
+        if (Array.isArray(old) && old.length) {
+          ex = old.map(function(h){ return { handle: h }; });
+        }
+      } catch(e){}
+    }
+
+    var entry = {
+      handle: {{ product.handle | json }},
+      url: {{ product.url | json }},
+      title: {{ product.title | json }},
+      template_suffix: {{ product.template_suffix | json }},
+      tags: {{ product.tags | json }},
+      published_at: {{ product.published_at | date: "%Y-%m-%dT%H:%M:%S%z" | json }},
+      price_min: {{ product.price_min | json }},
+      compare_at_price_max: {{ product.compare_at_price_max | json }},
+      available: {{ product.available | json }},
+      metafields: {
+        custom: {
+          preorder: {{ product.metafields.custom.preorder | default: blank | json }},
+          comingsoon: {{ product.metafields.custom.comingsoon | default: blank | json }}
+        }
+      },
+      image: {% if product.featured_image %}{{ product.featured_image | image_url: width: 700 | json }}{% else %}null{% endif %},
+      // ★ ここが一番大事：ロック情報
+      display_locked: {{ display_lock | json }}
+    };
+
+    // 同じ handle を一旦削除して末尾に追加
+    ex = ex.filter(function(x){ return x && x.handle !== entry.handle; });
+    ex.push(entry);
+
+    var MAX_KEEP = 50;
+    if (ex.length > MAX_KEEP) ex = ex.slice(ex.length - MAX_KEEP);
+
+    localStorage.setItem('recentlyViewedEx', JSON.stringify(ex));
+    localStorage.setItem('recentlyViewed', JSON.stringify(ex.map(function(x){ return x.handle; })));
+
+    console && console.log && console.log('[rv] saved', entry.handle, 'locked=', entry.display_locked);
+  } catch(err) {
+    console && console.warn && console.warn('[recentlyViewedEx] save failed:', err);
+  }
+})();
+</script>
+
+<script>
+  (function () {
+    var productDisabled = {{ product_disabled | json }};
+    var pid = {{ product.id | json }};
+
+    try {
+      if (!productDisabled && pid) {
+        // 有効な商品だけを「最後に見た商品」として保存
+        localStorage.setItem('wb_last_pid', String(pid));
+      }
+    } catch (e) {
+      // localStorage が使えない環境は何もしない
+    }
+  })();
+</script>
+
+{%- comment -%} wb03 add end 最近見た：拡張保存（template/tags/metafields/ロックフラグを保存） {%- endcomment -%}
+
+
+{% stylesheet %}
+  .product-information {
+    gap: var(--gap) 0;
+  }
+
+  /* Base grid layout */
+  .product-information__grid {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+  }
+
+  /* Default column positions */
+  .product-details {
+    order: 1;
+  }
+
+  .product-information__media {
+    order: 0;
+    width: 0;
+    min-width: 100%;
+  }
+
+  /* Mobile styles */
+  @media screen and (max-width: 749px) {
+    .product-information__media {
+      grid-column: 1 / -1;
+    }
+
+    .product-details {
+      grid-column: 2 / 3;
+    }
+  }
+
+  /* Desktop styles */
+  @media screen and (min-width: 750px) {
+    .product-information__grid {
+      grid-column: 2;
+    }
+
+    /* Position when there is no media */
+    .product-information__grid.product-information--media-none,
+    .product-information__grid:has(.product-information__media:empty) {
+      .product-details {
+        width: var(--narrow-content-width);
+        margin: 0 auto;
+      }
+    }
+
+    /* Position when there is media */
+    .product-information__grid:not(:has(.product-information__media:empty)) {
+      /* Media on the left side */
+      &.product-information--media-left {
+        grid-template-columns: 1fr min(50vw, var(--sidebar-width));
+
+        .product-information__media {
+          padding-right: calc(var(--gap, 0) / 2);
+        }
+
+        .product-details {
+          padding-left: calc(var(--gap, 0) / 2);
+        }
+
+        &:has(.media-gallery--extend) {
+          grid-column: 1 / 3;
+        }
+      }
+
+      /* Media on the right side */
+      &.product-information--media-right {
+        grid-template-columns: min(50vw, var(--sidebar-width)) 1fr;
+
+        .product-information__media {
+          padding-left: calc(var(--gap, 0) / 2);
+          order: 1;
+        }
+
+        .product-details {
+          padding-right: calc(var(--gap, 0) / 2);
+          order: 0;
+        }
+
+        &:has(.media-gallery--extend) {
+          grid-column: 2 / -1;
+        }
+      }
+
+      /* Equal width columns */
+      &.product-information__grid--half,
+      &.product-information__grid--half:has(.media-gallery--extend) {
+        grid-column: 1 / -1;
+        grid-template-columns:
+          var(--full-page-grid-margin) calc(var(--full-page-grid-central-column-width) / 2) calc(
+            var(--full-page-grid-central-column-width) / 2
+          )
+          var(--full-page-grid-margin);
+
+        &.product-information--media-left {
+          .product-information__media {
+            grid-column: 2 / 3;
+
+            &:has(.media-gallery--extend) {
+              grid-column: 1 / 3;
+            }
+          }
+
+          .product-details {
+            grid-column: 3 / 4;
+          }
+        }
+
+        &.product-information--media-right {
+          .product-information__media {
+            grid-column: 3 / 4;
+
+            &:has(.media-gallery--extend) {
+              grid-column: 3 / -1;
+            }
+          }
+
+          .product-details {
+            grid-column: 2 / 3;
+          }
+        }
+      }
+    }
+
+    /* Handle full width section */
+    .section--full-width {
+      .product-information__grid:not(:has(.product-information__media:empty)),
+      .product-information__grid:not(:has(.product-information__media:empty)) {
+        &.product-information--media-left,
+        &.product-information--media-right {
+          grid-column: 1 / -1;
+        }
+
+        &.product-information--media-left .product-details {
+          padding-inline-end: var(--padding-lg);
+        }
+
+        &.product-information--media-right .product-details {
+          padding-inline-start: var(--padding-lg);
+        }
+
+        &.product-information__grid--half.product-information--media-left {
+          .product-information__media {
+            grid-column: 1 / 3;
+          }
+
+          .product-details {
+            grid-column: 3 / -1;
+          }
+        }
+
+        &.product-information__grid--half.product-information--media-right {
+          .product-information__media {
+            grid-column: 3 / -1;
+          }
+
+          .product-details {
+            grid-column: 1 / 3;
+          }
+        }
+      }
+    }
+  }
+
+  /* Wider sidebar for large screens */
+  @media screen and (min-width: 1200px) {
+    .product-information__grid:not(
+        .product-information__grid--half,
+        :has(.product-information__media:empty)
+      ).product-information--media-left {
+      grid-template-columns: 2fr 1fr;
+    }
+
+    .product-information__grid:not(
+        .product-information__grid--half,
+        :has(.product-information__media:empty)
+      ).product-information--media-right {
+      grid-template-columns: 1fr 2fr;
+    }
+  }
+
+  .product-information__grid--limit-details .product-details > .group-block {
+    max-width: var(--sidebar-width);
+  }
+
+  /* If the header is sticky, make product details content stick underneath the header */
+  body:has(#header-group #header-component[data-sticky-state='active']) .product-details.sticky-content--desktop {
+    --sticky-header-offset: var(--header-height);
+  }
+{% endstylesheet %}
+
+{%- liquid
+  assign display_start_raw = product.metafields.product.display_start_at
+  assign display_end_raw   = product.metafields.product.display_end_at
+  assign product_disabled  = false
+
+  if display_start_raw != blank or display_end_raw != blank
+    assign now_ts = 'now' | date: '%s'
+
+    if display_start_raw != blank
+      assign start_ts = display_start_raw | date: '%s'
+    endif
+
+    if display_end_raw != blank
+      assign end_ts = display_end_raw | date: '%s'
+    endif
+
+    if display_start_raw != blank and display_end_raw == blank
+      # start のみ → その日時より前は NG
+      if now_ts < start_ts
+        assign product_disabled = true
+      endif
+
+    elsif display_start_raw == blank and display_end_raw != blank
+      # end のみ → その日時より後は NG
+      if now_ts > end_ts
+        assign product_disabled = true
+      endif
+
+    elsif display_start_raw != blank and display_end_raw != blank
+      # start & end → 期間外は NG
+      if now_ts < start_ts or now_ts > end_ts
+        assign product_disabled = true
+      endif
+    endif
+  endif
+-%}
+
+<script>
+  (function () {
+    var productDisabled = {{ product_disabled | json }};
+    var pid = {{ product.id | json }};
+
+    try {
+      if (!productDisabled) {
+        // 有効な商品だけを「最後に見た商品」として保存
+        localStorage.setItem('wb_last_pid', String(pid));
+      } else {
+        // 無効な商品の場合は何もしない（既存の last_pid は残す）
+      }
+    } catch (e) {
+      // localStorage が使えない環境は何もしない
+    }
+  })();
+</script>
+
+{% comment %} 会場限定販売機能 {% endcomment %}
+<script type="application/json" data-product-json>
+{
+  "title": {{ product.title | json }},
+  "variants": [
+    {% for variant in product.variants %}
+    {
+      "id": {{ variant.id }},
+      "title": {{ variant.title | json }},
+      "metafields": {
+        "variant": {
+          "venue_config": {{ variant.metafields.variant.venue_config.value | default: 'null' | replace: '=>', ':' }},
+          "is_venue_only": {{ variant.metafields.variant.is_venue_only.value | default: 'false' }},
+          "valid_passphrases": {{ variant.metafields.variant.valid_passphrases.value | json | default: 'null' }}
+        }
+      }
+    }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  ]
+}
+</script>
+
+<div data-venue-message></div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.VenueCheck) {
+      VenueCheck.init({
+        apiEndpoint: '{{ shop.secure_url }}/apps/tos-shopify-functions/venue-token',
+        buttonSelector: '[name="add"]'
+      });
+    }
+  });
+</script>
+
+{% schema %}
+{
+  "name": "t:names.product_information",
+  "blocks": [
+    {
+      "type": "@app"
+    }
+  ],
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:content.layout"
+    },
+    {
+      "type": "select",
+      "id": "content_width",
+      "label": "t:settings.width",
+      "options": [
+        {
+          "value": "content-center-aligned",
+          "label": "t:options.page"
+        },
+        {
+          "value": "content-full-width",
+          "label": "t:options.full"
+        }
+      ],
+      "default": "content-center-aligned"
+    },
+    {
+      "type": "select",
+      "id": "desktop_media_position",
+      "label": "t:settings.media_position",
+      "options": [
+        {
+          "value": "left",
+          "label": "t:options.left"
+        },
+        {
+          "value": "right",
+          "label": "t:options.right"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "checkbox",
+      "id": "equal_columns",
+      "label": "t:settings.equal_columns",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "limit_details_width",
+      "label": "t:settings.limit_product_details_width",
+      "default": false,
+      "visible_if": "{{ section.settings.equal_columns }}"
+    },
+    {
+      "type": "range",
+      "id": "gap",
+      "label": "t:settings.gap",
+      "min": 0,
+      "max": 48,
+      "step": 4,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:settings.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:content.padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "t:settings.top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "t:settings.bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": []
+}
+{% endschema %}

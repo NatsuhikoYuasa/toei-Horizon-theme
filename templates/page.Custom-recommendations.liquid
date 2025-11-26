@@ -1,0 +1,85 @@
+<section class="page-width">
+  <h1 style="margin:24px 0;">あなたへのおすすめ</h1>
+  <div id="wb-recos-page" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:16px;"></div>
+</section>
+
+<script>
+(async function(){
+  const root = document.getElementById('wb-recos-page');
+  if(!root) return;
+
+  // URLパラメータ
+  const qs = new URLSearchParams(location.search);
+  let pid = qs.get('pid') || null;
+  const fb  = qs.get('fb') || 'all';
+
+  if (!pid) {
+    try { pid = localStorage.getItem('wb_last_pid'); } catch(_e){}
+  }
+
+  const LIMIT_PAGE = 36; // 一覧ページは多めに
+  const base = {{ routes.root_url | json }};
+  const keyOf = (p)=> p.id || p.handle || p.url || (p.title + ':' + (p.price||'')); 
+  const dedupe = (list)=>{ const s=new Set(); return list.filter(p=>{const k=keyOf(p); if(s.has(k)) return false; s.add(k); return true;}); };
+
+  const fmt = (c)=> (window.Shopify && Shopify.formatMoney) ? Shopify.formatMoney(c) : ('¥' + Math.round(c/100));
+  const hrefOf = (p)=> p.url || p.online_store_url || (p.handle ? (base + 'products/' + p.handle) : '#');
+  const imgOf  = (p)=> p.featured_image || (p.images && p.images[0] && (p.images[0].src || p.images[0].url)) || null;
+
+  const normalize = (p)=>({
+    id: p.id, title: p.title, handle: p.handle || null,
+    url: p.url || p.online_store_url || null,
+    featured_image: imgOf(p),
+    price: p.price, price_min: p.price_min, price_max: p.price_max, price_varies: p.price_varies
+  });
+
+  async function fetchRecommendations(productId, take=24){
+    if(!productId) return [];
+    const url = "{{ routes.product_recommendations_url }}.json"
+      + "?product_id=" + encodeURIComponent(productId)
+      + "&intent=related"
+      + "&limit=" + encodeURIComponent(take);
+    const r = await fetch(url, {credentials:'same-origin'});
+    if(!r.ok) return [];
+    const data = await r.json();
+    return Array.isArray(data.products) ? data.products.map(normalize) : [];
+  }
+  async function fetchCollection(handle, take=60){
+    const r = await fetch(`/collections/${encodeURIComponent(handle)}/products.json?limit=${take}`, {credentials:'same-origin'});
+    if(!r.ok) return [];
+    const {products=[]} = await r.json();
+    return products.map(normalize);
+  }
+  async function fetchAll(take=60){
+    const r = await fetch(`/products.json?limit=${take}`, {credentials:'same-origin'});
+    if(!r.ok) return [];
+    const {products=[]} = await r.json();
+    return products.map(normalize);
+  }
+
+  // 1) 個別化 2) 補充 の順で LIMIT_PAGE まで
+  let out = [];
+  try { if(pid) out = await fetchRecommendations(pid, 24); } catch(_e){}
+  try {
+    if (out.length < LIMIT_PAGE) out = dedupe(out.concat(await fetchCollection(fb, 80)));
+    if (out.length < LIMIT_PAGE && fb !== 'all') out = dedupe(out.concat(await fetchCollection('all', 80)));
+    if (out.length < LIMIT_PAGE) out = dedupe(out.concat(await fetchAll(80)));
+  } catch(_e){}
+
+  // 描画
+  root.innerHTML = out.slice(0, LIMIT_PAGE).map(p=>{
+    const img = imgOf(p);
+    const price = p.price_varies && p.price_min!=null && p.price_max!=null
+      ? `${fmt(p.price_min)} — ${fmt(p.price_max)}`
+      : (p.price!=null ? fmt(p.price) : '');
+    return `
+      <a href="${hrefOf(p)}" style="display:flex;flex-direction:column;text-decoration:none;color:inherit">
+        ${img ? `<img src="${img}&width=700" alt="${p.title||''}" loading="lazy" style="width:100%;height:auto;border-radius:5px;">` : ``}
+        <div style="padding:10px 12px 10px 0">
+          <div style="font-size:13px;line-height:1.4;">${p.title||''}</div>
+          ${price ? `<div style="font-size:12px;opacity:.9;">${price}</div>` : ``}
+        </div>
+      </a>`;
+  }).join('');
+})();
+</script>

@@ -1,0 +1,47 @@
+{% comment %} wb03 add {% endcomment %}
+     {%- comment -%}
+  コレクションのメタフィールド custom.search_keyword を使った
+  検索キーワードチップ表示
+{%- endcomment -%}
+
+<div class="predictive-search-empty-section">
+  {%- comment -%} wb03 add: 検索キーワードチップ {%- endcomment -%}
+  <div class="predictive-search-keywords">
+    <h4 class="predictive-search-results__title">
+      キーワード
+    </h4>
+
+    <ul class="predictive-search-keywords__list" aria-label="検索キーワード候補">
+      {%- for collection in collections -%}
+        {%- assign keyword = collection.metafields.custom.search_keyword -%}
+        {%- if keyword != blank -%}
+          <li class="predictive-search-keywords__item">
+            <button
+              type="button"
+              class="predictive-search-keyword-chip"
+              data-search="{{ keyword | escape }}"
+            >
+              {{ keyword }}
+            </button>
+          </li>
+        {%- endif -%}
+      {%- endfor -%}
+    </ul>
+  </div>
+
+
+
+
+{% render 'predictive-search-empty-state',
+  load_empty_state: true,
+  shadow_opacity: 0.1,
+  products_test_id: 'products-list-default--reset'
+%}
+
+{% schema %}
+{
+  "name": "t:names.predictive_search_empty",
+  "class": "predictive-search-empty-section",
+  "settings": []
+}
+{% endschema %}

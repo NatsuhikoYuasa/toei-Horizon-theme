@@ -1,0 +1,344 @@
+{% comment %}
+  Custom-slider.liquid
+{% endcomment %}
+
+<section id="section-{{ section.id }}" class="wb-cs" style="margin-bottom: {{ section.settings.section_mb }};">
+  <div class="wb-cs__inner{% unless section.settings.full_width %} wb-cs--contained{% endunless %}"
+       style="--peek-desktop: {{ section.settings.peek_desktop }}; --peek-mobile: {{ section.settings.peek_mobile }}; --radius: {{ section.settings.radius }}; --card-bg: {{ section.settings.card_bg }}; --card-fg: {{ section.settings.card_fg }}; --btn-bg: {{ section.settings.btn_bg }}; --btn-fg: {{ section.settings.btn_fg }}; --pad-x: {{ section.settings.pad_x }}; --pad-y: {{ section.settings.pad_y }};">
+
+    <!-- 見出し（常時表示）／サブ見出しは '-' で非表示 -->
+    <div class="wb-cs__head" style="text-align: {{ section.settings.heading_align }};">
+      <h2 class="wb-cs__title">{{ section.settings.heading | newline_to_br }}</h2>
+        {%- assign title_val = block.settings.title | strip -%}
+        {%- if title_val != '-' and title_val != '' -%}
+        <h3 class="wb-cs__cardTitle">{{ block.settings.title | newline_to_br }}</h3>
+        {%- endif -%}
+    </div>
+
+    <div class="swiper wb-cs__swiper"
+         data-autoplay="{{ section.settings.autoplay }}"
+         data-delay="{{ section.settings.autoplay_delay | default: 4000 }}"
+         data-loop="{{ section.settings.loop }}"
+         data-dots="{{ section.settings.dots }}"
+         data-arrows="{{ section.settings.arrows }}">
+      <div class="swiper-wrapper">
+        {% for block in section.blocks %}
+          {% if block.type == 'slide' %}
+          <div class="swiper-slide wb-cs__slide" {{ block.shopify_attributes }}>
+            <article class="wb-cs__cardWrap">
+              <div class="wb-cs__grid">
+                <!-- 画像（PC右／SP上） -->
+                <div class="wb-cs__media">
+                  {% assign dimg = block.settings.image_desktop | default: block.settings.image_mobile %}
+                  {% assign mimg = block.settings.image_mobile  | default: block.settings.image_desktop %}
+                  <a class="wb-cs__mediaLink"
+                     {% if block.settings.link %} href="{{ block.settings.link }}" {% else %} role="link" aria-disabled="true" {% endif %}>
+                    <picture>
+                      {% if mimg != blank %}<source media="(max-width: 768px)" srcset="{{ mimg | image_url: width: 1200 }}">{% endif %}
+                      {% if dimg != blank %}
+                        <img class="wb-cs__img" src="{{ dimg | image_url: width: 1800 }}" alt="{{ block.settings.alt | escape }}" loading="lazy">
+                      {% endif %}
+                    </picture>
+                  </a>
+                </div>
+
+                <!-- テキスト -->
+                <div class="wb-cs__card">
+                  {%- assign title_val = block.settings.title | strip -%}
+                  {%- if title_val != '-' and title_val != '' -%}
+                    <h3 class="wb-cs__cardTitle">{{ block.settings.title }}</h3>
+                  {%- endif -%}
+
+                  {%- assign desc_plain = block.settings.desc | strip_html | strip -%}
+                  {%- if desc_plain != '' and desc_plain != '-' -%}
+                    <div class="wb-cs__cardDesc">{{ block.settings.desc }}</div>
+                  {%- endif -%}
+
+                  {%- if block.settings.btn_label and block.settings.btn_label != '' -%}
+                    <div class="wb-cs__cardCta">
+                      {%- assign href_val = block.settings.link | default: "/" -%}
+                      <a class="wb-cs__btn"
+                         {%- if href_val != "/" -%} href="{{ href_val }}" {%- else -%} role="button" aria-disabled="true" {%- endif -%}>
+                        {{ block.settings.btn_label }}
+                      </a>
+                    </div>
+                  {%- endif -%}
+                </div>
+              </div>
+            </article>
+          </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <!-- コントロール -->
+      <div class="wb-cs__controls">
+        {% if section.settings.arrows %}<button class="wb-cs__prev" type="button" aria-label="前へ"><span class="wb-cs__chev">‹</span></button>{% endif %}
+        {% if section.settings.dots %}<div class="wb-cs__dots"></div>{% endif %}
+        <span class="wb-cs__sep" aria-hidden="true"></span>
+        <button class="wb-cs__toggle" type="button" aria-pressed="{{ section.settings.autoplay }}" aria-label="{{ section.settings.autoplay | default: false | if: '一時停止', '再生' }}"></button>
+        {% if section.settings.arrows %}<button class="wb-cs__next" type="button" aria-label="次へ"><span class="wb-cs__chev">›</span></button>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <style>
+/* === コンテナ/覗き === */
+#section-{{ section.id }} .wb-cs__swiper{
+  overflow:visible !important; box-sizing:border-box !important;
+  padding-inline: var(--peek-mobile, 12%) !important;
+}
+#section-{{ section.id }} .wb-cs__slide{
+  width: calc(100% - (var(--peek-mobile, 12%) * 2)) !important;
+  flex: 0 0 auto !important; display:block !important;
+}
+@media (min-width:1024px){
+  #section-{{ section.id }} .wb-cs__swiper{ padding-inline: calc(var(--peek-desktop, 220px)/2) !important; }
+  #section-{{ section.id }} .wb-cs__slide { width: calc(100% - var(--peek-desktop, 220px)) !important; }
+}
+
+/* === Swiperの安定化（他CSS無効化） === */
+#section-{{ section.id }} .swiper{width:100% !important;}
+#section-{{ section.id }} .swiper-wrapper{display:flex !important;}
+#section-{{ section.id }} .swiper-slide{flex:0 0 auto !important;}
+
+/* === カード（画像＋テキスト一体） === */
+#section-{{ section.id }} .wb-cs__cardWrap{
+  background:var(--card-bg); color:var(--card-fg);
+  border-radius:var(--radius); overflow:hidden;
+  box-shadow:0 10px 24px rgba(0,0,0,.08);
+}
+#section-{{ section.id }} .wb-cs__grid{display:grid;grid-template-columns:1fr;gap:0 !important;}
+@media (min-width:1024px){
+  #section-{{ section.id }} .wb-cs__grid{grid-template-columns:1.25fr 1fr;}
+  #section-{{ section.id }} .wb-cs__media{order:2;}
+  #section-{{ section.id }} .wb-cs__card {order:1;}
+}
+
+/* === 画像比率 === */
+#section-{{ section.id }} .wb-cs__mediaLink{display:block;height:100%;}
+#section-{{ section.id }} .wb-cs__img{width:100%;height:100%;object-fit:cover;display:block;aspect-ratio:4/5;}
+@media (min-width:1024px){ #section-{{ section.id }} .wb-cs__img{aspect-ratio:3/4;} }
+
+/* === テキスト余白（デザイン寄せ） === */
+#section-{{ section.id }} .wb-cs__card{
+  display:flex;flex-direction:column;gap:12px;
+  padding:18px 16px 16px !important; /* SPはコンパクト */
+  min-height:0;
+}
+@media (min-width:1024px){
+  #section-{{ section.id }} .wb-cs__card{
+    padding:64px 72px 48px !important; /* PCゆったり */
+    gap:18px; min-height:420px;
+  }
+}
+#section-{{ section.id }} .wb-cs__cardTitle{
+  margin:0;font-weight:700;font-size:clamp(18px,2vw,22px);
+  line-height:1.55;white-space:pre-wrap;word-break:break-word;
+}
+#section-{{ section.id }} .wb-cs__cardDesc{
+  font-size:14px;line-height:1.9;opacity:.95;white-space:pre-wrap;word-break:break-word;
+}
+
+/* === CTAボタン（位置を下げ、右に山括弧） === */
+#section-{{ section.id }} .wb-cs__cardCta{margin-top:12px;}
+#section-{{ section.id }} .wb-cs__btn{
+  display:inline-flex;align-items:center;justify-content:space-between;gap:.45em;
+  min-height:46px;min-width:190px;padding:0 28px;border-radius:10px;
+  background:var(--btn-bg);color:var(--btn-fg);text-decoration:none;font-weight:700;font-size:14px;
+  transition:filter .15s ease, transform .15s ease;
+}
+#section-{{ section.id }} .wb-cs__btn::after{content:"›";font-size:1.05em;line-height:1;}
+#section-{{ section.id }} .wb-cs__btn:hover{filter:brightness(.98);transform:translateY(-1px);}
+
+/* === コントローラー（正円・太矢印・細短PAUSE） === */
+#section-{{ section.id }} .wb-cs__controls{
+  display:flex;gap:12px;justify-content:center;align-items:center;
+  margin:16px auto 0;background:#fff;border-radius:20px;
+  box-shadow:0 10px 24px rgba(0,0,0,.08);width:fit-content;padding:10px 14px;
+}
+#section-{{ section.id }} .wb-cs__prev,#section-{{ section.id }} .wb-cs__next{
+  width:36px;height:36px;aspect-ratio:1/1;border-radius:999px;border:1.5px solid #E5E7EB;
+  display:grid;place-items:center;background:#fff;cursor:pointer;padding:0;
+}
+#section-{{ section.id }} .wb-cs__chev{font-size:20px;line-height:1;color:#111827;font-weight:800;}
+#section-{{ section.id }} .wb-cs__sep{width:1px;height:22px;background:#E5E7EB;display:inline-block;}
+#section-{{ section.id }} .wb-cs__dots{display:flex;align-items:center;gap:8px;}
+#section-{{ section.id }} .wb-cs__dots .swiper-pagination-bullet{width:6px;height:6px;background:#9AA0A6;opacity:.45;border-radius:999px;}
+#section-{{ section.id }} .wb-cs__dots .swiper-pagination-bullet-active{background:#e53935;opacity:1;}
+
+/* ▶︎ / || 切替（細く短い2本） */
+#section-{{ section.id }} .wb-cs__toggle{width:32px;height:32px;border:0;border-radius:8px;background:#fff;cursor:pointer;position:relative;}
+#section-{{ section.id }} .wb-cs__toggle[aria-pressed="true"]::before,
+#section-{{ section.id }} .wb-cs__toggle[aria-pressed="true"]::after{
+  content:"";position:absolute;top:10px;bottom:10px;width:2px;background:#111827;border-radius:1px;
+}
+#section-{{ section.id }} .wb-cs__toggle[aria-pressed="true"]::before{left:5px;}
+#section-{{ section.id }} .wb-cs__toggle[aria-pressed="true"]::after {right:11px;}
+#section-{{ section.id }} .wb-cs__toggle[aria-pressed="false"]::before{
+  content:"";position:absolute;left:5px;top:9px;bottom:9px;width:0;height:0;
+  border-top:8px solid transparent;border-bottom:8px solid transparent;border-left:12px solid #111827;
+}
+
+/* === モバイル横はみ出し専用パッチ（このセクションだけ） === */
+#section-{{ section.id }}{
+  position: relative;
+  overflow-x: clip;              /* 右側へのはみ出しでページが横スクロールしない */
+  max-width: 100vw;              /* ビューポート外へ広がらない */
+}
+#section-{{ section.id }} .wb-cs__inner{
+  overflow-x: clip;              /* 内側でも横スクロールを発生させない */
+  max-width: 100%;
+}
+#section-{{ section.id }} .wb-cs__swiper{
+  max-width: 100%;
+  margin-inline: auto;
+  /* iOSでの1pxズレ対策 */
+  transform: translateZ(0);
+  will-change: transform;
+}
+#section-{{ section.id }} .swiper-wrapper{
+  /* 余計な幅計算が残っていても外へ押し出さない */
+  max-width: 100%;
+}
+/* === PCのボタン位置をデザイン寄せでさらに下げる === */
+@media (min-width:1024px){
+  /* テキストカードの高さと内側余白を増やして“下目”にスペースを確保 */
+  #section-{{ section.id }} .wb-cs__card{
+    min-height: 460px !important;        /* 400→460で下側の余白を確保 */
+    padding: 64px 72px 48px !important;   /* 上64 / 左右72 / 下48 */
+    gap: 18px !important;
+  }
+
+  /* ボタンを本文の後ろから“さらに下へ”：本文→(autoスペース)→ボタンの順 */
+  #section-{{ section.id }} .wb-cs__cardCta{
+    margin-top: 10vh;
+    padding-top: 28px !important;         /* 本文との距離を確保 */
+    align-self: flex-start !important;    /* 左寄せ固定 */
+  }
+
+  /* ボタン見た目（任意の微調整） */
+  #section-{{ section.id }} .wb-cs__btn{
+    min-width: 200px !important;
+  }
+}
+
+</style>
+<script>
+(function(){
+  var root = document.currentScript.closest('#section-{{ section.id }}');
+
+  function init(){
+    if(!window.Swiper){ setTimeout(init,60); return; }
+    var el = root.querySelector('.wb-cs__swiper'); if(!el) return;
+
+    // 二重初期化対策
+    if(el.swiper){ try{ el.swiper.destroy(true,true); }catch(e){} }
+
+    var autoplay = el.dataset.autoplay === 'true';
+    var delay    = parseInt(el.dataset.delay || '4000',10);
+    var loop     = el.dataset.loop === 'true';
+    var useDots  = el.dataset.dots === 'true';
+    var useArw   = el.dataset.arrows === 'true';
+
+    var swiper = new Swiper(el,{
+      loop,
+      slidesPerView: 'auto',          // 幅はCSS（calc）で1枚分に固定
+      centeredSlides: true,
+      centeredSlidesBounds: true,
+      watchSlidesProgress: true,
+      rewind: false,
+      spaceBetween: 16,
+      speed: 450,
+      roundLengths: true,
+      autoplay: autoplay ? { delay, disableOnInteraction:false } : false,
+      pagination: useDots ? { el: root.querySelector('.wb-cs__dots'), clickable:true } : undefined,
+      navigation: useArw  ? { nextEl: root.querySelector('.wb-cs__next'), prevEl: root.querySelector('.wb-cs__prev') } : undefined,
+      observer: true, observeParents: true, updateOnWindowResize: true,
+      breakpoints: { 0:{ spaceBetween:12 }, 1024:{ spaceBetween:16 } },
+      on:{
+        init(){ this.slideToLoop(0,0,false); },
+        imagesReady(){ this.update(); this.slideToClosest(0,false); },
+        resize(){ this.update(); this.slideToClosest(0,false); }
+      }
+    });
+
+    // ▶︎ / || のUI同期
+    var t = root.querySelector('.wb-cs__toggle');
+    if(t){
+      t.setAttribute('aria-pressed', autoplay ? 'true' : 'false');
+      swiper.on('autoplayStart', ()=>{ t.setAttribute('aria-pressed','true');  t.setAttribute('aria-label','一時停止'); });
+      swiper.on('autoplayStop',  ()=>{ t.setAttribute('aria-pressed','false'); t.setAttribute('aria-label','再生'); });
+      t.addEventListener('click', function(){
+        (t.getAttribute('aria-pressed') === 'true')
+          ? swiper.autoplay && swiper.autoplay.stop()
+          : (swiper.params.autoplay || (swiper.params.autoplay={delay,disableOnInteraction:false}), swiper.autoplay.start());
+      });
+    }
+  }
+
+  if(!window.Swiper){
+    var l=document.createElement('link'); l.rel='stylesheet';
+    l.href='https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css'; document.head.appendChild(l);
+    var s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js'; s.onload=init; document.head.appendChild(s);
+  }else{ init(); }
+})();
+</script>
+
+</section>
+
+{% schema %}
+{
+  "name": "カスタムスライダー（Custom）",
+  "settings": [
+    { "type": "textarea", "id": "heading", "label": "見出し", "default": "おすすめスライダー" },
+    { "type": "text", "id": "subheading", "label": "サブ見出し", "default": "-" },
+
+    { "type": "select", "id": "heading_align", "label": "見出しの位置", "default": "left", "options": [
+      { "value": "left", "label": "左" }, { "value": "center", "label": "中央" }, { "value": "right", "label": "右" }
+    ]},
+
+    { "type": "checkbox", "id": "full_width", "label": "フル幅にする", "default": false },
+    { "type": "text", "id": "max_width", "label": "最大幅（pxまたはCSS値）", "default": "1200px" },
+    { "type": "text", "id": "pad_x", "label": "左右パディング", "default": "16px" },
+    { "type": "text", "id": "pad_y", "label": "上下パディング", "default": "24px" },
+    { "type": "text", "id": "section_mb", "label": "セクション下の余白（例: 48px）", "default": "48px" },
+    { "type": "text", "id": "peek_desktop", "label": "PCの左右見切れ量", "default": "220px" },
+    { "type": "text", "id": "peek_mobile", "label": "SPの左右見切れ量", "default": "12%" },
+
+    { "type": "color", "id": "card_bg", "label": "カード背景色", "default": "#f4f6f8" },
+    { "type": "color", "id": "card_fg", "label": "カード文字色", "default": "#222222" },
+    { "type": "text", "id": "radius", "label": "角丸（例: 12px）", "default": "12px" },
+    { "type": "color", "id": "btn_bg", "label": "ボタン背景色", "default": "#e83f3f" },
+    { "type": "color", "id": "btn_fg", "label": "ボタン文字色", "default": "#ffffff" },
+
+    { "type": "checkbox", "id": "autoplay", "label": "自動再生", "default": true },
+    { "type": "range", "id": "autoplay_delay", "label": "自動再生の間隔(ms)", "min": 2000, "max": 8000, "step": 500, "default": 4000 },
+    { "type": "checkbox", "id": "loop", "label": "ループ", "default": true },
+    { "type": "checkbox", "id": "dots", "label": "ドット表示", "default": true },
+    { "type": "checkbox", "id": "arrows", "label": "矢印表示", "default": true }
+  ],
+  "blocks": [
+    {
+      "type": "slide",
+      "name": "スライド",
+      "limit": 12,
+      "settings": [
+        { "type": "image_picker", "id": "image_desktop", "label": "画像（PC）" },
+        { "type": "image_picker", "id": "image_mobile",  "label": "画像（SP）" },
+
+        { "type": "text", "id": "alt",   "label": "画像の代替テキスト", "default": "代替テキスト" },
+        { "type": "textarea", "id": "title",   "label": "見出し", "default": "スライドタイトル" },
+        { "type": "richtext", "id": "desc", "label": "説明文", "default": "<p>　</p>" },
+
+        { "type": "text", "id": "btn_label", "label": "ボタン文言", "default": "詳しく見る" },
+        { "type": "url",  "id": "link",      "label": "リンク先URL", "default": "/" }
+      ]
+    }
+  ],
+  "presets": [
+    { "name": "カスタムスライダー（Custom）",
+      "blocks": [ { "type":"slide" }, { "type":"slide" }, { "type":"slide" }, { "type":"slide" }, { "type":"slide" } ] }
+  ]
+}
+{% endschema %}

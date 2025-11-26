@@ -1,0 +1,106 @@
+{% comment %}
+  Custom-product-breadcrumbs.liquid
+  メタオブジェクトを使った商品ページ用パンくず
+{% endcomment %}
+
+{%- liquid
+  assign p = product
+
+  assign genre_obj    = p.metafields.custom.product_genre_object.value
+  assign index_obj    = p.metafields.custom.product_index_object.value
+  assign work_obj     = p.metafields.custom.product_the_work.value
+  assign category_obj = p.metafields.custom.product_product_category_object.value
+-%}
+
+<nav class="wb-breadcrumb" aria-label="パンくずリスト">
+  <ol class="wb-breadcrumb__list">
+    {%- comment -%} トップ {%- endcomment -%}
+    <li class="wb-breadcrumb__item">
+      <a href="{{ routes.root_url }}">トップ</a>
+    </li>
+
+    {%- comment -%} 商品_ジャンル（DVD/Blu-ray など） {%- endcomment -%}
+    {%- if genre_obj -%}
+      {%- assign genre_collection = genre_obj.genre_collection.value -%}
+      {%- assign genre_href = genre_collection.url | default: '#' -%}
+      <li class="wb-breadcrumb__item">
+        <a href="{{ genre_href }}">
+          {{ genre_obj.genre_title }}
+        </a>
+      </li>
+    {%- endif -%}
+
+    {%- comment -%} 商品_索引（か行 など） {%- endcomment -%}
+    {%- if index_obj -%}
+      {%- assign index_collection = index_obj.index_collection.value -%}
+      {%- assign index_href = index_collection.url | default: '#' -%}
+      <li class="wb-breadcrumb__item">
+        <a href="{{ index_href }}">
+          {{ index_obj.index_title }}
+        </a>
+      </li>
+    {%- endif -%}
+
+    {%- comment -%} 商品_作品（仮面ライダー など） {%- endcomment -%}
+    {%- if work_obj -%}
+      {%- assign work_collection = work_obj.the_work_collection.value -%}
+      {%- assign work_href = work_collection.url | default: '#' -%}
+      <li class="wb-breadcrumb__item">
+        <a href="{{ work_href }}">
+          {{ work_obj.the_work_title }}
+        </a>
+      </li>
+    {%- endif -%}
+
+    {%- comment -%} 商品_商品カテゴリー（仮面ライダーJ など） {%- endcomment -%}
+    {%- if category_obj -%}
+      {%- assign category_collection = category_obj.product_category_collection.value -%}
+      {%- assign category_href = category_collection.url | default: '#' -%}
+      <li class="wb-breadcrumb__item">
+        <a href="{{ category_href }}">
+          {{ category_obj.product_category_title }}
+        </a>
+      </li>
+    {%- endif -%}
+
+    {%- comment -%} 最後：商品タイトル {%- endcomment -%}
+    <li class="wb-breadcrumb__item wb-breadcrumb__item--current" aria-current="page">
+      {{ p.title }}
+    </li>
+  </ol>
+</nav>
+
+<style>
+  .wb-breadcrumb {
+    margin-block: 1rem 0.75rem;
+    font-size: 13px;
+  }
+  .wb-breadcrumb__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .wb-breadcrumb__item {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+  .wb-breadcrumb__item + .wb-breadcrumb__item::before {
+    content: "›";
+    margin: 0 0.4em;
+    color: #999;
+  }
+  .wb-breadcrumb__item a {
+    text-decoration: none;
+    color: inherit;
+  }
+  .wb-breadcrumb__item a:hover {
+    text-decoration: underline;
+  }
+  .wb-breadcrumb__item--current {
+    color: #777;
+  }
+</style>

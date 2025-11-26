@@ -1,0 +1,376 @@
+{% assign the_collection = section.settings.collection %}
+
+<section id="section-{{ section.id }}" class="section page-width cfc-collection-feature">
+  <div class="cfc-container">
+    <!-- Left: collection image + CTA -->
+    <div class="cfc-left">
+      {% if the_collection and the_collection.image %}
+        {{
+          the_collection.image
+          | image_url: width: 960
+          | image_tag: loading: 'lazy', alt: the_collection.title, class: 'cfc-left-img'
+        }}
+      {% else %}
+        <div class="cfc-placeholder">コレクション画像を設定してください</div>
+      {% endif %}
+
+      {% if the_collection %}
+        <a class="cfc-cta" href="{{ the_collection.url }}" aria-label="{{ the_collection.title }}を見る">
+          <span class="cfc-cta-text">今すぐチェック</span>
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M13.172 12 8.222 7.05l1.414-1.414L16 12l-6.364 6.364-1.414-1.414z" fill="currentColor"/>
+          </svg>
+        </a>
+      {% endif %}
+    </div>
+
+    <!-- Right: title + products -->
+    <div class="cfc-right">
+      {% if the_collection %}
+        <h2 class="cfc-title">{{ the_collection.title }}</h2>
+
+        {% if the_collection.products_count > 0 %}
+          <div class="cfc-grid">
+            {% for product in the_collection.products limit: 4 %}
+
+              {%- comment -%} display_start_at / display_end_at による表示ロック判定 {%- endcomment -%}
+              {% liquid
+                assign display_locked    = false
+                assign display_start_raw = product.metafields.product.display_start_at
+                assign display_end_raw   = product.metafields.product.display_end_at
+
+                if display_start_raw != blank or display_end_raw != blank
+                  assign now_ts = 'now' | date: '%s'
+
+                  if display_start_raw != blank
+                    assign start_ts = display_start_raw | date: '%s'
+                  endif
+
+                  if display_end_raw != blank
+                    assign end_ts = display_end_raw | date: '%s'
+                  endif
+
+                  if display_start_raw != blank and display_end_raw == blank
+                    if now_ts < start_ts
+                      assign display_locked = true
+                    endif
+                  elsif display_start_raw == blank and display_end_raw != blank
+                    if now_ts > end_ts
+                      assign display_locked = true
+                    endif
+                  elsif display_start_raw != blank and display_end_raw != blank
+                    if now_ts < start_ts or now_ts > end_ts
+                      assign display_locked = true
+                    endif
+                  endif
+                endif
+              %}
+
+              {%- comment -%}
+                ▼ バッジ判定（汎用コレクションと同じ仕様）
+                NEW … published_at / tag:new / metafield custom.new_until
+                予約受付中 … PRE-ORDER 判定ロジック（テンプレート／タグ／metafield custom.preorder）
+                初回特典残りわずか … 初回特典バリアントの在庫合計が閾値以下
+                早期予約特典あり … 予約商品かつ、いずれかのバリアントに custom.is_early_bonus = true
+                締切間近 … 各バリアントの variant.sell_end_at を見て 10 日前〜当日
+              {%- endcomment -%}
+
+              {%- assign now_ts    = 'now' | date: '%s' | plus: 0 -%}
+              {%- assign new_days  = section.settings.new_days | default: 14 | plus: 0 -%}
+              {%- assign days_sec  = new_days | times: 86400 -%}
+              {%- assign cutoff_ts = now_ts | minus: days_sec -%}
+
+              {%- comment %} ========== NEW（公開日 / tag:new / metafield new_until） ========== {%- endcomment -%}
+              {%- assign pub_ts = 0 -%}
+              {%- if product.published_at != blank -%}
+                {%- assign pub_ts = product.published_at | date: '%s' | plus: 0 -%}
+              {%- endif -%}
+              {%- assign is_new_published = false -%}
+              {%- if pub_ts != 0 and pub_ts > cutoff_ts -%}{%- assign is_new_published = true -%}{%- endif -%}
+
+              {%- assign tags_lc   = product.tags | join: ',' | downcase -%}
+              {%- assign tags_wrap = ',' | append: tags_lc | append: ',' -%}
+              {%- assign is_new_tag = false -%}
+              {%- if tags_wrap contains ',new,' -%}{%- assign is_new_tag = true -%}{%- endif -%}
+
+              {%- assign is_new_mf = false -%}
+              {%- if product.metafields.custom.new_until != blank -%}
+                {%- assign new_until_ts = product.metafields.custom.new_until | date: '%s' | plus: 0 -%}
+                {%- if new_until_ts > now_ts -%}{%- assign is_new_mf = true -%}{%- endif -%}
+              {%- endif -%}
+
+              {%- assign is_new = false -%}
+              {%- if is_new_published or is_new_tag or is_new_mf -%}{%- assign is_new = true -%}{%- endif -%}
+
+              {%- comment %} ========== 予約受付中（PRE-ORDER 判定） ========== {%- endcomment -%}
+              {%- assign t_suffix = product.template_suffix | downcase | default: '' -%}
+
+              {%- assign pre_ok = false -%}
+              {%- if t_suffix contains 'preorder' or
+                    tags_wrap contains ',preorder,' or
+                    tags_wrap contains ',pre-order,' or
+                    tags_wrap contains ',pre order,' or
+                    tags_lc  contains '予約' or
+                    tags_lc  contains '先行' or
+                    tags_lc  contains '先行予約' or
+                    product.metafields.custom.preorder -%}
+                {%- assign pre_ok = true -%}
+              {%- endif -%}
+
+              {%- comment -%} ========== 初回特典 / 早期予約特典 / 締切間近 ========== {%- endcomment -%}
+              {%- assign first_bonus_low        = false -%}
+              {%- assign early_bonus           = false -%}
+              {%- assign closing_soon          = false -%}
+
+              {%- assign first_bonus_threshold = 10     | plus: 0 -%}
+              {%- assign ten_days_sec          = 864000 | plus: 0 -%}
+              {%- assign first_bonus_total     = 0      | plus: 0 -%}
+              {%- assign min_end_ts            = 0      | plus: 0 -%}
+
+              {%- for v in product.variants -%}
+                {%- assign v_inventory       = v.inventory_quantity | default: 0 | plus: 0 -%}
+                {%- assign v_first_bonus    = v.metafields.custom.is_first_bonus -%}
+                {%- assign v_early_bonus    = v.metafields.custom.is_early_bonus -%}
+
+                {%- comment -%} ▼ 初回特典残りわずか（対象バリアントの在庫合計） {%- endcomment -%}
+                {%- if v_first_bonus and v_inventory > 0 -%}
+                  {%- assign first_bonus_total = first_bonus_total | plus: v_inventory -%}
+                {%- endif -%}
+
+                {%- comment -%} ▼ 早期予約特典あり（予約商品かつ early_bonus が付いたバリアントがある） {%- endcomment -%}
+                {%- if pre_ok and v_early_bonus -%}
+                  {%- assign early_bonus = true -%}
+                {%- endif -%}
+
+                {%- comment -%} ▼ 締切間近（各バリアントの sell_end_at のうち最も近いもの） {%- endcomment -%}
+                {%- assign v_end_raw = v.metafields.variant.sell_end_at -%}
+                {%- if v_end_raw != blank -%}
+                  {%- assign v_end_ts = v_end_raw | date: '%s' | plus: 0 -%}
+                  {%- if min_end_ts == 0 or v_end_ts < min_end_ts -%}
+                    {%- assign min_end_ts = v_end_ts -%}
+                  {%- endif -%}
+                {%- endif -%}
+              {%- endfor -%}
+
+              {%- if first_bonus_total > 0 and first_bonus_total <= first_bonus_threshold -%}
+                {%- assign first_bonus_low = true -%}
+              {%- endif -%}
+
+              {%- if min_end_ts != 0 -%}
+                {%- assign closing_from_ts = min_end_ts | minus: ten_days_sec -%}
+                {%- if now_ts >= closing_from_ts and now_ts <= min_end_ts -%}
+                  {%- assign closing_soon = true -%}
+                {%- endif -%}
+              {%- endif -%}
+
+              <a
+                class="cfc-card{% if display_locked %} cfc-card--locked{% endif %}"
+                {% unless display_locked %}
+                  href="{{ product.url | within: the_collection }}"
+                {% endunless %}
+              >
+                <div class="cfc-card-media">
+                  {% if product.featured_image %}
+                    {{
+                      product.featured_image
+                      | image_url: width: 600
+                      | image_tag: loading: 'lazy', alt: product.title
+                    }}
+                  {% else %}
+                    <div class="cfc-noimg">No Image</div>
+                  {% endif %}
+                </div>
+
+                {% if section.settings.show_badges %}
+                  <div class="cfc-badges cfc-badges--below">
+                    {%- if is_new and pre_ok == false -%}
+                      <span class="cfc-badge cfc-badge--new">NEW</span>
+                    {%- endif -%}
+
+                    {%- if pre_ok -%}
+                      <span class="cfc-badge cfc-badge--pre">予約受付中</span>
+                    {%- endif -%}
+
+                    {%- if first_bonus_low -%}
+                      <span class="cfc-badge cfc-badge--first-bonus">初回特典残りわずか</span>
+                    {%- endif -%}
+
+                    {%- if early_bonus -%}
+                      <span class="cfc-badge cfc-badge--early">早期予約特典あり</span>
+                    {%- endif -%}
+
+                    {%- if closing_soon -%}
+                      <span class="cfc-badge cfc-badge--closing">締切間近</span>
+                    {%- endif -%}
+                  </div>
+                {% endif %}
+
+                <div class="cfc-card-body">
+                  <div class="cfc-card-title">{{ product.title }}</div>
+                  <div class="cfc-card-price">
+                    {% if product.price_varies %}
+                      {{ product.price_min | money }} — {{ product.price_max | money }}
+                    {% else %}
+                      {{ product.price | money }}
+                    {% endif %}
+                  </div>
+                </div>
+              </a>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="cfc-empty">このコレクションに商品がありません。</p>
+        {% endif %}
+      {% else %}
+        <p class="cfc-empty">セクション設定でコレクションを選択してください。</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <style>
+    /* ===== Theme tokens（既存のまま） ===== */
+    #section-{{ section.id }}.cfc-collection-feature {
+      --bg:#060816; --fg:#e6edf3; --muted:#9aa4b2;
+      --card:#161b22; --cardBorder:#222833;
+      --cta:#e63946; --ctaFg:#fff;
+    }
+
+    /* Section：上下の余白のみ（既存を維持） */
+    #section-{{ section.id }}.cfc-collection-feature {
+      background:var(--bg); color:var(--fg);
+      padding-block: clamp(64px,10vw,120px); padding-inline: 0; overflow-x:hidden;
+    }
+
+    /* 中央カラム（既存を維持） */
+    #section-{{ section.id }} .cfc-container {
+      display:grid; grid-template-columns:1fr; gap:clamp(44px,6vw,96px); align-items:start;
+    }
+
+    /* LEFT（既存） */
+    #section-{{ section.id }} .cfc-left { position:relative; }
+    #section-{{ section.id }} .cfc-left-img { display:block; width:100%; height:auto; border-radius:5px; }
+    #section-{{ section.id }} .cfc-placeholder {
+      background:var(--card); border:1px solid var(--cardBorder);
+      display:flex; align-items:center; justify-content:center; color:var(--muted);
+    }
+
+    /* CTA（既存） */
+    #section-{{ section.id }} .cfc-cta {
+      margin-top:16px; display:inline-flex; align-items:center; gap:10px;
+      background:var(--cta); color:var(--ctaFg);
+      padding:12px 18px; border-radius:5px; font-weight:600; text-decoration:none;
+    }
+    #section-{{ section.id }} .cfc-cta:hover { opacity:.9; }
+    #section-{{ section.id }} .cfc-cta-text { flex:0 1 auto; }
+
+    /* RIGHT（既存） */
+    #section-{{ section.id }} .cfc-title {
+      font-size:22px; line-height:1.35; margin:0 0 16px 0; font-weight:700;
+      border-bottom:1px solid var(--cardBorder); padding-bottom:10px;
+    }
+
+    /* Products（既存） */
+    #section-{{ section.id }} .cfc-grid { display:flex; gap: {{ section.settings.card_gap | default: 16 }}px; padding:0; }
+    #section-{{ section.id }} .cfc-grid > * { flex:0 0 auto; }
+    #section-{{ section.id }} .cfc-card { overflow:visible; text-decoration:none; color:var(--fg); display:flex; flex-direction:column; }
+
+    #section-{{ section.id }} .cfc-card-media {
+      background:#0b0f14; display:flex; align-items:center; justify-content:center;
+      border-radius: 5px; overflow: hidden;
+    }
+    #section-{{ section.id }} .cfc-card-media img { width:100%; height:100%; object-fit:cover; border-radius:5px; }
+
+    /* ▼ バッジ（画像の下） */
+    #section-{{ section.id }} .cfc-badges.cfc-badges--below{ display:flex; gap:6px; margin-top:8px; }
+    #section-{{ section.id }} .cfc-badge{ font-size:10px; font-weight:700; line-height:1; padding:6px 8px; color:#fff; border-radius:0; }
+    #section-{{ section.id }} .cfc-badge--new{        background:#e63946; }
+    #section-{{ section.id }} .cfc-badge--pre{        background:#3B82F6; }
+    #section-{{ section.id }} .cfc-badge--first-bonus{background:#ef4444; }
+    #section-{{ section.id }} .cfc-badge--early{      background:#22c55e; }
+    #section-{{ section.id }} .cfc-badge--closing{    background:#f97316; }
+
+    #section-{{ section.id }} .cfc-card-body { padding:10px 12px 10px 0; display:grid; gap:6px; }
+    #section-{{ section.id }} .cfc-card-title { font-size:13px; line-height:1.4; }
+    #section-{{ section.id }} .cfc-card-price { font-size:12px; color:var(--muted); }
+    #section-{{ section.id }} .cfc-empty { color:var(--muted); }
+
+    #section-{{ section.id }} .cfc-badges.cfc-badges--below{
+      display:flex; flex-wrap:wrap; gap:6px 6px;
+    }
+    #section-{{ section.id }} .cfc-badge{
+      display:inline-flex; align-items:center;
+      white-space:nowrap;
+      min-width:max-content;
+    }
+
+    /* ===== display_start_at / display_end_at でロックされたカード ===== */
+    #section-{{ section.id }} .cfc-card.cfc-card--locked{
+      opacity: 0.4;
+      pointer-events: none;
+      cursor: default;
+    }
+
+    /* ===== Desktop（>=769px）横2カラム＋商品4列 ===== */
+    @media (min-width: 769px) {
+      #section-{{ section.id }} .cfc-container { grid-template-columns: clamp(240px, 28vw, 360px) 1fr; }
+      #section-{{ section.id }} .cfc-grid {
+        display:grid !important;
+        grid-template-columns: repeat(4, minmax(0,1fr));
+        gap: {{ section.settings.card_gap | default: 16 }}px !important;
+        overflow: visible;
+      }
+      #section-{{ section.id }} .cfc-card { min-width:0; }
+    }
+
+    /* ===== Smartphone（<=768px） ===== */
+    @media (max-width: 768px){
+      #section-{{ section.id }} .cfc-container{ display: block !important; }
+      #section-{{ section.id }}.cfc-collection-feature{ overflow: visible; }
+
+      #section-{{ section.id }} .cfc-left .cfc-cta{ display: flex; }
+      #section-{{ section.id }} .cfc-cta-text { flex:1 1 auto; text-align:left; }
+      #section-{{ section.id }} .cfc-cta svg { flex:0 0 auto; margin-left:auto; }
+
+      #section-{{ section.id }} .cfc-right { overflow: visible; }
+      #section-{{ section.id }} .cfc-right > .cfc-grid {
+        display: flex;
+        gap: var(--cfc-gap-sp);
+        overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch; touch-action: auto;
+        scroll-snap-type: x proximity; scroll-snap-stop: normal; scrollbar-gutter: stable;
+        width: calc(100vw - var(--cfc-safe-inline));
+        margin-left: 0; padding-left: 0;
+        margin-right: calc(50% - 50vw - var(--cfc-gap-sp)); padding-right: 0;
+        scroll-padding-right: var(--cfc-safe-inline);
+        overscroll-behavior-x: contain;
+      }
+      #section-{{ section.id }} .cfc-right > .cfc-grid::after{ content:""; flex: 0 0 calc(max(0px, var(--cfc-safe-inline) - var(--cfc-gap-sp))); }
+
+      #section-{{ section.id }} {
+        --cfc-safe-inline: var(--full-page-grid-margin-inline-offset, var(--page-margin-inline-offset, 16px));
+        --cfc-gap-sp: {{ section.settings.card_gap_mobile | default: 12 }}px;
+      }
+
+      #section-{{ section.id }} .cfc-right > .cfc-grid .cfc-card {
+        flex: 0 0 clamp(140px, 38vw, 240px);
+        width: clamp(140px, 38vw, 240px);
+        scroll-snap-align: start;
+      }
+
+      #section-{{ section.id }} .cfc-title { margin-top: 40px; }
+    }
+  </style>
+</section>
+
+{% schema %}
+{
+  "name": "特集コレクション（Custom）",
+  "settings": [
+    { "type": "collection", "id": "collection", "label": "コレクションを選択" },
+    { "type": "checkbox", "id": "show_badges", "label": "商品ラベル（NEW / 予約受付中 / 初回特典残りわずか / 早期予約特典あり / 締切間近）を表示", "default": true },
+    { "type": "range", "id": "new_days", "label": "NEW 判定（日数以内の公開）", "min": 1, "max": 60, "step": 1, "default": 14 },
+    { "type": "range", "id": "card_gap", "label": "（PC）商品カードの間隔 (px)", "min": 8, "max": 32, "step": 2, "default": 16 },
+    { "type": "range", "id": "card_gap_mobile", "label": "（スマホ）商品カードの間隔 (px)", "min": 6, "max": 24, "step": 1, "default": 12 }
+  ],
+  "presets": [{ "name": "特集コレクション（Custom）", "category": "コレクション" }]
+}
+{% endschema %}

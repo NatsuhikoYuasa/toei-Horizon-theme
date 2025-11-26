@@ -1,0 +1,150 @@
+{% comment %}
+  Custom-recently-viewed-recorder.liquid
+  - 商品ページで最近見た商品を localStorage に保存
+  - display_start_at / display_end_at を Liquid で判定して
+    display_locked フラグとして一緒に保存
+  - さらにバリアント情報から
+    * first_bonus_total … 初回特典バリアント在庫合計
+    * early_bonus       … 早期予約特典ありが1つでもあれば true
+    * closing_soon      … sell_end_at が10日以内のものがあれば true
+    を計算して保存
+{% endcomment %}
+
+{%- liquid
+  assign now_ts       = 'now' | date: '%s' | plus: 0
+
+  # ▼ 初回特典 / 早期予約特典 / 締切間近 用の集計
+  assign first_bonus_total = 0
+  assign early_bonus       = false
+  assign min_end_ts        = 0
+  assign ten_days_sec      = 864000 | plus: 0   # 10日分（秒）
+
+  for v in product.variants
+    # 全ロケーション合算の在庫（Shopify が合算してくれる）
+    assign v_inv = v.inventory_quantity | default: 0 | plus: 0
+
+    # 初回特典残りわずか用：カスタムメタフィールド custom.is_first_bonus = true のものだけ集計
+    if v.metafields.custom.is_first_bonus and v_inv > 0
+      assign first_bonus_total = first_bonus_total | plus: v_inv
+    endif
+
+    # 早期予約特典あり：どれか1つでも true なら OK
+    if v.metafields.custom.is_early_bonus
+      assign early_bonus = true
+    endif
+
+    # 締切間近用：variant.sell_end_at の一番近い日時を取る
+    assign v_end_raw = v.metafields.variant.sell_end_at
+    if v_end_raw != blank
+      assign v_end_ts = v_end_raw | date: '%s' | plus: 0
+      if min_end_ts == 0 or v_end_ts < min_end_ts
+        assign min_end_ts = v_end_ts
+      endif
+    endif
+  endfor
+
+  assign closing_soon = false
+  if min_end_ts != 0
+    assign closing_from_ts = min_end_ts | minus: ten_days_sec
+    if now_ts >= closing_from_ts and now_ts <= min_end_ts
+      assign closing_soon = true
+    endif
+  endif
+
+  # ▼ display_start_at / display_end_at によるロック判定
+  assign ds_raw   = product.metafields.product.display_start_at
+  assign de_raw   = product.metafields.product.display_end_at
+
+  assign has_ds   = ds_raw != blank
+  assign has_de   = de_raw != blank
+  assign ds_ts    = 0
+  assign de_ts    = 0
+
+  if has_ds
+    assign ds_ts = ds_raw | date: '%s' | plus: 0
+  endif
+  if has_de
+    assign de_ts = de_raw | date: '%s' | plus: 0
+  endif
+
+  assign display_lock = false
+  if has_ds and has_de
+    if now_ts < ds_ts or now_ts > de_ts
+      assign display_lock = true
+    endif
+  elsif has_ds
+    if now_ts < ds_ts
+      assign display_lock = true
+    endif
+  elsif has_de
+    if now_ts > de_ts
+      assign display_lock = true
+    endif
+  endif
+-%}
+
+<script>
+(function(){
+  try{
+    var handle = {{ product.handle | json }};
+    if (!handle) return;
+
+    var exKey  = 'recentlyViewedEx';
+    var key    = 'recentlyViewed';
+
+    var exArr  = [];
+    var simple = [];
+
+    try{ exArr  = JSON.parse(localStorage.getItem(exKey)) || []; }catch(e){}
+    try{ simple = JSON.parse(localStorage.getItem(key))   || []; }catch(e){}
+
+    // 既存の同じ handle を削除
+    exArr  = exArr.filter(function(x){ return !x || x.handle !== handle; });
+    simple = simple.filter(function(h){ return h !== handle; });
+
+    // Liquid で計算した各フラグ
+    var locked       = {{ display_lock      | json }};
+    var firstTotal   = {{ first_bonus_total | json }};
+    var earlyBonus   = {{ early_bonus       | json }};
+    var closingSoon  = {{ closing_soon      | json }};
+
+    console.log('[rv-recorder] handle=%s locked=%s first_total=%s early=%s closing=%s',
+      handle, locked, firstTotal, earlyBonus, closingSoon);
+
+    // ★ セクション側で使う情報をまとめて保存
+    exArr.push({
+      handle: {{ product.handle | json }},
+      url: {{ product.url | json }},
+      title: {{ product.title | json }},
+      template_suffix: {{ product.template_suffix | json }},
+      tags: {{ product.tags | json }},
+      published_at: {{ product.published_at | date: "%Y-%m-%dT%H:%M:%S%z" | json }},
+      price_min: {{ product.price_min | json }},
+      compare_at_price_max: {{ product.compare_at_price_max | json }},
+      available: {{ product.available | json }},
+      metafields: {
+        custom: {
+          preorder:   {{ product.metafields.custom.preorder   | json }},
+          comingsoon: {{ product.metafields.custom.comingsoon | json }}
+        }
+      },
+      image: {{ product.featured_image | image_url: width: 700 | json }},
+      display_locked: locked,
+
+      // 追加：初回特典 / 早期予約特典 / 締切間近
+      first_bonus_total: firstTotal,
+      early_bonus:       earlyBonus,
+      closing_soon:      closingSoon
+    });
+
+    simple.push(handle);
+
+    // 上限 40 件
+    if (exArr.length  > 40) exArr  = exArr.slice(-40);
+    if (simple.length > 40) simple = simple.slice(-40);
+
+    localStorage.setItem(exKey, JSON.stringify(exArr));
+    localStorage.setItem(key,  JSON.stringify(simple));
+  }catch(e){}
+})();
+</script>

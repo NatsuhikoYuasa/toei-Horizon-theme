@@ -1,0 +1,397 @@
+{% comment %}
+  Home Smart Recommendations（非表示→回遊後表示版）
+  - 初回：指定コレクションを表示（見出し＝コレクション名／もっと見る＝コレクションURL）
+  - 回遊後：localStorage("wb_last_pid") がある場合のみレコメンドに差し替え
+{% endcomment %}
+
+{% liquid
+  assign coll      = section.settings.fallback_collection
+  assign fb_handle = coll.handle | default: 'all'
+  assign the_collection_title = coll.title | default: 'おすすめ商品'
+  assign the_collection_url   = coll.url   | default: routes.root_url | append: 'collections/' | append: fb_handle
+%}
+
+{%- comment -%}
+  fallback コレクション内の商品ごとに
+  product.metafields.product.display_start_at / display_end_at を使って
+  「今この瞬間ロックか？」を Liquid 側で計算し、JS用のマップにしておく
+{%- endcomment -%}
+{% assign lock_pairs = '' %}
+{% if coll and coll.products_count > 0 %}
+  {% for prod in coll.products %}
+    {% liquid
+      assign display_start_raw = prod.metafields.product.display_start_at
+      assign display_end_raw   = prod.metafields.product.display_end_at
+      assign prod_disabled  = false
+
+      if display_start_raw != blank or display_end_raw != blank
+        assign now_ts = 'now' | date: '%s'
+
+        if display_start_raw != blank
+          assign start_ts = display_start_raw | date: '%s'
+        endif
+
+        if display_end_raw != blank
+          assign end_ts = display_end_raw | date: '%s'
+        endif
+
+        if display_start_raw != blank and display_end_raw == blank
+          if now_ts < start_ts
+            assign prod_disabled = true
+          endif
+        elsif display_start_raw == blank and display_end_raw != blank
+          if now_ts > end_ts
+            assign prod_disabled = true
+          endif
+        elsif display_start_raw != blank and display_end_raw != blank
+          if now_ts < start_ts or now_ts > end_ts
+            assign prod_disabled = true
+          endif
+        endif
+      endif
+    %}
+    {% capture pair %}
+      {{ prod.handle | json }}: {{ prod_disabled | json }}
+    {% endcapture %}
+    {% if forloop.first %}
+      {% assign lock_pairs = pair %}
+    {% else %}
+      {% assign lock_pairs = lock_pairs | append: ',' | append: pair %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% capture lock_json %}
+{ {{ lock_pairs }} }
+{% endcapture %}
+
+
+
+<section
+  id="csh-{{ section.id }}"
+  class="csh section page-width color-{{ section.settings.color_scheme }} is-hidden"
+  data-limit="{{ section.settings.max_products | default: 8 }}"
+  data-intent="{{ section.settings.recommendation_type | default: 'related' }}"
+  data-fallback-handle="{{ fb_handle }}"
+  style="
+    {% render 'spacing-style', settings: section.settings %}
+    --csh-gap-pc: {{ section.settings.gap_pc | default: 16 }}px;
+    --csh-gap-sp: {{ section.settings.gap_sp | default: 12 }}px;
+    --csh-safe: var(--full-page-grid-margin-inline-offset, var(--page-margin-inline-offset, 16px));
+    --csh-accent: {{ section.settings.accent_color | default: '#E63946' }};
+    --csh-aspect: 3 / 4;
+    padding-block-start: {{ section.settings['padding-block-start'] | default: 36 }}px;
+    padding-block-end:   {{ section.settings['padding-block-end']   | default: 36 }}px;
+    {% if section.settings.bg_color != blank %}background: {{ section.settings.bg_color }};{% endif %}
+  "
+  aria-hidden="true"
+>
+  <div class="csh-head">
+    <h2 class="csh-title">{{ the_collection_title }}</h2>
+    {% comment %} <a class="csh-more" href="{{ the_collection_url }}" aria-label="{{ the_collection_title }}をもっと見る">
+      <span class="csh-more-text">{{ the_collection_title }}をもっと見る</span>
+      <span class="csh-more-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path d="M8 5l7 7-7 7" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+    </a> {% endcomment %}
+  </div>
+
+  <div id="wb-home-recos-{{ section.id }}" class="csh-grid" aria-live="polite"></div>
+
+  <style>
+    #csh-{{ section.id }}.is-hidden{display:none !important;}
+
+    /* 見出し行・もっと見る（汎用と同一） */
+    #csh-{{ section.id }} .csh-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px;}
+    #csh-{{ section.id }} .csh-title{position:relative;margin:0;font-size:18px;font-weight:700;padding-left:14px;}
+    #csh-{{ section.id }} .csh-title::before{content:"";position:absolute;left:0;top:0;width:3px;height:1.1em;background:var(--csh-accent,#e63946);border-radius:2px;}
+    {% comment %} #csh-{{ section.id }} .csh-more{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:inherit;font-size:14px;font-weight:600;}
+    #csh-{{ section.id }} .csh-more-icon{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;min-width:32px;border-radius:999px;background:var(--csh-accent,#e63946);}
+    #csh-{{ section.id }} .csh-more-icon svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    @media (max-width:768px){#csh-{{ section.id }} .csh-more{position:absolute;right:var(--csh-safe);bottom:60px;}} {% endcomment %}
+
+    /* グリッド・カード */
+    #csh-{{ section.id }} .csh-grid{display:grid;grid-template-columns:repeat({{ section.settings.columns_desktop | default: 6 }},minmax(0,1fr));gap:var(--csh-gap-pc);}
+    #csh-{{ section.id }} .csh-card{display:flex;flex-direction:column;color:inherit;text-decoration:none;}
+    #csh-{{ section.id }} .csh-body{padding:10px 12px 10px 0;display:grid;gap:6px;}
+    #csh-{{ section.id }} .csh-name{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    #csh-{{ section.id }} .csh-price{font-size:12px;opacity:.9;}
+
+    /* サムネは成り行き比率 */
+    #csh-{{ section.id }} .csh-thumb{border-radius:5px;overflow:hidden;display:block;background:transparent;}
+    #csh-{{ section.id }} .csh-thumb img{width:100%;height:auto;display:block;}
+
+    /* 🔒 ロックされたカード（display_locked=true） */
+    #csh-{{ section.id }} .csh-card.csh-card--locked{
+      opacity: .45;
+      pointer-events: none;
+    }
+
+    /* SP 横スクロール */
+    @media (max-width:768px){
+      #csh-{{ section.id }}{position:relative;}
+      #csh-{{ section.id }} .csh-grid{display:flex!important;gap:var(--csh-gap-sp);overflow-x:auto;scroll-snap-type:x proximity;scrollbar-gutter:stable;width:calc(100vw - var(--csh-safe));margin-right:calc(50% - 50vw - var(--csh-gap-sp));padding-bottom:16px;}
+      #csh-{{ section.id }} .csh-card{flex:0 0 clamp(140px,38vw,240px);width:clamp(140px,38vw,240px);scroll-snap-align:start;}
+      #csh-{{ section.id }} .csh-grid::after{content:"";flex:0 0 calc(max(0px,var(--csh-safe) - var(--csh-gap-sp)));}
+    }
+  </style>
+
+    <script>
+  (function(){
+    const sec   = document.getElementById('csh-{{ section.id }}');
+    const grid  = document.getElementById('wb-home-recos-{{ section.id }}');
+    const title = sec?.querySelector('.csh-title');
+    if(!sec || !grid) return;
+
+    const LIMIT     = Number(sec.dataset.limit || {{ section.settings.max_products | default: 6 }});
+    const INTENT    = (sec.dataset.intent || '{{ section.settings.recommendation_type | default: "related" }}');
+    const FB_HANDLE = (sec.dataset.fallbackHandle || '').trim() || 'all';
+
+    /* ---------------------------------------------------------
+      Liquid から 期間ロック情報（初回コレクション用）を受け取る
+      → すべてのデータ fetch の後にも使えるようにする
+    --------------------------------------------------------- */
+    const lockMapInitial = {{ lock_json }};
+    function show(){ sec.classList.remove('is-hidden'); sec.removeAttribute('aria-hidden'); }
+    const keyOf  = (p)=> p.id || p.handle || p.url || (p.title + ':' + (p.price||'')); 
+    const dedupe = (list)=>{ const s=new Set(); return list.filter(p=>{const k=keyOf(p); if(s.has(k)) return false; s.add(k); return true;}); };
+
+    function productHref(p){
+      const base = {{ routes.root_url | json }};
+      if (p && p.url) return p.url;
+      if (p && p.online_store_url) return p.online_store_url;
+      if (p && p.handle) return base + 'products/' + p.handle;
+      return '#';
+    }
+
+    function primaryImage(p){
+      if (p.featured_image) return p.featured_image;
+      if (p.images && p.images[0] && (p.images[0].src || p.images[0].url)) return (p.images[0].src || p.images[0].url);
+      return null;
+    }
+
+    function toCents(x){
+      if (x == null) return null;
+      if (typeof x === 'number' && Number.isFinite(x)) return Math.round(x);
+      if (typeof x === 'string'){
+        const s = x.replace(/[^\d.]/g,'').trim();
+        if (!s) return null;
+        const f = parseFloat(s);
+        return Number.isFinite(f) ? Math.round(f*100) : null;
+      }
+      return null;
+    }
+
+    function priceHTMLFromProduct(p){
+      const fmt = (c)=> (window.Shopify && Shopify.formatMoney) ? Shopify.formatMoney(c) : ('¥' + Math.round(c/100));
+      const oneC = toCents(p.price ?? p.price_min ?? (p.variants && p.variants[0] && p.variants[0].price));
+      const minC = toCents(p.price_min);
+      const maxC = toCents(p.price_max);
+      if (p.price_varies && minC!=null && maxC!=null) return fmt(minC) + ' — ' + fmt(maxC);
+      if (oneC!=null) return fmt(oneC);
+      if (minC!=null) return fmt(minC);
+      return '';
+    }
+
+    /* ---------------------------------------------------------
+      ⭐ recentlyViewedEx (回遊後) のロック情報
+    --------------------------------------------------------- */
+    let lockMap = {};
+    try {
+      const exArr = JSON.parse(localStorage.getItem('recentlyViewedEx')) || [];
+      if (Array.isArray(exArr)) {
+        exArr.forEach(function(item){
+          if (!item || !item.handle) return;
+          lockMap[item.handle] = !!item.display_locked;
+        });
+      }
+    } catch(e){}
+
+    /* ---------------------------------------------------------
+      ⭐ normalize（商品共通フォーマット化）
+      初回も回遊後もここを通るので、
+      display_locked をここで統一的に扱う！
+    --------------------------------------------------------- */
+    const normalize = (p)=>{
+      const handle = p.handle || null;
+
+      const lockedFromRecent  = handle && lockMap[handle];
+      const lockedFromInitial = handle && lockMapInitial[handle];
+
+      const locked = !!(p.display_locked || lockedFromRecent || lockedFromInitial);
+
+      return {
+        id: p.id,
+        title: p.title,
+        handle: handle,
+        url: p.url || p.online_store_url || null,
+        online_store_url: p.online_store_url || null,
+        featured_image: primaryImage(p),
+        price: p.price,
+        price_min: p.price_min,
+        price_max: p.price_max,
+        price_varies: p.price_varies,
+        variants: p.variants || null,
+        display_locked: locked
+      };
+    };
+
+    /* ---------------------------------------------------------
+      レンダリング（グレーアウト含む）
+    --------------------------------------------------------- */
+    function render(list){
+      grid.innerHTML = list.slice(0, LIMIT).map(p=>{
+        const img        = primaryImage(p);
+        const priceHtml  = {% if section.settings.show_price %}priceHTMLFromProduct(p){% else %}''{% endif %};
+        const locked     = !!p.display_locked;
+        const href       = locked ? 'javascript:void(0)' : productHref(p);
+        const lockedAttr = locked ? ' aria-disabled="true"' : '';
+        const lockedCls  = locked ? ' csh-card--locked' : '';
+
+        return `
+          <a class="csh-card${lockedCls}" href="${href}"${lockedAttr}>
+            <div class="csh-thumb">${img ? `<img src="${img}&width=700" alt="${p.title||''}" loading="lazy">` : ``}</div>
+            <div class="csh-body">
+              <div class="csh-name">${p.title||''}</div>
+              {% if section.settings.show_price %}${priceHtml ? `<div class="csh-price">${priceHtml}</div>` : ''}{% endif %}
+            </div>
+          </a>`;
+      }).join('');
+    }
+
+    /* ---------------------------------------------------------
+      データ取得（レコメンド / コレクション / 全商品）
+    --------------------------------------------------------- */
+    async function fetchRecommendations(pid){
+      const url = "{{ routes.product_recommendations_url }}.json"
+                + "?product_id=" + encodeURIComponent(pid)
+                + "&intent=" + encodeURIComponent(INTENT)
+                + "&limit=" + encodeURIComponent(LIMIT);
+      const r = await fetch(url, {credentials:'same-origin'});
+      if(!r.ok) throw new Error('recos failed');
+      const data = await r.json();
+      return Array.isArray(data.products) ? data.products.map(normalize) : [];
+    }
+
+    async function fetchCollection(handle, take=LIMIT*6){
+      const r = await fetch(`/collections/${encodeURIComponent(handle)}/products.json?limit=${take}`, {credentials:'same-origin'});
+      if(!r.ok) throw new Error('collection failed');
+      const {products=[]} = await r.json();
+      return products.map(normalize);
+    }
+
+    async function fetchAll(take=LIMIT*6){
+      const r = await fetch(`/products.json?limit=${take}`, {credentials:'same-origin'});
+      if(!r.ok) throw new Error('siteall failed');
+      const {products=[]} = await r.json();
+      return products.map(normalize);
+    }
+
+    /* ---------------------------------------------------------
+      初回 fallback レンダリング
+    --------------------------------------------------------- */
+    async function renderFallback(){
+      let list = [];
+      try { list = await fetchCollection(FB_HANDLE); } catch(_e){}
+      if (!list.length && FB_HANDLE !== 'all'){ try { list = await fetchCollection('all'); } catch(_e){} }
+      if (!list.length){ try { list = await fetchAll(); } catch(_e){} }
+      list = dedupe(list);
+      if (list.length){ render(list); show(); }
+    }
+
+    /* ---------------------------------------------------------
+      実行
+    --------------------------------------------------------- */
+    async function run(){
+      let lastPid = null;
+      try{ lastPid = localStorage.getItem('wb_last_pid'); }catch(_e){}
+
+      /* 初回：fallback */
+      if(!lastPid){ await renderFallback(); return; }
+
+      /* 回遊後：レコメンド */
+      try{
+        let recos = await fetchRecommendations(lastPid);
+        recos = dedupe(recos);
+
+        /* 足りない分を補充 */
+        if (recos.length < LIMIT){
+          let pool = [];
+          try { pool = await fetchCollection(FB_HANDLE); } catch(_e){}
+          if (FB_HANDLE !== 'all'){ try { pool = pool.concat(await fetchCollection('all')); } catch(_e){} }
+          try { if (pool.length < LIMIT) pool = pool.concat(await fetchAll()); } catch(_e){}
+          const keys = new Set(recos.map(keyOf));
+          for (const p of pool){
+            const k = keyOf(p);
+            if (keys.has(k)) continue;
+            recos.push(p); keys.add(k);
+            if (recos.length >= LIMIT) break;
+          }
+        }
+
+        /* 見出し / リンク差し替え */
+        if (title) { title.textContent = {{ section.settings.title_personal | json }}; }
+        const more     = sec.querySelector('.csh-more');
+        const moreText = sec.querySelector('.csh-more-text');
+        if (more){
+          const target = `/pages/recommendations?pid=${encodeURIComponent(lastPid)}&fb=${encodeURIComponent(FB_HANDLE)}`;
+          more.href = target;
+          more.setAttribute('aria-label', 'あなたへのおすすめをもっと見る');
+          if (moreText) moreText.textContent = 'あなたへのおすすめをもっと見る';
+        }
+
+        render(recos);
+        show();
+      }catch(_e){
+        await renderFallback();
+      }
+    }
+
+    if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', run, {once:true}); }
+    else { run(); }
+  })();
+  </script>
+
+</section>
+
+{% schema %}
+{
+  "name": "あなたへのおすすめ（Custom）",
+  "settings": [
+    { "type": "text", "id": "title_personal", "label": "個別見出し（差し替え時）", "default": "You may also like" },
+
+    {
+      "type": "collection",
+      "id": "fallback_collection",
+      "label": "初回に表示するおすすめコレクション",
+      "info": "初回訪問時に表示する商品コレクション。未設定の場合は全商品（all）から取得します。"
+    },
+
+    { "type": "select", "id": "recommendation_type", "label": "おすすめ種別",
+      "options": [
+        { "value": "related", "label": "関連商品" },
+        { "value": "complementary", "label": "一緒に購入されやすい" }
+      ],
+      "default": "related"
+    },
+
+    { "type": "range", "id": "max_products", "label": "最大表示数", "min": 3, "max": 12, "step": 1, "default": 8 },
+    { "type": "checkbox", "id": "show_price", "label": "価格を表示", "default": true },
+
+    { "type": "header", "content": "レイアウト" },
+    { "type": "range", "id": "columns_desktop", "label": "（PC）列数", "min": 2, "max": 8, "step": 1, "default": 6 },
+    { "type": "range", "id": "gap_pc", "label": "（PC）カード間隔(px)", "min": 8, "max": 32, "step": 2, "default": 16 },
+    { "type": "range", "id": "gap_sp", "label": "（SP）カード間隔(px)", "min": 6, "max": 24, "step": 1, "default": 12 },
+
+    { "type": "header", "content": "余白 / 背景" },
+    { "type": "range", "id": "padding-block-start", "label": "上余白", "min": 0, "max": 100, "step": 1, "unit": "px", "default": 36 },
+    { "type": "range", "id": "padding-block-end", "label": "下余白", "min": 0, "max": 100, "step": 1, "unit": "px", "default": 36 },
+    { "type": "color", "id": "bg_color", "label": "背景色", "default": "#F5F6F9" },
+    { "type": "color_scheme", "id": "color_scheme", "label": "配色（テーマスキーム）", "default": "scheme-1" },
+    { "type": "color", "id": "accent_color", "label": "アクセントカラー", "default": "#E63946" }
+  ],
+  "presets": [{ "name": "あなたへのおすすめ（Custom）" }]
+}
+{% endschema %}
