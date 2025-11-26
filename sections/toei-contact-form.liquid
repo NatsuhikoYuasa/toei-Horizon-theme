@@ -37,7 +37,7 @@
           <div class="toei-contact__row">
             <div class="toei-contact__labelWrap">
               <span class="toei-contact__badge">必須</span>
-              <label for="ContactCategory" class="toei-contact__label">お問い合わせ内容（種別）</label>
+              <label for="ContactCategory" class="toei-contact__label">お問い合わせ件名</label>
             </div>
             <div class="toei-contact__field">
               <select id="ContactCategory" name="contact[category]" required class="toei-contact__input">
@@ -56,7 +56,7 @@
               <label for="ContactBody" class="toei-contact__label">お問い合わせ内容（本文）</label>
             </div>
             <div class="toei-contact__field">
-              <textarea id="ContactBody" name="contact[body]" rows="6" class="toei-contact__input" required></textarea>
+              <textarea id="ContactBody" name="contact[body]" rows="6" class="toei-contact__input" required placeholder="お問い合わせ内容"></textarea>
             </div>
           </div>
 
@@ -81,7 +81,7 @@
               <label for="ContactEmail" class="toei-contact__label">メールアドレス</label>
             </div>
             <div class="toei-contact__field">
-              <input id="ContactEmail" type="email" name="contact[email]" class="toei-contact__input" required>
+              <input id="ContactEmail" type="email" name="contact[email]" class="toei-contact__input" required placeholder="sample@sample.com">
             </div>
           </div>
 
@@ -91,7 +91,7 @@
               <label for="ContactPhone" class="toei-contact__label">電話番号</label>
             </div>
             <div class="toei-contact__field">
-              <input id="ContactPhone" type="tel" name="contact[phone]" class="toei-contact__input" required>
+              <input id="ContactPhone" type="tel" name="contact[phone]" class="toei-contact__input" required placeholder="123-4567-8901">
             </div>
           </div>
         </div>
