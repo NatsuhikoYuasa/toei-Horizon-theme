@@ -1,5 +1,3 @@
-
-
 <script
   src="{{ 'results-list.js' | asset_url }}"
   type="module"
@@ -42,16 +40,10 @@
       results_size: collection.products_count
     %}
 
-      
-
     {%- comment -%} 左下の絞り込みボタン {%- endcomment -%}
     <div class="wb-facets-actions">
-      <button type="button" class="wb-facets-clear">
-        全ての絞り込み条件を解除
-      </button>
+      <button type="button" class="wb-facets-clear">全ての絞り込み条件を解除</button>
     </div>
-
-    
 
     {% assign products_per_page = 24 %}
 
@@ -88,265 +80,260 @@
 </results-list>
 
 {% stylesheet %}
-  .main-collection-grid {
-    grid-column: var(--grid-column--mobile);
+    .main-collection-grid {
+      grid-column: var(--grid-column--mobile);
 
-    @media screen and (min-width: 750px) {
-      grid-column: var(--grid-column--desktop);
+      @media screen and (min-width: 750px) {
+        grid-column: var(--grid-column--desktop);
+      }
     }
-  }
 
-  .collection-wrapper {
-    @media screen and (min-width: 750px) {
-      grid-template-columns:
-        1fr repeat(
-          var(--centered-column-number),
-          minmax(0, calc((var(--page-width) - var(--page-margin) * 2) / var(--centered-column-number)))
-        )
-        1fr;
-    }
-  }
-
-  .collection-wrapper:has(.facets-block-wrapper--full-width),
-  .collection-wrapper:has(.collection-wrapper--full-width) {
-    @media screen and (min-width: 750px) {
-      grid-column: 1 / -1;
-      grid-template-columns:
-        minmax(var(--page-margin), 1fr) repeat(
-          var(--centered-column-number),
-          minmax(0, calc((var(--page-width) - var(--page-margin) * 2) / var(--centered-column-number)))
-        )
-        minmax(var(--page-margin), 1fr);
-    }
-  }
-
-  .collection-wrapper:has(.facets--vertical) .facets-block-wrapper--vertical:not(.hidden) ~ .main-collection-grid {
-    @media screen and (min-width: 750px) {
-      grid-column: var(--facets-vertical-col-width) / var(--full-width-column-number);
-    }
-  }
-
-  .collection-wrapper:has(.facets-block-wrapper--vertical:not(#filters-drawer)):has(.collection-wrapper--full-width) {
-    @media screen and (min-width: 750px) {
-      grid-column: 1 / -1;
-      grid-template-columns: 0fr repeat(var(--centered-column-number), minmax(0, 1fr)) 0fr;
-    }
-  }
-
-  :is(.collection-wrapper--full-width, .collection-wrapper--full-width-on-mobile)
-    [product-grid-view='default']
-    .product-grid__card {
-    @media screen and (max-width: 749px) {
-      padding-inline-start: max(var(--padding-xs), var(--padding-inline-start));
-      padding-inline-end: max(var(--padding-xs), var(--padding-inline-end));
-    }
-  }
-
-  :is(.collection-wrapper--full-width, .collection-wrapper--full-width-on-mobile)
-    [product-grid-view='mobile-single']
-    .product-grid__card {
-    @media screen and (max-width: 749px) {
-      padding-inline-start: max(var(--padding-xs), var(--padding-inline-start));
-      padding-inline-end: max(var(--padding-xs), var(--padding-inline-end));
-    }
-  }
-
-  /* Make product media go edge-to-edge by using negative margins */
-  :is(.collection-wrapper--full-width) .card-gallery,
-  :is(.collection-wrapper--full-width-on-mobile) .card-gallery {
-    @media screen and (max-width: 749px) {
-      margin-inline-start: calc(-1 * max(var(--padding-xs), var(--padding-inline-start)));
-      margin-inline-end: calc(-1 * max(var(--padding-xs), var(--padding-inline-end)));
-    }
-  }
-
-
-
-
-  {% comment %} wb03 add {% endcomment %}
-  .main-collection-grid {
-    grid-column: var(--grid-column--mobile);
-
-    @media screen and (min-width: 750px) {
-      grid-column: var(--grid-column--desktop);
-    }
-  }
-
-  .collection-wrapper {
-    @media screen and (min-width: 750px) {
-      grid-template-columns:
-        1fr repeat(
-          var(--centered-column-number),
-          minmax(0, calc((var(--page-width) - var(--page-margin) * 2) / var(--centered-column-number)))
-        )
-        1fr;
-    }
-  }
-
-  .collection-wrapper:has(.facets-block-wrapper--full-width),
-  .collection-wrapper:has(.collection-wrapper--full-width) {
-    @media screen and (min-width: 750px) {
-      grid-column: 1 / -1;
-      grid-template-columns:
-        minmax(var(--page-margin), 1fr) repeat(
-          var(--centered-column-number),
-          minmax(0, calc((var(--page-width) - var(--page-margin) * 2) / var(--centered-column-number)))
-        )
-        minmax(var(--page-margin), 1fr);
-    }
-  }
-
-  .collection-wrapper:has(.facets--vertical) .facets-block-wrapper--vertical:not(.hidden) ~ .main-collection-grid {
-    @media screen and (min-width: 750px) {
-      grid-column: var(--facets-vertical-col-width) / var(--full-width-column-number);
-    }
-  }
-
-  .collection-wrapper:has(.facets-block-wrapper--vertical:not(#filters-drawer)):has(.collection-wrapper--full-width) {
-    @media screen and (min-width: 750px) {
-      grid-column: 1 / -1;
-      grid-template-columns: 0fr repeat(var(--centered-column-number), minmax(0, 1fr)) 0fr;
-    }
-  }
-
-  :is(.collection-wrapper--full-width, .collection-wrapper--full-width-on-mobile)
-    [product-grid-view='default']
-    .product-grid__card {
-    @media screen and (max-width: 749px) {
-      padding-inline-start: max(var(--padding-xs), var(--padding-inline-start));
-      padding-inline-end: max(var(--padding-xs), var(--padding-inline-end));
-    }
-  }
-
-  :is(.collection-wrapper--full-width, .collection-wrapper--full-width-on-mobile)
-    [product-grid-view='mobile-single']
-    .product-grid__card {
-    @media screen and (max-width: 749px) {
-      padding-inline-start: max(var(--padding-xs), var(--padding-inline-start));
-      padding-inline-end: max(var(--padding-xs), var(--padding-inline-end));
-    }
-  }
-
-  :is(.collection-wrapper--full-width) .card-gallery,
-  :is(.collection-wrapper--full-width-on-mobile) .card-gallery {
-    @media screen and (max-width: 749px) {
-      margin-inline-start: calc(-1 * max(var(--padding-xs), var(--padding-inline-start)));
-      margin-inline-end: calc(-1 * max(var(--padding-xs), var(--padding-inline-end)));
-    }
-  }
-
-  /* ===== ここから追加：1枚目スクショ風のPCレイアウト ===== */
-  @media screen and (min-width: 990px) {
-    /* 全体を2カラム（左：フィルター／右：商品グリッド）にする */
     .collection-wrapper {
-      display: grid;
-      grid-template-columns: 280px minmax(0, 1fr);
-      column-gap: 32px;
-      max-width: var(--page-width);
-      margin-inline: auto;
-      padding-inline: var(--page-margin);
-      align-items: flex-start;
+      @media screen and (min-width: 750px) {
+        grid-template-columns:
+          1fr repeat(
+            var(--centered-column-number),
+            minmax(0, calc((var(--page-width) - var(--page-margin) * 2) / var(--centered-column-number)))
+          )
+          1fr;
+      }
     }
 
-    /* 縦フィルターを左カラムに固定 */
-    .collection-wrapper .facets-block-wrapper--vertical {
-      grid-column: 1;
+    .collection-wrapper:has(.facets-block-wrapper--full-width),
+    .collection-wrapper:has(.collection-wrapper--full-width) {
+      @media screen and (min-width: 750px) {
+        grid-column: 1 / -1;
+        grid-template-columns:
+          minmax(var(--page-margin), 1fr) repeat(
+            var(--centered-column-number),
+            minmax(0, calc((var(--page-width) - var(--page-margin) * 2) / var(--centered-column-number)))
+          )
+          minmax(var(--page-margin), 1fr);
+      }
     }
 
-    /* 商品グリッドを右カラムに */
-    .collection-wrapper .main-collection-grid {
-      grid-column: 2;
+    .collection-wrapper:has(.facets--vertical) .facets-block-wrapper--vertical:not(.hidden) ~ .main-collection-grid {
+      @media screen and (min-width: 750px) {
+        grid-column: var(--facets-vertical-col-width) / var(--full-width-column-number);
+      }
     }
 
-    /* フィルターパネルをカードっぽく見せる */
-    .collection-wrapper .facets-block-wrapper--vertical .facets {
-      background: #ffffff;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgb(0 0 0 / 0.06);
-      padding: 24px 20px;
+    .collection-wrapper:has(.facets-block-wrapper--vertical:not(#filters-drawer)):has(.collection-wrapper--full-width) {
+      @media screen and (min-width: 750px) {
+        grid-column: 1 / -1;
+        grid-template-columns: 0fr repeat(var(--centered-column-number), minmax(0, 1fr)) 0fr;
+      }
     }
-  }
+
+    :is(.collection-wrapper--full-width, .collection-wrapper--full-width-on-mobile)
+      [product-grid-view='default']
+      .product-grid__card {
+      @media screen and (max-width: 749px) {
+        padding-inline-start: max(var(--padding-xs), var(--padding-inline-start));
+        padding-inline-end: max(var(--padding-xs), var(--padding-inline-end));
+      }
+    }
+
+    :is(.collection-wrapper--full-width, .collection-wrapper--full-width-on-mobile)
+      [product-grid-view='mobile-single']
+      .product-grid__card {
+      @media screen and (max-width: 749px) {
+        padding-inline-start: max(var(--padding-xs), var(--padding-inline-start));
+        padding-inline-end: max(var(--padding-xs), var(--padding-inline-end));
+      }
+    }
+
+    /* Make product media go edge-to-edge by using negative margins */
+    :is(.collection-wrapper--full-width) .card-gallery,
+    :is(.collection-wrapper--full-width-on-mobile) .card-gallery {
+      @media screen and (max-width: 749px) {
+        margin-inline-start: calc(-1 * max(var(--padding-xs), var(--padding-inline-start)));
+        margin-inline-end: calc(-1 * max(var(--padding-xs), var(--padding-inline-end)));
+      }
+    }
 
 
-/* 左下のボタンレイアウト */
-  .wb-facets-actions {
-    margin-top: 16px;
-  }
+    {% comment %} wb03 add {% endcomment %}
+    .main-collection-grid {
+      grid-column: var(--grid-column--mobile);
 
-  @media screen and (max-width: 989px) {
+      @media screen and (min-width: 750px) {
+        grid-column: var(--grid-column--desktop);
+      }
+    }
+
+    .collection-wrapper {
+      @media screen and (min-width: 750px) {
+        grid-template-columns:
+          1fr repeat(
+            var(--centered-column-number),
+            minmax(0, calc((var(--page-width) - var(--page-margin) * 2) / var(--centered-column-number)))
+          )
+          1fr;
+      }
+    }
+
+    .collection-wrapper:has(.facets-block-wrapper--full-width),
+    .collection-wrapper:has(.collection-wrapper--full-width) {
+      @media screen and (min-width: 750px) {
+        grid-column: 1 / -1;
+        grid-template-columns:
+          minmax(var(--page-margin), 1fr) repeat(
+            var(--centered-column-number),
+            minmax(0, calc((var(--page-width) - var(--page-margin) * 2) / var(--centered-column-number)))
+          )
+          minmax(var(--page-margin), 1fr);
+      }
+    }
+
+    .collection-wrapper:has(.facets--vertical) .facets-block-wrapper--vertical:not(.hidden) ~ .main-collection-grid {
+      @media screen and (min-width: 750px) {
+        grid-column: var(--facets-vertical-col-width) / var(--full-width-column-number);
+      }
+    }
+
+    .collection-wrapper:has(.facets-block-wrapper--vertical:not(#filters-drawer)):has(.collection-wrapper--full-width) {
+      @media screen and (min-width: 750px) {
+        grid-column: 1 / -1;
+        grid-template-columns: 0fr repeat(var(--centered-column-number), minmax(0, 1fr)) 0fr;
+      }
+    }
+
+    :is(.collection-wrapper--full-width, .collection-wrapper--full-width-on-mobile)
+      [product-grid-view='default']
+      .product-grid__card {
+      @media screen and (max-width: 749px) {
+        padding-inline-start: max(var(--padding-xs), var(--padding-inline-start));
+        padding-inline-end: max(var(--padding-xs), var(--padding-inline-end));
+      }
+    }
+
+    :is(.collection-wrapper--full-width, .collection-wrapper--full-width-on-mobile)
+      [product-grid-view='mobile-single']
+      .product-grid__card {
+      @media screen and (max-width: 749px) {
+        padding-inline-start: max(var(--padding-xs), var(--padding-inline-start));
+        padding-inline-end: max(var(--padding-xs), var(--padding-inline-end));
+      }
+    }
+
+    :is(.collection-wrapper--full-width) .card-gallery,
+    :is(.collection-wrapper--full-width-on-mobile) .card-gallery {
+      @media screen and (max-width: 749px) {
+        margin-inline-start: calc(-1 * max(var(--padding-xs), var(--padding-inline-start)));
+        margin-inline-end: calc(-1 * max(var(--padding-xs), var(--padding-inline-end)));
+      }
+    }
+
+    /* ===== ここから追加：1枚目スクショ風のPCレイアウト ===== */
+    @media screen and (min-width: 990px) {
+      /* 全体を2カラム（左：フィルター／右：商品グリッド）にする */
+      .collection-wrapper {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        column-gap: 32px;
+        max-width: var(--page-width);
+        margin-inline: auto;
+        padding-inline: var(--page-margin);
+        align-items: flex-start;
+      }
+
+      /* 縦フィルターを左カラムに固定 */
+      .collection-wrapper .facets-block-wrapper--vertical {
+        grid-column: 1;
+      }
+
+      /* 商品グリッドを右カラムに */
+      .collection-wrapper .main-collection-grid {
+        grid-column: 2;
+      }
+
+      /* フィルターパネルをカードっぽく見せる */
+      .collection-wrapper .facets-block-wrapper--vertical .facets {
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgb(0 0 0 / 0.06);
+        padding: 24px 20px;
+      }
+    }
+
+
+  /* 左下のボタンレイアウト */
     .wb-facets-actions {
-      display: none; /* モバイルは非表示（ドロワー側にボタンがある想定） */
-    }
-  }
-
-  @media screen and (min-width: 990px) {
-    .collection-wrapper {
-      display: grid;
-      grid-template-columns: 280px minmax(0, 1fr);
-      column-gap: 32px;
-      max-width: var(--page-width);
-      margin-inline: auto;
-      padding-inline: var(--page-margin);
-      align-items: flex-start;
+      margin-top: 16px;
     }
 
-    /* フィルター左、商品右 */
-    .collection-wrapper .facets-block-wrapper--vertical {
-      grid-column: 1;
+    @media screen and (max-width: 989px) {
+      .wb-facets-actions {
+        display: none; /* モバイルは非表示（ドロワー側にボタンがある想定） */
+      }
     }
 
-    .collection-wrapper .main-collection-grid {
-      grid-column: 2;
+    @media screen and (min-width: 990px) {
+      .collection-wrapper {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        column-gap: 32px;
+        max-width: var(--page-width);
+        margin-inline: auto;
+        padding-inline: var(--page-margin);
+        align-items: flex-start;
+      }
+
+      /* フィルター左、商品右 */
+      .collection-wrapper .facets-block-wrapper--vertical {
+        grid-column: 1;
+      }
+
+      .collection-wrapper .main-collection-grid {
+        grid-column: 2;
+      }
+
+      /* フィルターパネルのカード風スタイル */
+      .collection-wrapper .facets-block-wrapper--vertical .facets {
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgb(0 0 0 / 0.06);
+        padding: 24px 20px;
+      }
+
+      /* 左カラムの一番下にボタンを並べる */
+      .collection-wrapper .wb-facets-actions {
+        grid-column: 1;
+        align-self: flex-start;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
     }
 
-    /* フィルターパネルのカード風スタイル */
-    .collection-wrapper .facets-block-wrapper--vertical .facets {
+    .wb-facets-actions button {
+      width: 100%;
+      padding: 11px 12px;
+      font-size: 13px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      cursor: pointer;
+    }
+
+    .wb-facets-apply {
+      background: #e53935;
+      color: #ffffff;
+    }
+
+    .wb-facets-clear {
       background: #ffffff;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgb(0 0 0 / 0.06);
-      padding: 24px 20px;
+      border-color: #cccccc;
     }
 
-    /* 左カラムの一番下にボタンを並べる */
-    .collection-wrapper .wb-facets-actions {
-      grid-column: 1;
-      align-self: flex-start;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+    /* PCでは商品 4 列まで */
+    @media screen and (min-width: 990px) {
+      .collection-wrapper .product-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
     }
-  }
-
-  .wb-facets-actions button {
-    width: 100%;
-    padding: 11px 12px;
-    font-size: 13px;
-    border-radius: 999px;
-    border: 1px solid transparent;
-    cursor: pointer;
-  }
-
-  .wb-facets-apply {
-    background: #e53935;
-    color: #ffffff;
-  }
-
-  .wb-facets-clear {
-    background: #ffffff;
-    border-color: #cccccc;
-  }
-
-  /* PCでは商品 4 列まで */
-  @media screen and (min-width: 990px) {
-    .collection-wrapper .product-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-  }
-
-
 {% endstylesheet %}
-
 
 <script>
   const url = new URL(window.location.href);
@@ -390,9 +377,6 @@
     }
   });
 </script>
-
-
-
 
 {% schema %}
 {

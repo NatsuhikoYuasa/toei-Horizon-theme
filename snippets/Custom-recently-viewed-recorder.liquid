@@ -11,12 +11,12 @@
 {% endcomment %}
 
 {%- liquid
-  assign now_ts       = 'now' | date: '%s' | plus: 0
+  assign now_ts = 'now' | date: '%s' | plus: 0
 
   # ▼ 初回特典 / 早期予約特典 / 締切間近 用の集計
   assign first_bonus_total = 0
-  assign early_bonus       = false
-  assign min_end_ts        = 0
+  assign early_bonus = false
+  assign min_end_ts = 0
   assign ten_days_sec      = 864000 | plus: 0   # 10日分（秒）
 
   for v in product.variants
@@ -52,13 +52,13 @@
   endif
 
   # ▼ display_start_at / display_end_at によるロック判定
-  assign ds_raw   = product.metafields.product.display_start_at
-  assign de_raw   = product.metafields.product.display_end_at
+  assign ds_raw = product.metafields.product.display_start_at
+  assign de_raw = product.metafields.product.display_end_at
 
-  assign has_ds   = ds_raw != blank
-  assign has_de   = de_raw != blank
-  assign ds_ts    = 0
-  assign de_ts    = 0
+  assign has_ds = ds_raw != blank
+  assign has_de = de_raw != blank
+  assign ds_ts = 0
+  assign de_ts = 0
 
   if has_ds
     assign ds_ts = ds_raw | date: '%s' | plus: 0
@@ -84,67 +84,67 @@
 -%}
 
 <script>
-(function(){
-  try{
-    var handle = {{ product.handle | json }};
-    if (!handle) return;
+  (function(){
+    try{
+      var handle = {{ product.handle | json }};
+      if (!handle) return;
 
-    var exKey  = 'recentlyViewedEx';
-    var key    = 'recentlyViewed';
+      var exKey  = 'recentlyViewedEx';
+      var key    = 'recentlyViewed';
 
-    var exArr  = [];
-    var simple = [];
+      var exArr  = [];
+      var simple = [];
 
-    try{ exArr  = JSON.parse(localStorage.getItem(exKey)) || []; }catch(e){}
-    try{ simple = JSON.parse(localStorage.getItem(key))   || []; }catch(e){}
+      try{ exArr  = JSON.parse(localStorage.getItem(exKey)) || []; }catch(e){}
+      try{ simple = JSON.parse(localStorage.getItem(key))   || []; }catch(e){}
 
-    // 既存の同じ handle を削除
-    exArr  = exArr.filter(function(x){ return !x || x.handle !== handle; });
-    simple = simple.filter(function(h){ return h !== handle; });
+      // 既存の同じ handle を削除
+      exArr  = exArr.filter(function(x){ return !x || x.handle !== handle; });
+      simple = simple.filter(function(h){ return h !== handle; });
 
-    // Liquid で計算した各フラグ
-    var locked       = {{ display_lock      | json }};
-    var firstTotal   = {{ first_bonus_total | json }};
-    var earlyBonus   = {{ early_bonus       | json }};
-    var closingSoon  = {{ closing_soon      | json }};
+      // Liquid で計算した各フラグ
+      var locked       = {{ display_lock      | json }};
+      var firstTotal   = {{ first_bonus_total | json }};
+      var earlyBonus   = {{ early_bonus       | json }};
+      var closingSoon  = {{ closing_soon      | json }};
 
-    console.log('[rv-recorder] handle=%s locked=%s first_total=%s early=%s closing=%s',
-      handle, locked, firstTotal, earlyBonus, closingSoon);
+      console.log('[rv-recorder] handle=%s locked=%s first_total=%s early=%s closing=%s',
+        handle, locked, firstTotal, earlyBonus, closingSoon);
 
-    // ★ セクション側で使う情報をまとめて保存
-    exArr.push({
-      handle: {{ product.handle | json }},
-      url: {{ product.url | json }},
-      title: {{ product.title | json }},
-      template_suffix: {{ product.template_suffix | json }},
-      tags: {{ product.tags | json }},
-      published_at: {{ product.published_at | date: "%Y-%m-%dT%H:%M:%S%z" | json }},
-      price_min: {{ product.price_min | json }},
-      compare_at_price_max: {{ product.compare_at_price_max | json }},
-      available: {{ product.available | json }},
-      metafields: {
-        custom: {
-          preorder:   {{ product.metafields.custom.preorder   | json }},
-          comingsoon: {{ product.metafields.custom.comingsoon | json }}
-        }
-      },
-      image: {{ product.featured_image | image_url: width: 700 | json }},
-      display_locked: locked,
+      // ★ セクション側で使う情報をまとめて保存
+      exArr.push({
+        handle: {{ product.handle | json }},
+        url: {{ product.url | json }},
+        title: {{ product.title | json }},
+        template_suffix: {{ product.template_suffix | json }},
+        tags: {{ product.tags | json }},
+        published_at: {{ product.published_at | date: "%Y-%m-%dT%H:%M:%S%z" | json }},
+        price_min: {{ product.price_min | json }},
+        compare_at_price_max: {{ product.compare_at_price_max | json }},
+        available: {{ product.available | json }},
+        metafields: {
+          custom: {
+            preorder:   {{ product.metafields.custom.preorder   | json }},
+            comingsoon: {{ product.metafields.custom.comingsoon | json }}
+          }
+        },
+        image: {{ product.featured_image | image_url: width: 700 | json }},
+        display_locked: locked,
 
-      // 追加：初回特典 / 早期予約特典 / 締切間近
-      first_bonus_total: firstTotal,
-      early_bonus:       earlyBonus,
-      closing_soon:      closingSoon
-    });
+        // 追加：初回特典 / 早期予約特典 / 締切間近
+        first_bonus_total: firstTotal,
+        early_bonus:       earlyBonus,
+        closing_soon:      closingSoon
+      });
 
-    simple.push(handle);
+      simple.push(handle);
 
-    // 上限 40 件
-    if (exArr.length  > 40) exArr  = exArr.slice(-40);
-    if (simple.length > 40) simple = simple.slice(-40);
+      // 上限 40 件
+      if (exArr.length  > 40) exArr  = exArr.slice(-40);
+      if (simple.length > 40) simple = simple.slice(-40);
 
-    localStorage.setItem(exKey, JSON.stringify(exArr));
-    localStorage.setItem(key,  JSON.stringify(simple));
-  }catch(e){}
-})();
+      localStorage.setItem(exKey, JSON.stringify(exArr));
+      localStorage.setItem(key,  JSON.stringify(simple));
+    }catch(e){}
+  })();
 </script>

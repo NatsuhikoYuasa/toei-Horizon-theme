@@ -1,5 +1,3 @@
-
-
 {% liquid
   if section.settings.desktop_media_position == 'left'
     assign render_order = 'media,product-details'
@@ -95,101 +93,154 @@
   {% comment %} {% render 'Custom-recently-viewed-recorder' %} {% endcomment %}
 </div>
 
-{%- comment -%} wb03 add start 最近見た：拡張保存（template/tags/metafields/ロックフラグを保存） {%- endcomment -%}
+{%- comment -%}
+  wb03 add start 最近見た：拡張保存
+  - localStorage('recentlyViewedEx') に詳細情報＋ロックフラグを保存
+{%- endcomment -%}
 
 {%- liquid
-  assign display_start_raw = product.metafields.product.display_start_at
-  assign display_end_raw   = product.metafields.product.display_end_at
-  assign product_disabled  = false
-  assign display_lock      = false
+  assign now_ts = 'now' | date: '%s' | plus: 0
 
-  if display_start_raw != blank or display_end_raw != blank
-    assign now_ts = 'now' | date: '%s'
+  # ▼ 初回特典 / 早期予約特典 / 締切間近 用の集計
+  assign first_bonus_total = 0
+  assign early_bonus = false
+  assign min_end_ts = 0
+  # 10日分（秒）
+  assign ten_days_sec = 864000 | plus: 0
 
-    if display_start_raw != blank
-      assign start_ts = display_start_raw | date: '%s'
+  for v in product.variants
+    assign v_inv = v.inventory_quantity | default: 0 | plus: 0
+
+    # 初回特典残りわずか用
+    if v.metafields.custom.is_first_bonus and v_inv > 0
+      assign first_bonus_total = first_bonus_total | plus: v_inv
     endif
 
-    if display_end_raw != blank
-      assign end_ts = display_end_raw | date: '%s'
+    # 早期予約特典あり
+    if v.metafields.custom.is_early_bonus
+      assign early_bonus = true
     endif
 
-    if display_start_raw != blank and display_end_raw == blank
-      # start のみ → その日時より前は NG
-      if now_ts < start_ts
-        assign product_disabled = true
-        assign display_lock     = true
+    # 締切間近用：最も近い sell_end_at
+    assign v_end_raw = v.metafields.variant.sell_end_at
+    if v_end_raw != blank
+      assign v_end_ts = v_end_raw | date: '%s' | plus: 0
+      if min_end_ts == 0 or v_end_ts < min_end_ts
+        assign min_end_ts = v_end_ts
       endif
+    endif
+  endfor
 
-    elsif display_start_raw == blank and display_end_raw != blank
-      # end のみ → その日時より後は NG
-      if now_ts > end_ts
-        assign product_disabled = true
-        assign display_lock     = true
-      endif
+  assign closing_soon = false
+  if min_end_ts != 0
+    assign closing_from_ts = min_end_ts | minus: ten_days_sec
+    if now_ts >= closing_from_ts and now_ts <= min_end_ts
+      assign closing_soon = true
+    endif
+  endif
 
-    elsif display_start_raw != blank and display_end_raw != blank
-      # start & end → 期間外は NG
-      if now_ts < start_ts or now_ts > end_ts
-        assign product_disabled = true
-        assign display_lock     = true
-      endif
+  # ▼ display_start_at / display_end_at によるロック判定
+  assign ds_raw = product.metafields.product.display_start_at
+  assign de_raw = product.metafields.product.display_end_at
+
+  assign ds_ts = 0
+  assign de_ts = 0
+  assign display_lock = false
+
+  # 日時をタイムスタンプ化
+  if ds_raw != blank
+    assign ds_ts = ds_raw | date: '%s' | plus: 0
+  endif
+
+  if de_raw != blank
+    assign de_ts = de_raw | date: '%s' | plus: 0
+  endif
+
+  # 期間外かどうか判定
+  if ds_raw != blank and de_raw != blank
+    # start & end → 期間外はロック
+    if now_ts < ds_ts or now_ts > de_ts
+      assign display_lock = true
+    endif
+
+  elsif ds_raw != blank
+    # start のみ → その日時より前はロック
+    if now_ts < ds_ts
+      assign display_lock = true
+    endif
+
+  elsif de_raw != blank
+    # end のみ → その日時より後はロック
+    if now_ts > de_ts
+      assign display_lock = true
     endif
   endif
 -%}
 
 <script>
-(function(){
-  try{
-    var ex = [];
-    try { ex = JSON.parse(localStorage.getItem('recentlyViewedEx')) || []; } catch(e){}
+  (function(){
+    try{
+      var exKey  = 'recentlyViewedEx';
+      var key    = 'recentlyViewed';
 
-    // 旧配列（handles のみ）から移行
-    if (!ex.length) {
-      try {
-        var old = JSON.parse(localStorage.getItem('recentlyViewed')) || [];
-        if (Array.isArray(old) && old.length) {
-          ex = old.map(function(h){ return { handle: h }; });
-        }
-      } catch(e){}
+      var exArr  = [];
+      var simple = [];
+
+      try{ exArr  = JSON.parse(localStorage.getItem(exKey)) || []; }catch(e){}
+      try{ simple = JSON.parse(localStorage.getItem(key))   || []; }catch(e){}
+
+      var handle = {{ product.handle | json }};
+      if (!handle) return;
+
+      // 同じ handle を一旦削除
+      exArr  = exArr.filter(function(x){ return !x || x.handle !== handle; });
+      simple = simple.filter(function(h){ return h !== handle; });
+
+      // Liquid で計算した各フラグ
+      var locked      = {{ display_lock      | json }};
+      var firstTotal  = {{ first_bonus_total | json }};
+      var earlyBonus  = {{ early_bonus       | json }};
+      var closingSoon = {{ closing_soon      | json }};
+
+      var entry = {
+        handle: {{ product.handle | json }},
+        url: {{ product.url | json }},
+        title: {{ product.title | json }},
+        template_suffix: {{ product.template_suffix | json }},
+        tags: {{ product.tags | json }},
+        published_at: {{ product.published_at | date: "%Y-%m-%dT%H:%M:%S%z" | json }},
+        price_min: {{ product.price_min | json }},
+        compare_at_price_max: {{ product.compare_at_price_max | json }},
+        available: {{ product.available | json }},
+        metafields: {
+          custom: {
+            preorder:   {{ product.metafields.custom.preorder   | default: blank | json }},
+            comingsoon: {{ product.metafields.custom.comingsoon | default: blank | json }}
+          }
+        },
+        image: {% if product.featured_image %}{{ product.featured_image | image_url: width: 700 | json }}{% else %}null{% endif %},
+        display_locked:    locked,
+        first_bonus_total: firstTotal,
+        early_bonus:       earlyBonus,
+        closing_soon:      closingSoon
+      };
+
+      exArr.push(entry);
+      simple.push(handle);
+
+      // 上限 40 件
+      if (exArr.length  > 40) exArr  = exArr.slice(-40);
+      if (simple.length > 40) simple = simple.slice(-40);
+
+      localStorage.setItem(exKey, JSON.stringify(exArr));
+      localStorage.setItem(key,  JSON.stringify(simple));
+
+      console.log('[rv] saved', entry.handle, 'locked=', entry.display_locked,
+        'first=', entry.first_bonus_total, 'early=', entry.early_bonus, 'closing=', entry.closing_soon);
+    }catch(e){
+      console.warn('[rv] save error', e);
     }
-
-    var entry = {
-      handle: {{ product.handle | json }},
-      url: {{ product.url | json }},
-      title: {{ product.title | json }},
-      template_suffix: {{ product.template_suffix | json }},
-      tags: {{ product.tags | json }},
-      published_at: {{ product.published_at | date: "%Y-%m-%dT%H:%M:%S%z" | json }},
-      price_min: {{ product.price_min | json }},
-      compare_at_price_max: {{ product.compare_at_price_max | json }},
-      available: {{ product.available | json }},
-      metafields: {
-        custom: {
-          preorder: {{ product.metafields.custom.preorder | default: blank | json }},
-          comingsoon: {{ product.metafields.custom.comingsoon | default: blank | json }}
-        }
-      },
-      image: {% if product.featured_image %}{{ product.featured_image | image_url: width: 700 | json }}{% else %}null{% endif %},
-      // ★ ここが一番大事：ロック情報
-      display_locked: {{ display_lock | json }}
-    };
-
-    // 同じ handle を一旦削除して末尾に追加
-    ex = ex.filter(function(x){ return x && x.handle !== entry.handle; });
-    ex.push(entry);
-
-    var MAX_KEEP = 50;
-    if (ex.length > MAX_KEEP) ex = ex.slice(ex.length - MAX_KEEP);
-
-    localStorage.setItem('recentlyViewedEx', JSON.stringify(ex));
-    localStorage.setItem('recentlyViewed', JSON.stringify(ex.map(function(x){ return x.handle; })));
-
-    console && console.log && console.log('[rv] saved', entry.handle, 'locked=', entry.display_locked);
-  } catch(err) {
-    console && console.warn && console.warn('[recentlyViewedEx] save failed:', err);
-  }
-})();
+  })();
 </script>
 
 <script>
@@ -209,7 +260,6 @@
 </script>
 
 {%- comment -%} wb03 add end 最近見た：拡張保存（template/tags/metafields/ロックフラグを保存） {%- endcomment -%}
-
 
 {% stylesheet %}
   .product-information {
@@ -407,8 +457,8 @@
 
 {%- liquid
   assign display_start_raw = product.metafields.product.display_start_at
-  assign display_end_raw   = product.metafields.product.display_end_at
-  assign product_disabled  = false
+  assign display_end_raw = product.metafields.product.display_end_at
+  assign product_disabled = false
 
   if display_start_raw != blank or display_end_raw != blank
     assign now_ts = 'now' | date: '%s'
@@ -462,34 +512,34 @@
 
 {% comment %} 会場限定販売機能 {% endcomment %}
 <script type="application/json" data-product-json>
-{
-  "title": {{ product.title | json }},
-  "variants": [
-    {% for variant in product.variants %}
-    {
-      "id": {{ variant.id }},
-      "title": {{ variant.title | json }},
-      "metafields": {
-        "variant": {
-          "venue_config": {{ variant.metafields.variant.venue_config.value | default: 'null' | replace: '=>', ':' }},
-          "is_venue_only": {{ variant.metafields.variant.is_venue_only.value | default: 'false' }},
-          "valid_passphrases": {{ variant.metafields.variant.valid_passphrases.value | json | default: 'null' }}
+  {
+    "title": {{ product.title | json }},
+    "variants": [
+      {% for variant in product.variants %}
+      {
+        "id": {{ variant.id }},
+        "title": {{ variant.title | json }},
+        "metafields": {
+          "variant": {
+            "venue_config": {{ variant.metafields.variant.venue_config.value | default: 'null' | replace: '=>', ':' }},
+            "is_venue_only": {{ variant.metafields.variant.is_venue_only.value | default: 'false' }},
+            "valid_passphrases": {{ variant.metafields.variant.valid_passphrases.value | json | default: 'null' }}
+          }
         }
-      }
-    }{% unless forloop.last %},{% endunless %}
-    {% endfor %}
-  ]
-}
+      }{% unless forloop.last %},{% endunless %}
+      {% endfor %}
+    ]
+  }
 </script>
 
 <div data-venue-message></div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     if (window.VenueCheck) {
       VenueCheck.init({
         apiEndpoint: '{{ shop.secure_url }}/apps/tos-shopify-functions/venue-token',
-        buttonSelector: '[name="add"]'
+        buttonSelector: '[name="add"]',
       });
     }
   });

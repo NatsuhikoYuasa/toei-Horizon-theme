@@ -27,9 +27,7 @@
 
     <div class="rv-band" aria-hidden="true"></div>
 
-    <div class="rv-list" data-limit="{{ section.settings.limit | default: 6 }}">
-      {# JSでカードを挿入 #}
-    </div>
+    <div class="rv-list" data-limit="{{ section.settings.limit | default: 6 }}">{# JSでカードを挿入 #}</div>
   </div>
 
   <style>
@@ -77,7 +75,7 @@
     }
     #custom-rv-{{ section.id }} .rv-badge--new{          background:#e63946; } /* NEW：赤 */
     #custom-rv-{{ section.id }} .rv-badge--pre{          background:#3B82F6; } /* 予約受付中：青 */
-    #custom-rv-{{ section.id }} .rv-badge--first-bonus{  background:#ef4444; } /* 初回特典残りわずか：赤系 */
+    #custom-rv-{{ section.id }} .rv-badge--first{        background:#ef4444; } /* 初回特典残りわずか：赤系 */
     #custom-rv-{{ section.id }} .rv-badge--early{        background:#22c55e; } /* 早期予約特典あり：緑 */
     #custom-rv-{{ section.id }} .rv-badge--closing{      background:#f97316; } /* 締切間近：オレンジ */
 
@@ -132,239 +130,287 @@
       white-space:nowrap !important;
       min-width:max-content;
     }
-
   </style>
 
-      <script>
-(function(){
-  var root = document.getElementById('custom-rv-{{ section.id }}');
-  if (!root) return;
+  <script>
+    (function(){
+      var root = document.getElementById('custom-rv-{{ section.id }}');
+      if (!root) return;
 
-  var listEl = root.querySelector('.rv-list');
-  var limit  = parseInt(listEl?.dataset.limit || '6', 10);
+      var listEl = root.querySelector('.rv-list');
+      var limit  = parseInt(listEl?.dataset.limit || '6', 10);
 
-  // 1) localStorage から拡張版履歴を取得
-  var exArr = [];
-  var simpleArr = [];
-  try { exArr     = JSON.parse(localStorage.getItem('recentlyViewedEx')) || []; } catch(e){}
-  try { simpleArr = JSON.parse(localStorage.getItem('recentlyViewed'))   || []; } catch(e){}
+      // 1) localStorage から拡張版履歴を取得
+      var exArr = [];
+      var simpleArr = [];
+      try { exArr     = JSON.parse(localStorage.getItem('recentlyViewedEx')) || []; } catch(e){}
+      try { simpleArr = JSON.parse(localStorage.getItem('recentlyViewed'))   || []; } catch(e){}
 
-  // 拡張版があればそれを優先（なければ simple のみ → その場合は非表示）
-  var source = exArr.length ? exArr : [];
-  if (!source.length){
-    root.remove();
-    return;
-  }
-
-  // 直近から重複除去して limit まで抽出
-  var picked = [];
-  var seen   = {};
-  for (var i = source.length - 1; i >= 0 && picked.length < limit; i--){
-    var p = source[i];
-    var h = p && p.handle;
-    if (!h || seen[h]) continue;
-    seen[h] = 1;
-    picked.push(p);
-  }
-  if (!picked.length){
-    root.remove();
-    return;
-  }
-
-  // いったん中身リセット
-  listEl.innerHTML = '';
-
-  // util
-  function formatMoney(cents){
-    try{
-      if (window.Shopify && Shopify.formatMoney) {
-        return Shopify.formatMoney(cents, "{{ shop.money_format | replace: '"', '\"' }}");
+      // 拡張版があればそれを優先（なければ simple のみ → その場合は非表示）
+      var source = exArr.length ? exArr : [];
+      if (!source.length){
+        root.remove();
+        return;
       }
-    }catch(e){}
-    var yen = Math.round((cents || 0)/100);
-    return new Intl.NumberFormat('ja-JP',{style:'currency',currency:'JPY'}).format(yen);
-  }
 
-  var NEW_DAYS    = {{ section.settings.new_days    | default: 14   | json }};
-  var SHOW_BADGES = {{ section.settings.show_badges | default: true | json }};
-  var SHOW_PRICE  = {{ section.settings.show_price  | default: true | json }};
+      // 直近から重複除去して limit まで抽出
+      var picked = [];
+      var seen   = {};
+      for (var i = source.length - 1; i >= 0 && picked.length < limit; i--){
+        var p = source[i];
+        var h = p && p.handle;
+        if (!h || seen[h]) continue;
+        seen[h] = 1;
+        picked.push(p);
+      }
+      if (!picked.length){
+        root.remove();
+        return;
+      }
 
-  function normTags(p){
-    var t = p && p.tags;
-    if (!t) return [];
-    if (Array.isArray(t)) return t.map(function(s){ return (s||'').toString(); });
-    return t.toString().split(',').map(function(s){ return s.trim(); });
-  }
-  function hasTag(p, needles){
-    var set = normTags(p).map(function(s){ return s.toLowerCase(); });
-    return needles.some(function(n){
-      n = n.toLowerCase();
-      return set.some(function(tag){ return tag === n || tag.indexOf(n) >= 0; });
-    });
-  }
-  function suffixIncl(p, kw){
-    var s = (p && p.template_suffix || '').toString().toLowerCase();
-    return !!kw && s.indexOf(kw) >= 0;
-  }
-  function metaTruthy(v){
-    if (v == null) return false;
-    if (typeof v === 'boolean') return v;
-    var s = (''+v).trim().toLowerCase();
-    return !!s && s !== '0' && s !== 'false' && s !== 'no' && s !== 'null' && s !== 'undefined';
-  }
+      // いったん中身リセット
+      listEl.innerHTML = '';
 
-  function isSale(p){
-    try{
-      var priceMin = Number(p && p.price_min || 0);
-      var capMax   = Number(p && p.compare_at_price_max || 0);
-      return capMax > priceMin && priceMin > 0;
-    }catch(e){}
-    return false;
-  }
-  function isAvailable(p){
-    return !!(p && p.available);
-  }
-  function isNew(p){
-    try{
-      var pub = p && p.published_at;
-      var ts = pub ? Date.parse(pub) : NaN;
-      if (isNaN(ts)) return false;
-      var cutoff = Date.now() - NEW_DAYS * 86400000;
-      return ts > cutoff;
-    }catch(e){}
-    return false;
-  }
-  function isPreorder(p){
-    return metaTruthy(p?.metafields?.custom?.preorder)
-        || suffixIncl(p,'preorder')
-        || hasTag(p, ['preorder','pre-order','pre order','予約','予約販売','先行','先行予約']);
-  }
-  function isComingSoon(p){
-    return metaTruthy(p?.metafields?.custom?.comingsoon)
-        || suffixIncl(p,'coming')
-        || hasTag(p, ['comingsoon','coming-soon','coming soon','coming_soon','発売前','近日','近日発売','coming']);
-  }
+      // util
+      function formatMoney(cents){
+        try{
+          if (window.Shopify && Shopify.formatMoney) {
+            return Shopify.formatMoney(cents, "{{ shop.money_format | replace: '"', '\"' }}");
+          }
+        }catch(e){}
+        var yen = Math.round((cents || 0)/100);
+        return new Intl.NumberFormat('ja-JP',{style:'currency',currency:'JPY'}).format(yen);
+      }
 
-  // ▼ 初回特典合計 / 早期予約特典 / 締切間近（recorder で保存した値を利用）
-  function getFirstBonusTotal(p){
-    try{
-      return Number(p && p.first_bonus_total || 0);
-    }catch(e){}
-    return 0;
-  }
-  function hasEarlyBonus(p){
-    return !!(p && p.early_bonus);
-  }
-  function isClosingSoon(p){
-    return !!(p && p.closing_soon);
-  }
+      var NEW_DAYS    = {{ section.settings.new_days    | default: 14   | json }};
+      var SHOW_BADGES = {{ section.settings.show_badges | default: true | json }};
+      var SHOW_PRICE  = {{ section.settings.show_price  | default: true | json }};
 
-  // 2) カード描画
-  picked.forEach(function(p){
-    if (!p || !p.title) return;
+      function normTags(p){
+        var t = p && p.tags;
+        if (!t) return [];
+        if (Array.isArray(t)) return t.map(function(s){ return (s||'').toString(); });
+        return t.toString().split(',').map(function(s){ return s.trim(); });
+      }
+      function hasTag(p, needles){
+        var set = normTags(p).map(function(s){ return s.toLowerCase(); });
+        return needles.some(function(n){
+          n = n.toLowerCase();
+          return set.some(function(tag){ return tag === n || tag.indexOf(n) >= 0; });
+        });
+      }
+      function suffixIncl(p, kw){
+        var s = (p && p.template_suffix || '').toString().toLowerCase();
+        return !!kw && s.indexOf(kw) >= 0;
+      }
+      function metaTruthy(v){
+        if (v == null) return false;
+        if (typeof v === 'boolean') return v;
+        var s = (''+v).trim().toLowerCase();
+        return !!s && s !== '0' && s !== 'false' && s !== 'no' && s !== 'null' && s !== 'undefined';
+      }
 
-    var bNew    = isNew(p);
-    var bSale   = isSale(p);
-    var bSold   = !isAvailable(p);
-    var bPre    = isPreorder(p);
-    var bComing = isComingSoon(p);
+      function isSale(p){
+        try{
+          var priceMin = Number(p && p.price_min || 0);
+          var capMax   = Number(p && p.compare_at_price_max || 0);
+          return capMax > priceMin && priceMin > 0;
+        }catch(e){}
+        return false;
+      }
+      function isAvailable(p){
+        return !!(p && p.available);
+      }
+      function isNew(p){
+        try{
+          var pub = p && p.published_at;
+          var ts = pub ? Date.parse(pub) : NaN;
+          if (isNaN(ts)) return false;
+          var cutoff = Date.now() - NEW_DAYS * 86400000;
+          return ts > cutoff;
+        }catch(e){}
+        return false;
+      }
+      function isPreorder(p){
+        return metaTruthy(p?.metafields?.custom?.preorder)
+            || suffixIncl(p,'preorder')
+            || hasTag(p, ['preorder','pre-order','pre order','予約','予約販売','先行','先行予約']);
+      }
+      function isComingSoon(p){
+        return metaTruthy(p?.metafields?.custom?.comingsoon)
+            || suffixIncl(p,'coming')
+            || hasTag(p, ['comingsoon','coming-soon','coming soon','coming_soon','発売前','近日','近日発売','coming']);
+      }
 
-    var firstTotal = getFirstBonusTotal(p);
-    // 初回特典残りわずか：在庫合計 1〜10
-    var bFirst = firstTotal > 0 && firstTotal <= 10;
+      // ▼ 初回特典合計 / 早期予約特典 / 締切間近（recorder で保存した値を利用）
+      function getFirstBonusTotal(p){
+        try{
+          return Number(p && p.first_bonus_total || 0);
+        }catch(e){}
+        return 0;
+      }
+      function hasEarlyBonus(p){
+        return !!(p && p.early_bonus);
+      }
+      function isClosingSoon(p){
+        return !!(p && p.closing_soon);
+      }
 
-    var bEarly   = hasEarlyBonus(p);  // 早期予約特典あり
-    var bClosing = isClosingSoon(p);  // 締切間近
+      // 2) カード描画
+      picked.forEach(function(p){
+        if (!p || !p.title) return;
 
-    // ★ NEW は「予約受付中」「COMING SOON」と同時には出さない
-    var showNew = bNew && !bPre && !bComing;
+            var bNew    = isNew(p);
+        var bSale   = isSale(p);                 // ← 将来使うかもしれないので残してOK
+        var bSold   = !isAvailable(p);
+        var bPre    = isPreorder(p);
+        var bComing = isComingSoon(p);
 
-    var badges = '';
-    if (SHOW_BADGES && (showNew || bSale || bSold || bPre || bComing || bFirst || bEarly || bClosing)){
-      badges =
-        '<div class="rv-badges">'
-        + (showNew ? '<span class="rv-badge rv-badge--new">NEW</span>' : '')
-        // + (bSale   ? '<span class="rv-badge rv-badge--sale">SALE</span>' : '') // ← SALE を出したくなければコメントアウト
-        + (bSold   ? '<span class="rv-badge rv-badge--sold">SOLD OUT</span>' : '')
-        + (bPre    ? '<span class="rv-badge rv-badge--pre">予約受付中</span>' : '')
-        + (bComing ? '<span class="rv-badge rv-badge--coming">COMING SOON</span>' : '')
-        + (bFirst  ? '<span class="rv-badge rv-badge--first">初回特典残りわずか</span>' : '')
-        + (bEarly  ? '<span class="rv-badge rv-badge--early">早期予約特典あり</span>' : '')
-        + (bClosing? '<span class="rv-badge rv-badge--closing">締切間近</span>' : '')
-        + '</div>';
-    }
+        var firstTotal = getFirstBonusTotal(p);
+        var bFirst  = firstTotal > 0 && firstTotal <= 10; // 初回特典残りわずか
+        var bEarly  = hasEarlyBonus(p);                   // 早期予約特典あり
+        var bClosing = isClosingSoon(p);                  // 締切間近
 
-    var el = document.createElement('a');
-    el.className = 'rv-card';
+        // ★ NEW は予約・COMING SOON が付いている時は出さない
+        var showNew = bNew && !bPre && !bComing;
 
-    // display_locked の反映
-    var locked = !!p.display_locked;
-    if (locked){
-      el.classList.add('rv-locked');
-      el.setAttribute('aria-disabled','true');
-      el.href = 'javascript:void(0)';
-    }else{
-      el.href = p.url || ('/products/' + (p.handle || ''));
-    }
+        var badges = '';
+        if (SHOW_BADGES && (showNew || bSold || bPre || bComing || bFirst || bEarly || bClosing)){
+          badges =
+            '<div class="rv-badges">'
+            + (showNew ? '<span class="rv-badge rv-badge--new">NEW</span>' : '')
+            // SALE は使わないので完全に削除
+            {% comment %} + (bSold   ? '<span class="rv-badge rv-badge--sold">SOLD OUT</span>' : '') {% endcomment %}
+            + (bPre    ? '<span class="rv-badge rv-badge--pre">予約受付中</span>' : '')
+            {% comment %} + (bComing ? '<span class="rv-badge rv-badge--coming">COMING SOON</span>' : '') {% endcomment %}
+            + (bFirst  ? '<span class="rv-badge rv-badge--first">初回特典残りわずか</span>' : '')
+            + (bEarly  ? '<span class="rv-badge rv-badge--early">早期予約特典あり</span>' : '')
+            + (bClosing? '<span class="rv-badge rv-badge--closing">締切間近</span>' : '')
+            + '</div>';
+        }
 
-    var imgHtml = '';
-    if (p.image){
-      imgHtml =
-        '<div class="rv-thumb">' +
-          '<img class="rv-img" src="'+ p.image +'" alt="'+ (p.title || '') +'">' +
-        '</div>';
-    }
 
-    var priceHtml = '';
-    if (SHOW_PRICE){
-      priceHtml = '<span class="rv-price">'+ formatMoney(p.price_min || 0) +'</span>';
-    }
+        var el = document.createElement('a');
+        el.className = 'rv-card';
 
-    el.innerHTML =
-      imgHtml
-      + badges
-      + '<div class="rv-meta">'
-      +   '<span class="rv-title-link">'+ (p.title || '') +'</span>'
-      +   priceHtml
-      + '</div>';
+        // display_locked の反映
+        var locked = !!p.display_locked;
+        if (locked){
+          el.classList.add('rv-locked');
+          el.setAttribute('aria-disabled','true');
+          el.href = 'javascript:void(0)';
+        }else{
+          el.href = p.url || ('/products/' + (p.handle || ''));
+        }
 
-    listEl.appendChild(el);
-  });
+        var imgHtml = '';
+        if (p.image){
+          imgHtml =
+            '<div class="rv-thumb">' +
+              '<img class="rv-img" src="'+ p.image +'" alt="'+ (p.title || '') +'">' +
+            '</div>';
+        }
 
-  if (!listEl.querySelector('.rv-card')){
-    root.remove();
-  }
-})();
+        var priceHtml = '';
+        if (SHOW_PRICE){
+          priceHtml = '<span class="rv-price">'+ formatMoney(p.price_min || 0) +'</span>';
+        }
+
+        el.innerHTML =
+          imgHtml
+          + badges
+          + '<div class="rv-meta">'
+          +   '<span class="rv-title-link">'+ (p.title || '') +'</span>'
+          +   priceHtml
+          + '</div>';
+
+        listEl.appendChild(el);
+      });
+
+      if (!listEl.querySelector('.rv-card')){
+        root.remove();
+      }
+    })();
   </script>
-
 </section>
 
 {% schema %}
 {
   "name": "最近見た商品（Custom）",
   "settings": [
-    { "type": "text",   "id": "heading",       "label": "見出し", "default": "最近見た商品" },
-    { "type": "select", "id": "heading_align", "label": "見出しの揃え", "default": "left",
+    { "type": "text", "id": "heading", "label": "見出し", "default": "最近見た商品" },
+    {
+      "type": "select",
+      "id": "heading_align",
+      "label": "見出しの揃え",
+      "default": "left",
       "options": [
         { "value": "left", "label": "左寄せ" },
         { "value": "center", "label": "中央寄せ" }
       ]
     },
     { "type": "color", "id": "bg_color", "label": "背景色", "default": "#F5F6F9" },
-    { "type": "range",  "id": "limit",         "label": "最大表示数", "min": 1, "max": 12, "step": 1, "default": 6 },
-    { "type": "checkbox","id": "show_price",   "label": "価格を表示する", "default": true },
+    { "type": "range", "id": "limit", "label": "最大表示数", "min": 1, "max": 12, "step": 1, "default": 6 },
+    { "type": "checkbox", "id": "show_price", "label": "価格を表示する", "default": true },
 
     { "type": "header", "content": "カード間隔" },
-    { "type": "range",  "id": "card_gap",        "label": "（PC）商品カードの間隔 (px)", "min": 8, "max": 32, "step": 2, "default": 16 },
-    { "type": "range",  "id": "card_gap_mobile", "label": "（スマホ）商品カードの間隔 (px)", "min": 6, "max": 24, "step": 1, "default": 12 },
+    {
+      "type": "range",
+      "id": "card_gap",
+      "label": "（PC）商品カードの間隔 (px)",
+      "min": 8,
+      "max": 32,
+      "step": 2,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "card_gap_mobile",
+      "label": "（スマホ）商品カードの間隔 (px)",
+      "min": 6,
+      "max": 24,
+      "step": 1,
+      "default": 12
+    },
 
     { "type": "header", "content": "余白" },
-    { "type": "range",  "id": "padding-block-start", "label": "上余白", "min": 0, "max": 100, "step": 1, "unit": "px", "default": 36 },
-    { "type": "range",  "id": "padding-block-end",   "label": "下余白", "min": 0, "max": 100, "step": 1, "unit": "px", "default": 36 },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "上余白",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "下余白",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 36
+    },
 
     { "type": "header", "content": "バッジ" },
-    { "type": "checkbox", "id": "show_badges", "label": "商品ラベル（NEW / 予約受付中 / 初回特典残りわずか / 早期予約特典あり / 締切間近）を表示", "default": true },
-    { "type": "range", "id": "new_days", "label": "NEW 判定（日数以内の公開）", "min": 1, "max": 60, "step": 1, "default": 14 },
+    {
+      "type": "checkbox",
+      "id": "show_badges",
+      "label": "商品ラベル（NEW / 予約受付中 / 初回特典残りわずか / 早期予約特典あり / 締切間近）を表示",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "new_days",
+      "label": "NEW 判定（日数以内の公開）",
+      "min": 1,
+      "max": 60,
+      "step": 1,
+      "default": 14
+    },
 
     { "type": "color_scheme", "id": "color_scheme", "label": "配色（Horizonのスキーム）", "default": "scheme-1" }
   ],
