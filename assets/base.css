@@ -4458,3 +4458,29 @@ text-component {
       white-space: nowrap;
     }
   }
+
+/* === スマホのドロワーメニュー文字サイズ調整 === */
+@media screen and (max-width: 749px) {
+
+  /* 親メニュー（仮面ライダー、スーパー戦隊…） */
+  .menu-drawer__menu-item--mainlist {
+    font-size: 1.4rem !important;
+    line-height: 1.4 !important;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+  }
+
+  /* 子メニュー（作品名） */
+  .menu-drawer__menu--childlist .menu-drawer__menu-item--child {
+    font-size: 1.15rem !important;
+    line-height: 1.5 !important;
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+  }
+
+  /* 子リンクの上下間隔 */
+  .menu-drawer__menu--childlist .menu-drawer__list-item {
+    min-height: auto !important;
+    margin-bottom: 0 !important;
+  }
+}
