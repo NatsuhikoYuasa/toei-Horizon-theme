@@ -1,0 +1,84 @@
+{% if customer %}
+  <div class="mypage-wrapper">
+    <h1 class="mypage-title">マイページ</h1>
+
+    <section class="mypage-hero">
+      <div class="mypage-hero__left">
+        <div class="mypage-hero__icon" aria-hidden="true">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.5" />
+            <path d="M4 19.5C4 15.9101 7.13401 13 10.75 13H13.25C16.866 13 20 15.9101 20 19.5V20H4V19.5Z" stroke="currentColor" stroke-width="1.5" />
+          </svg>
+        </div>
+        <div class="mypage-hero__profile">
+          <p class="mypage-hero__greeting">{{ customer.first_name }} {{ customer.last_name }} 様</p>
+        </div>
+      </div>
+
+      <div class="mypage-hero__right">
+        <div class="mypage-hero__item">
+          <span class="mypage-hero__label">現在のポイント</span>
+          <span class="mypage-hero__value">XXXX pt</span>
+          <!-- TODO: easyPointsの現在ポイントスニペットに差し替え -->
+        </div>
+        <a class="mypage-hero__link" href="/pages/points-history">ポイント履歴はこちら</a>
+        <!-- TODO: points-history テンプレート実装後に動作確認 -->
+        <div class="mypage-hero__item">
+          <span class="mypage-hero__label">現在の会員ランク</span>
+          <span class="mypage-hero__value">レギュラー</span>
+          <!-- TODO: easyPoints のランクスニペットに差し替え -->
+        </div>
+        <p class="mypage-hero__note">来月までにあと XX,XXX 円ご購入でゴールド会員にランクアップ</p>
+        <!-- TODO: customer.total_spent を使ってランクアップ条件を計算 -->
+        <a class="mypage-hero__link" href="/pages/member-rank">会員ランクについて詳しくはこちら</a>
+        <!-- TODO: member-rank ページ公開後にリンク確認 -->
+      </div>
+    </section>
+
+    <section class="mypage-grid">
+      <div class="mypage-card">
+        <h2 class="mypage-card__title">お買い物情報</h2>
+        <ul class="mypage-card__list">
+          <li><a href="{{ routes.account_url }}">購入履歴</a></li>
+          <li><a href="/pages/points-history">ポイント履歴</a></li>
+          <!-- TODO: points-history テンプレート実装後に動作確認 -->
+          <li><a href="/apps/advanced-wishlist">お気に入り一覧</a></li>
+          <!-- TODO: 実際の Wishlist URLに合わせて調整 -->
+          <li>
+            お気に入り点数：<span class="mypage-wishlist-count">0</span>件
+            <!-- TODO: Advanced Wishlist のJSで件数を上書き -->
+          </li>
+        </ul>
+        <div class="mypage-wishlist-embed">
+          <!-- TODO: Phase2以降で iframe またはスニペットを埋め込む -->
+        </div>
+      </div>
+
+      <div class="mypage-card">
+        <h2 class="mypage-card__title">会員情報設定</h2>
+        <ul class="mypage-card__list">
+          <li><a href="{{ routes.account_url }}">会員情報の変更</a></li>
+          <li><a href="{{ routes.account_addresses_url }}">アドレス帳の確認</a></li>
+          <li><a href="/pages/mail-magazine">メールニュース登録</a></li>
+          <!-- TODO: mail-magazine ページがない場合は作成後にリンク確認 -->
+        </ul>
+      </div>
+
+      <div class="mypage-card">
+        <h2 class="mypage-card__title">その他</h2>
+        <ul class="mypage-card__list">
+          <li><a href="/pages/contact">お問い合わせ</a></li>
+          <li><a href="/pages/withdrawal">退会</a></li>
+          <!-- TODO: withdrawal ページ公開後にリンク確認 -->
+          <li><a href="{{ routes.account_logout_url }}">ログアウト</a></li>
+        </ul>
+      </div>
+    </section>
+  </div>
+{% else %}
+  <div class="mypage-wrapper mypage-wrapper--guest">
+    <h1 class="mypage-title">マイページ</h1>
+    <p class="mypage-guest-message">マイページを表示するにはログインが必要です。</p>
+    <a class="mypage-login-button button button--primary" href="{{ routes.account_login_url }}">ログインページへ</a>
+  </div>
+{% endif %}
