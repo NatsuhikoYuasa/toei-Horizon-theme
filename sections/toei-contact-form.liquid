@@ -13,8 +13,8 @@
       {% endif %}
     </div>
 
-    <div class="toei-contact__card">
-      {% form 'contact', id: 'ContactForm' %}
+    {% form 'contact', id: 'ContactForm' %}
+      <div class="toei-contact__card">
         {% if form.posted_successfully? %}
           <div class="toei-contact__alert toei-contact__alert--success" role="status">
             {{ 'contact.form.post_success' | t }}
@@ -28,6 +28,10 @@
             </ul>
           </div>
         {% endif %}
+
+        <div class="toei-contact__cardHeader">
+          お問い合わせ内容の入力
+        </div>
 
         <div class="toei-contact__rows">
           <div class="toei-contact__row">
@@ -91,17 +95,17 @@
             </div>
           </div>
         </div>
+      </div>
 
-        <div class="toei-contact__actions">
-          {% if section.settings.back_link != blank %}
-            <a class="toei-contact__button toei-contact__button--secondary" href="{{ section.settings.back_link }}">戻る</a>
-          {% endif %}
-          <button type="submit" class="toei-contact__button toei-contact__button--primary">
-            {{ section.settings.submit_label | default: '確認する' }}
-          </button>
-        </div>
-      {% endform %}
-    </div>
+      <div class="toei-contact__actions">
+        {% if section.settings.back_link != blank %}
+          <a class="toei-contact__button toei-contact__button--secondary" href="{{ section.settings.back_link }}">戻る</a>
+        {% endif %}
+        <button type="submit" class="toei-contact__button toei-contact__button--primary">
+          {{ section.settings.submit_label | default: '確認する' }}
+        </button>
+      </div>
+    {% endform %}
   </div>
 </section>
 
@@ -114,7 +118,7 @@
       "type": "richtext",
       "id": "description",
       "label": "説明文",
-      "default": "<p>ご不明な点はお気軽にお問い合わせください。<a href=\"/pages/faq\" title=\"よくある質問\">よくある質問</a>もご確認ください。</p>"
+      "default": "<p><a href=\"/pages/faq\" title=\"よくある質問\">『よくある質問』</a>をご確認の上、お問い合わせくださいますようお願いいたします。</p><p>※注文内容に関するお問い合わせの場合は、「問い合わせ内容本文」欄に「注文番号（○○桁）」をご記入の上お問い合わせくださいますようお願いいたします。</p>"
     },
     {
       "type": "url",
