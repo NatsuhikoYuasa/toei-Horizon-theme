@@ -70,7 +70,18 @@
   align-items: center;
   gap: 8px;
   height: 100%;
-  border-right: 1px solid #dadde2;
+  border-right: 1px solid #dadde2; /* PC用の仕切り線 */
+}
+
+/* ここからSP用 override */
+@media (max-width: 960px) {
+  .toei-contact__badge {
+    flex: 1; /* SPでは少し細くする */
+  }
+
+  .toei-contact__labelWrap {
+    border-right: none; /* SPでは仕切り線なし */
+  }
 }
 
 .toei-contact__badge {
@@ -83,7 +94,7 @@
   font-size: 12px;
   line-height: 1.2;
   border-radius: 6px;
-  flex: 1.5;
+  flex: 1.5; /* PC用 */
 }
 
 .toei-contact__label {
