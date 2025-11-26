@@ -74,7 +74,7 @@
   },
   "actions": {
     "add_to_cart": "カートに追加",
-    "clear_all": "全ての絞り込み条件を解除",
+    "clear_all": "すべてクリア",
     "remove": "削除",
     "view_in_your_space": "スペースに表示",
     "show_filters": "フィルター",
