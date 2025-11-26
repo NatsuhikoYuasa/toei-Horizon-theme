@@ -69,7 +69,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding-top: 12px;
+  height: 100%;
+  border-right: 1px solid #dadde2;
 }
 
 .toei-contact__badge {
@@ -82,11 +83,13 @@
   font-size: 12px;
   line-height: 1.2;
   border-radius: 6px;
+  flex: 1.5;
 }
 
 .toei-contact__label {
   font-weight: 600;
   font-size: 14px;
+  flex: 8;
 }
 
 .toei-contact__field {
