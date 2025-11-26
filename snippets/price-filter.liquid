@@ -81,11 +81,9 @@
               name="{{ filter.min_value.param_name }}"
               id="{{ filter.label | escape }}-GTE"
               {%- if filter.min_value.value -%}
-
                 {% comment %} wb03 blocked&add フィルターの価格修正 {% endcomment %}
                 {% comment %} value="{{ filter.min_value.value | money_without_currency }}" {% endcomment %}
-                 value="{{ filter.min_value.value | money_without_currency | replace: ',', '' }}"
-
+                value="{{ filter.min_value.value | money_without_currency | replace: ',', '' }}"
               {%- endif -%}
               type="text"
               inputmode="decimal"
@@ -94,7 +92,7 @@
 
               {% comment %} wb03 blocked&add フィルターの価格修正 {% endcomment %}
               {% comment %} data-max="{{ min_input_max_value | money_without_currency }}" {% endcomment %}
-               data-max="{{ min_input_max_value | money_without_currency | replace: ',', '' }}"
+              data-max="{{ min_input_max_value | money_without_currency | replace: ',', '' }}"
 
               ref="minInput"
               autocomplete="off"
@@ -118,19 +116,19 @@
               name="{{ filter.max_value.param_name }}"
               id="{{ filter.label | escape }}-LTE"
               {%- if filter.max_value.value -%}
-
                 {% comment %} wb03 blocked&add フィルターの価格修正 {% endcomment %}
                 {% comment %} value="{{ filter.max_value.value | money_without_currency }}" {% endcomment %}
-                 value="{{ filter.max_value.value | money_without_currency | replace: ',', '' }}"
-
+                value="{{ filter.max_value.value | money_without_currency | replace: ',', '' }}"
               {%- endif -%}
               type="text"
               inputmode="decimal"
 
               {% comment %} wb03 blocked&add フィルターの価格修正 {% endcomment %}
-              {% comment %} placeholder="{{ filter.range_max | money_without_currency }}"
-              data-min="{{ max_input_min_value | money_without_currency }}"
-              data-max="{{ filter.range_max | money_without_currency }}" {% endcomment %}
+              {% comment %}
+                placeholder="{{ filter.range_max | money_without_currency }}"
+                data-min="{{ max_input_min_value | money_without_currency }}"
+                data-max="{{ filter.range_max | money_without_currency }}"
+              {% endcomment %}
               placeholder="{{ filter.range_max | money_without_currency | replace: ',', '' }}"
               data-min="{{ max_input_min_value | money_without_currency | replace: ',', '' }}"
               data-max="{{ filter.range_max | money_without_currency | replace: ',', '' }}"

@@ -1,0 +1,289 @@
+{% comment %}
+  Custom-footer.liquid
+{% endcomment %}
+
+<section
+  id="footer-{{ section.id }}"
+  class="wb-footer section page-width page-width--narrow"
+  style="
+    background: {{ section.settings.bg_color }};
+    color: {{ section.settings.text_color }};
+  "
+>
+  <div class="wb-footer__inner">
+    <div class="wb-footer__brand">
+      {% if section.settings.logo != blank %}
+        <div class="wb-footer__logo">
+          {{
+            section.settings.logo
+            | image_url: width: 400
+            | image_tag: loading: 'lazy', alt: section.settings.shop_name
+          }}
+        </div>
+      {% else %}
+        <p class="wb-footer__shop-name">
+          {{ section.settings.shop_name }}
+        </p>
+      {% endif %}
+
+      {% if section.settings.follow_label != '-' %}
+        <p class="wb-footer__follow-label">
+          {{ section.settings.follow_label }}
+        </p>
+      {% endif %}
+
+      {% if section.blocks.size > 0 %}
+        <div class="wb-footer__sns">
+          {% for block in section.blocks %}
+            {% if block.type == 'sns' %}
+              {% assign url = block.settings.url | default: '#' %}
+              <a
+                href="{{ url }}"
+                class="wb-footer__sns-link"
+                target="_blank"
+                rel="noopener"
+                {{ block.shopify_attributes }}
+              >
+                <span class="wb-footer__sns-circle">
+                  {% if block.settings.icon != blank %}
+                    {{
+                      block.settings.icon
+                      | image_url: width: 48
+                      | image_tag: loading: 'lazy', alt: block.settings.label
+                    }}
+                  {% else %}
+                    <span class="wb-footer__sns-fallback">{{ block.settings.label }}</span>
+                  {% endif %}
+                </span>
+              </a>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="wb-footer__spacer"></div>
+  </div>
+
+  {% if section.settings.copyright_text != '-' %}
+    <div class="wb-footer__copyright">
+      {{ section.settings.copyright_text }}
+    </div>
+  {% endif %}
+</section>
+
+<style>
+    #footer-{{ section.id }} {
+      padding: 60px 0 40px;
+      font-size: 14px;
+    }
+
+    #footer-{{ section.id }} .wb-footer__inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 40px;
+      /* padding-inline は page-width 側に任せる */
+    }
+
+    #footer-{{ section.id }} .wb-footer__brand {
+      max-width: 360px;
+    }
+
+    /* ロゴ幅（カスタマイズ設定） */
+    #footer-{{ section.id }} .wb-footer__logo img {
+      display: block;
+      max-width: {{ section.settings.logo_width }}px;
+      height: auto;
+      margin: 0 0 20px;
+    }
+
+    #footer-{{ section.id }} .wb-footer__shop-name {
+      font-size: 13px;
+      margin: 0 0 20px;
+    }
+
+    /* Follow us on + 下線 */
+    #footer-{{ section.id }} .wb-footer__follow-label {
+      font-size: 11px;
+      color: rgb(0 0 0 / 0.6);
+      margin: 0 0 14px;
+      position: relative;
+      display: inline-block;
+      padding-bottom: 8px;
+    }
+
+    #footer-{{ section.id }} .wb-footer__follow-label::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 520px; /* 下線の長さ：他セクションと合わせつつ長めに */
+      height: 1px;
+      background: rgb(0 0 0 / 0.15);
+    }
+
+    /* SNS アイコン全体 */
+    #footer-{{ section.id }} .wb-footer__sns {
+      display: flex;
+      gap: 16px;
+    }
+
+    /* 白丸背景 */
+    #footer-{{ section.id }} .wb-footer__sns-circle {
+      width: 34px;
+      height: 34px;
+      background: #ffffff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* アイコン画像を統一サイズで表示 */
+    #footer-{{ section.id }} .wb-footer__sns-circle img {
+      width: 18px !important;
+      height: 18px !important;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* テキスト fallback */
+    #footer-{{ section.id }} .wb-footer__sns-fallback {
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    #footer-{{ section.id }} .wb-footer__copyright {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 10px;
+      opacity: .7;
+      padding-inline: 20px;
+    }
+
+    @media (max-width: 768px) {
+      #footer-{{ section.id }} {
+        padding: 40px 0 30px;
+      }
+
+      #footer-{{ section.id }} .wb-footer__inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 24px;
+      }
+
+      /* SP で下線が長すぎる場合は短く */
+      #footer-{{ section.id }} .wb-footer__follow-label::after {
+        width: 260px;
+      }
+    }
+
+    /* ── スマホのドロワーメニュー用：文字を全体的に小さめに ─────────────── */
+  @media screen and (max-width: 749px) {
+
+    /* 親メニュー（仮面ライダー、スーパー戦隊…） */
+    .menu-drawer__menu-item--mainlist {
+      font-size: 1.2rem;    /* 前より小さく */
+      padding-top: 6px;
+      padding-bottom: 6px;
+    }
+
+    /* 子メニュー（作品名） */
+    .menu-drawer__menu--childlist .menu-drawer__menu-item--child {
+      font-size: 1rem;   /* かなり小さめに */
+      padding-top: 2px;
+      padding-bottom: 2px;
+    }
+
+    /* 子リンクの縦の間隔も少しだけ詰める */
+    .menu-drawer__menu--childlist .menu-drawer__list-item {
+      min-height: auto;
+      margin-bottom: 0;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "フッター（Custom）",
+  "settings": [
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "背景色",
+      "default": "#E6E8EE"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "テキストカラー",
+      "default": "#000000"
+    },
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "ロゴ画像"
+    },
+    {
+      "type": "range",
+      "id": "logo_width",
+      "label": "ロゴ画像の最大幅（px）",
+      "min": 80,
+      "max": 320,
+      "step": 10,
+      "default": 220
+    },
+    {
+      "type": "text",
+      "id": "shop_name",
+      "label": "ショップ名テキスト（ロゴ未設定時に表示）",
+      "default": "TOEI VIDEO ONLINE SHOP（仮）"
+    },
+    {
+      "type": "text",
+      "id": "follow_label",
+      "label": "「Follow us on」テキスト",
+      "default": "Follow us on"
+    },
+    {
+      "type": "text",
+      "id": "copyright_text",
+      "label": "コピーライト",
+      "default": "© 2022 東映ビデオ オンラインショップ"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "sns",
+      "name": "SNS アイコン",
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "ラベル（画像がない時の表示）",
+          "default": "X"
+        },
+        {
+          "type": "text",
+          "id": "url",
+          "label": "リンク URL",
+          "default": "#"
+        },
+        {
+          "type": "image_picker",
+          "id": "icon",
+          "label": "アイコン画像（SVG / PNG など）"
+        }
+      ]
+    }
+  ],
+  "max_blocks": 6,
+  "presets": [
+    {
+      "name": "フッター（Custom）"
+    }
+  ]
+}
+{% endschema %}

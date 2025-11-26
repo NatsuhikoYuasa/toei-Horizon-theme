@@ -1,0 +1,529 @@
+{
+  "article": [
+    {
+      "key": "external_url",
+      "namespace": "custom",
+      "name": "外部リンクURL",
+      "description": "",
+      "type": {
+        "name": "url",
+        "category": "URL"
+      }
+    }
+  ],
+  "blog": [],
+  "collection": [
+    {
+      "key": "search_keyword",
+      "namespace": "custom",
+      "name": "検索キーワード",
+      "description": "",
+      "type": {
+        "name": "single_line_text_field",
+        "category": "TEXT"
+      }
+    }
+  ],
+  "company": [],
+  "company_location": [],
+  "location": [],
+  "market": [],
+  "order": [
+    {
+      "key": "w2_order_id",
+      "namespace": "order",
+      "name": "w2_order_id",
+      "description": null,
+      "type": {
+        "name": "single_line_text_field",
+        "category": "TEXT"
+      }
+    },
+    {
+      "key": "w2_shipped_date",
+      "namespace": "order",
+      "name": "w2_shipped_date",
+      "description": null,
+      "type": {
+        "name": "date",
+        "category": "DATE_TIME"
+      }
+    },
+    {
+      "key": "w2_payment_name",
+      "namespace": "order",
+      "name": "w2_payment_name",
+      "description": null,
+      "type": {
+        "name": "single_line_text_field",
+        "category": "TEXT"
+      }
+    },
+    {
+      "key": "w2_core_system_imported_date",
+      "namespace": "order",
+      "name": "w2_core_system_imported_date",
+      "description": null,
+      "type": {
+        "name": "date",
+        "category": "DATE_TIME"
+      }
+    },
+    {
+      "key": "delivery_date",
+      "namespace": "order",
+      "name": "delivery_date",
+      "description": null,
+      "type": {
+        "name": "date",
+        "category": "DATE_TIME"
+      }
+    },
+    {
+      "key": "delivery_time",
+      "namespace": "order",
+      "name": "delivery_time",
+      "description": null,
+      "type": {
+        "name": "single_line_text_field",
+        "category": "TEXT"
+      }
+    },
+    {
+      "key": "test_delivery_status",
+      "namespace": "custom",
+      "name": "test_delivery_status",
+      "description": "",
+      "type": {
+        "name": "json",
+        "category": "JSON"
+      }
+    }
+  ],
+  "page": [],
+  "product": [
+    {
+      "key": "display_type",
+      "namespace": "product",
+      "name": "display_type",
+      "description": "",
+      "type": {
+        "name": "single_line_text_field",
+        "category": "TEXT"
+      }
+    },
+    {
+      "key": "display_start_at",
+      "namespace": "product",
+      "name": "display_start_at",
+      "description": null,
+      "type": {
+        "name": "date_time",
+        "category": "DATE_TIME"
+      }
+    },
+    {
+      "key": "display_end_at",
+      "namespace": "product",
+      "name": "display_end_at",
+      "description": null,
+      "type": {
+        "name": "date_time",
+        "category": "DATE_TIME"
+      }
+    },
+    {
+      "key": "color-pattern",
+      "namespace": "shopify",
+      "name": "色",
+      "description": "青やストライプなど、主な色やパターンを定義",
+      "type": {
+        "name": "list.metaobject_reference",
+        "category": "REFERENCE"
+      }
+    },
+    {
+      "key": "queries",
+      "namespace": "shopify--discovery--product_search_boost",
+      "name": "販売促進する商品を検索する",
+      "description": "商品が検索結果で上位に表示される検索クエリのリスト",
+      "type": {
+        "name": "list.single_line_text_field",
+        "category": "TEXT"
+      }
+    },
+    {
+      "key": "related_products",
+      "namespace": "shopify--discovery--product_recommendation",
+      "name": "関連商品",
+      "description": "関連商品のリスト",
+      "type": {
+        "name": "list.product_reference",
+        "category": "REFERENCE"
+      }
+    },
+    {
+      "key": "related_products_display",
+      "namespace": "shopify--discovery--product_recommendation",
+      "name": "関連商品の設定",
+      "description": "関連商品がアルゴリズムによるおすすめ商品とともにどのように表示されるかを決定します",
+      "type": {
+        "name": "single_line_text_field",
+        "category": "TEXT"
+      }
+    },
+    {
+      "key": "complementary_products",
+      "namespace": "shopify--discovery--product_recommendation",
+      "name": "付属商品",
+      "description": "付属商品のリスト",
+      "type": {
+        "name": "list.product_reference",
+        "category": "REFERENCE"
+      }
+    },
+    {
+      "key": "product_index_object",
+      "namespace": "custom",
+      "name": "商品_索引_オブジェクト",
+      "description": "",
+      "type": {
+        "name": "metaobject_reference",
+        "category": "REFERENCE"
+      }
+    },
+    {
+      "key": "product_genre_object",
+      "namespace": "custom",
+      "name": "商品_ジャンル_オブジェクト",
+      "description": "",
+      "type": {
+        "name": "metaobject_reference",
+        "category": "REFERENCE"
+      }
+    },
+    {
+      "key": "product_type_object",
+      "namespace": "custom",
+      "name": "商品_種別_オブジェクト",
+      "description": "",
+      "type": {
+        "name": "metaobject_reference",
+        "category": "REFERENCE"
+      }
+    },
+    {
+      "key": "product_reservation_sales_period_object",
+      "namespace": "custom",
+      "name": "商品_予約・販売期間_オブジェクト",
+      "description": "",
+      "type": {
+        "name": "metaobject_reference",
+        "category": "REFERENCE"
+      }
+    },
+    {
+      "key": "product_type_the_work",
+      "namespace": "custom",
+      "name": "商品_作品_オブジェクト",
+      "description": "",
+      "type": {
+        "name": "metaobject_reference",
+        "category": "REFERENCE"
+      }
+    },
+    {
+      "key": "product_product_category_object",
+      "namespace": "custom",
+      "name": "商品_商品カテゴリー_オブジェクト",
+      "description": "",
+      "type": {
+        "name": "metaobject_reference",
+        "category": "REFERENCE"
+      }
+    },
+    {
+      "key": "kana_index",
+      "namespace": "product",
+      "name": "作品索引",
+      "description": null,
+      "type": {
+        "name": "single_line_text_field",
+        "category": "TEXT"
+      }
+    },
+    {
+      "key": "category",
+      "namespace": "product",
+      "name": "商品カテゴリ",
+      "description": null,
+      "type": {
+        "name": "single_line_text_field",
+        "category": "TEXT"
+      }
+    },
+    {
+      "key": "sales_period_status",
+      "namespace": "product",
+      "name": "販売ステータス",
+      "description": null,
+      "type": {
+        "name": "single_line_text_field",
+        "category": "TEXT"
+      }
+    }
+  ],
+  "variant": [
+    {
+      "key": "max_per_order",
+      "namespace": "variant",
+      "name": "max_per_order",
+      "description": null,
+      "type": {
+        "name": "number_integer",
+        "category": "NUMBER"
+      }
+    },
+    {
+      "key": "point_rate",
+      "namespace": "variant",
+      "name": "point_rate",
+      "description": null,
+      "type": {
+        "name": "number_integer",
+        "category": "NUMBER"
+      }
+    },
+    {
+      "key": "cross_sell_variants",
+      "namespace": "variant",
+      "name": "cross_sell_variants",
+      "description": null,
+      "type": {
+        "name": "list.variant_reference",
+        "category": "REFERENCE"
+      }
+    },
+    {
+      "key": "up_sell_variants",
+      "namespace": "variant",
+      "name": "up_sell_variants",
+      "description": null,
+      "type": {
+        "name": "list.variant_reference",
+        "category": "REFERENCE"
+      }
+    },
+    {
+      "key": "release_date",
+      "namespace": "variant",
+      "name": "release_date",
+      "description": null,
+      "type": {
+        "name": "date",
+        "category": "DATE_TIME"
+      }
+    },
+    {
+      "key": "core_system_import_date",
+      "namespace": "variant",
+      "name": "core_system_import_date",
+      "description": null,
+      "type": {
+        "name": "date",
+        "category": "DATE_TIME"
+      }
+    },
+    {
+      "key": "sell_start_at",
+      "namespace": "variant",
+      "name": "sell_start_at",
+      "description": null,
+      "type": {
+        "name": "date_time",
+        "category": "DATE_TIME"
+      }
+    },
+    {
+      "key": "sell_end_at",
+      "namespace": "variant",
+      "name": "sell_end_at",
+      "description": null,
+      "type": {
+        "name": "date_time",
+        "category": "DATE_TIME"
+      }
+    },
+    {
+      "key": "release_note",
+      "namespace": "variant",
+      "name": "release_note",
+      "description": null,
+      "type": {
+        "name": "single_line_text_field",
+        "category": "TEXT"
+      }
+    },
+    {
+      "key": "information_release_note",
+      "namespace": "variant",
+      "name": "information_release_note",
+      "description": null,
+      "type": {
+        "name": "single_line_text_field",
+        "category": "TEXT"
+      }
+    },
+    {
+      "key": "preorder_deadline_note",
+      "namespace": "variant",
+      "name": "preorder_deadline_note",
+      "description": null,
+      "type": {
+        "name": "single_line_text_field",
+        "category": "TEXT"
+      }
+    },
+    {
+      "key": "initial_preorder_cutoff_note",
+      "namespace": "variant",
+      "name": "initial_preorder_cutoff_note",
+      "description": null,
+      "type": {
+        "name": "single_line_text_field",
+        "category": "TEXT"
+      }
+    },
+    {
+      "key": "notes",
+      "namespace": "variant",
+      "name": "notes",
+      "description": null,
+      "type": {
+        "name": "multi_line_text_field",
+        "category": "TEXT"
+      }
+    },
+    {
+      "key": "bonus_info",
+      "namespace": "variant",
+      "name": "bonus_info",
+      "description": null,
+      "type": {
+        "name": "multi_line_text_field",
+        "category": "TEXT"
+      }
+    },
+    {
+      "key": "outline",
+      "namespace": "variant",
+      "name": "outline",
+      "description": null,
+      "type": {
+        "name": "multi_line_text_field",
+        "category": "TEXT"
+      }
+    },
+    {
+      "key": "description",
+      "namespace": "variant",
+      "name": "description",
+      "description": null,
+      "type": {
+        "name": "multi_line_text_field",
+        "category": "TEXT"
+      }
+    },
+    {
+      "key": "cancelable",
+      "namespace": "variant",
+      "name": "cancelable",
+      "description": null,
+      "type": {
+        "name": "boolean",
+        "category": "TRUE_FALSE"
+      }
+    },
+    {
+      "key": "requires_shipping",
+      "namespace": "variant",
+      "name": "requires_shipping",
+      "description": null,
+      "type": {
+        "name": "boolean",
+        "category": "TRUE_FALSE"
+      }
+    },
+    {
+      "key": "is_limited",
+      "namespace": "variant",
+      "name": "is_limited",
+      "description": null,
+      "type": {
+        "name": "boolean",
+        "category": "TRUE_FALSE"
+      }
+    },
+    {
+      "key": "is_free_shipping",
+      "namespace": "variant",
+      "name": "is_free_shipping",
+      "description": null,
+      "type": {
+        "name": "boolean",
+        "category": "TRUE_FALSE"
+      }
+    },
+    {
+      "key": "extra_shipping_cost",
+      "namespace": "variant",
+      "name": "extra_shipping_cost",
+      "description": null,
+      "type": {
+        "name": "number_integer",
+        "category": "NUMBER"
+      }
+    },
+    {
+      "key": "is_preorder",
+      "namespace": "variant",
+      "name": "予約商品か",
+      "description": null,
+      "type": {
+        "name": "boolean",
+        "category": "TRUE_FALSE"
+      }
+    },
+    {
+      "key": "is_first_bonus",
+      "namespace": "custom",
+      "name": "初回特典残りわずか",
+      "description": "",
+      "type": {
+        "name": "boolean",
+        "category": "TRUE_FALSE"
+      }
+    },
+    {
+      "key": "is_early_bonus",
+      "namespace": "custom",
+      "name": "早期予約特典あり",
+      "description": "",
+      "type": {
+        "name": "boolean",
+        "category": "TRUE_FALSE"
+      }
+    },
+    {
+      "key": "venue_config",
+      "namespace": "variant",
+      "name": "venue_config",
+      "description": "",
+      "type": {
+        "name": "json",
+        "category": "JSON"
+      }
+    }
+  ],
+  "shop": []
+}

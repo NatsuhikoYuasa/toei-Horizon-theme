@@ -28,7 +28,7 @@
     {% if the_blog %}
       {%- comment -%} 見出し・もっと見る文言（自動） {%- endcomment -%}
       {%- assign heading_text = the_blog.title | default: 'キャンペーン・イベント情報' -%}
-      {%- assign more_label   = heading_text | append: 'をもっと見る' -%}
+      {%- assign more_label = heading_text | append: 'をもっと見る' -%}
 
       <div class="csh-head">
         <h2 class="csh-title">{{ heading_text }}</h2>
@@ -52,12 +52,12 @@
           {% for article in the_blog.articles limit: section.settings.limit %}
             {%- liquid
               # 外部URLメタフィールド（custom.external_url）を取得
-              assign ext_obj     = article.metafields.custom.external_url
-              assign link_url    = article.url
+              assign ext_obj = article.metafields.custom.external_url
+              assign link_url = article.url
               assign is_external = false
 
               if ext_obj and ext_obj.value != blank and ext_obj.value != '-' and ext_obj.value != '#'
-                assign link_url    = ext_obj.value
+                assign link_url = ext_obj.value
                 assign is_external = true
               endif
             -%}
@@ -65,7 +65,9 @@
             <a
               class="csh-card"
               href="{{ link_url }}"
-              {% if is_external %}target="_blank" rel="noopener noreferrer"{% endif %}
+              {% if is_external %}
+                target="_blank" rel="noopener noreferrer"
+              {% endif %}
             >
               <div class="csh-thumb">
                 {% if article.image %}
@@ -96,158 +98,158 @@
   {% endif %}
 
   <style>
-  /* ===== 見出し行 ===== */
-  #csh-{{ section.id }} .csh-head{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:16px;
-    margin-bottom:16px;
-  }
-  #csh-{{ section.id }} .csh-title{
-    position:relative;
-    margin:0;
-    font-size:18px;
-    font-weight:700;
-    padding-left:14px;
-  }
-  #csh-{{ section.id }} .csh-title::before{
-    content:"";
-    position:absolute;
-    left:0;
-    top:0;
-    width:3px;
-    height:1.1em;
-    background: var(--csh-accent, #e63946);
-    border-radius:2px;
-  }
-
-  /* “もっと見る” */
-  #csh-{{ section.id }} .csh-more{
-    display:inline-flex;
-    align-items:center;
-    gap:10px;
-    text-decoration:none;
-    color: inherit;
-    font-size:14px;
-    font-weight:600;
-  }
-  #csh-{{ section.id }} .csh-more-icon{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    width:32px;
-    height:32px;
-    min-width:32px;
-    border-radius:999px;
-    background: var(--csh-accent, #e63946);
-  }
-  #csh-{{ section.id }} .csh-more-icon svg{
-    width:18px;
-    height:18px;
-    stroke:#fff;
-    fill:none;
-    stroke-width:2;
-    stroke-linecap:round;
-    stroke-linejoin:round;
-  }
-
-  /* ===== グリッド ===== */
-  #csh-{{ section.id }} .csh-grid{
-    display:grid;
-    grid-template-columns: repeat({{ section.settings.columns_desktop | default: 4 }}, minmax(0,1fr));
-    gap: var(--csh-gap-pc);
-  }
-
-  /* ===== カード ===== */
-  #csh-{{ section.id }} .csh-card{
-    display:flex;
-    flex-direction:column;
-    color:inherit;
-    text-decoration:none;
-  }
-
-  /* ===== サムネイル ===== */
-  #csh-{{ section.id }} .csh-thumb{
-    border-radius:5px;
-    overflow:hidden;
-    background:#0b0f14;
-  }
-  #csh-{{ section.id }} .csh-thumb img{
-    width:100%;
-    height:auto;
-    display:block;
-    border-radius:5px;
-  }
-  #csh-{{ section.id }} .csh-thumb::before{
-    content:none !important;
-  }
-
-  /* ===== テキスト ===== */
-  #csh-{{ section.id }} .csh-body{
-    padding:10px 12px 10px 0;
-    display:grid;
-    gap:6px;
-  }
-  #csh-{{ section.id }} .csh-name{
-    font-size:13px;
-    line-height:1.4;
-    display:-webkit-box;
-    -webkit-line-clamp:2;
-    -webkit-box-orient:vertical;
-    overflow:hidden;
-  }
-  #csh-{{ section.id }} .csh-price{
-    font-size:12px;
-    opacity:.9;
-  }
-
-  #csh-{{ section.id }} .csh-empty{
-    font-size:14px;
-    opacity:.8;
-  }
-
-  /* ===== SP ===== */
-  @media (max-width: 768px){
-    #csh-{{ section.id }}{
+    /* ===== 見出し行 ===== */
+    #csh-{{ section.id }} .csh-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:16px;
+    }
+    #csh-{{ section.id }} .csh-title{
       position:relative;
+      margin:0;
+      font-size:18px;
+      font-weight:700;
+      padding-left:14px;
     }
-    #csh-{{ section.id }} .csh-grid{
-      display:flex !important;
-      gap: var(--csh-gap-sp);
-      overflow-x:auto;
-      overflow-y:visible;
-      -webkit-overflow-scrolling:touch;
-      scroll-snap-type:x proximity;
-      scroll-snap-stop:normal;
-      scrollbar-gutter:stable;
-      width: calc(100vw - var(--csh-safe));
-      margin-right: calc(50% - 50vw - var(--csh-gap-sp));
-      padding-bottom: 72px;
-    }
-    #csh-{{ section.id }} .csh-card{
-      flex:0 0 clamp(140px, 38vw, 240px);
-      width: clamp(140px, 38vw, 240px);
-      scroll-snap-align:start;
-    }
-    #csh-{{ section.id }} .csh-grid::after{
+    #csh-{{ section.id }} .csh-title::before{
       content:"";
-      flex: 0 0 calc(max(0px, var(--csh-safe) - var(--csh-gap-sp)));
-    }
-    #csh-{{ section.id }} .csh-more{
       position:absolute;
-      right: var(--csh-safe);
-      bottom: 60px;
+      left:0;
+      top:0;
+      width:3px;
+      height:1.1em;
+      background: var(--csh-accent, #e63946);
+      border-radius:2px;
     }
-  }
 
-  /* タブレット（750〜989px）は2列表示 */
-  @media (min-width: 750px) and (max-width: 989px){
-    #csh-{{ section.id }} .csh-grid{
-      display:grid !important;
-      grid-template-columns: repeat(2, minmax(0,1fr));
+    /* “もっと見る” */
+    #csh-{{ section.id }} .csh-more{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      text-decoration:none;
+      color: inherit;
+      font-size:14px;
+      font-weight:600;
     }
-  }
+    #csh-{{ section.id }} .csh-more-icon{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:32px;
+      height:32px;
+      min-width:32px;
+      border-radius:999px;
+      background: var(--csh-accent, #e63946);
+    }
+    #csh-{{ section.id }} .csh-more-icon svg{
+      width:18px;
+      height:18px;
+      stroke:#fff;
+      fill:none;
+      stroke-width:2;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+
+    /* ===== グリッド ===== */
+    #csh-{{ section.id }} .csh-grid{
+      display:grid;
+      grid-template-columns: repeat({{ section.settings.columns_desktop | default: 4 }}, minmax(0,1fr));
+      gap: var(--csh-gap-pc);
+    }
+
+    /* ===== カード ===== */
+    #csh-{{ section.id }} .csh-card{
+      display:flex;
+      flex-direction:column;
+      color:inherit;
+      text-decoration:none;
+    }
+
+    /* ===== サムネイル ===== */
+    #csh-{{ section.id }} .csh-thumb{
+      border-radius:5px;
+      overflow:hidden;
+      background:#0b0f14;
+    }
+    #csh-{{ section.id }} .csh-thumb img{
+      width:100%;
+      height:auto;
+      display:block;
+      border-radius:5px;
+    }
+    #csh-{{ section.id }} .csh-thumb::before{
+      content:none !important;
+    }
+
+    /* ===== テキスト ===== */
+    #csh-{{ section.id }} .csh-body{
+      padding:10px 12px 10px 0;
+      display:grid;
+      gap:6px;
+    }
+    #csh-{{ section.id }} .csh-name{
+      font-size:13px;
+      line-height:1.4;
+      display:-webkit-box;
+      -webkit-line-clamp:2;
+      -webkit-box-orient:vertical;
+      overflow:hidden;
+    }
+    #csh-{{ section.id }} .csh-price{
+      font-size:12px;
+      opacity:.9;
+    }
+
+    #csh-{{ section.id }} .csh-empty{
+      font-size:14px;
+      opacity:.8;
+    }
+
+    /* ===== SP ===== */
+    @media (max-width: 768px){
+      #csh-{{ section.id }}{
+        position:relative;
+      }
+      #csh-{{ section.id }} .csh-grid{
+        display:flex !important;
+        gap: var(--csh-gap-sp);
+        overflow-x:auto;
+        overflow-y:visible;
+        -webkit-overflow-scrolling:touch;
+        scroll-snap-type:x proximity;
+        scroll-snap-stop:normal;
+        scrollbar-gutter:stable;
+        width: calc(100vw - var(--csh-safe));
+        margin-right: calc(50% - 50vw - var(--csh-gap-sp));
+        padding-bottom: 72px;
+      }
+      #csh-{{ section.id }} .csh-card{
+        flex:0 0 clamp(140px, 38vw, 240px);
+        width: clamp(140px, 38vw, 240px);
+        scroll-snap-align:start;
+      }
+      #csh-{{ section.id }} .csh-grid::after{
+        content:"";
+        flex: 0 0 calc(max(0px, var(--csh-safe) - var(--csh-gap-sp)));
+      }
+      #csh-{{ section.id }} .csh-more{
+        position:absolute;
+        right: var(--csh-safe);
+        bottom: 60px;
+      }
+    }
+
+    /* タブレット（750〜989px）は2列表示 */
+    @media (min-width: 750px) and (max-width: 989px){
+      #csh-{{ section.id }} .csh-grid{
+        display:grid !important;
+        grid-template-columns: repeat(2, minmax(0,1fr));
+      }
+    }
   </style>
 </section>
 
@@ -267,15 +269,31 @@
     { "type": "range", "id": "gap_sp", "label": "（SP）カード間隔(px)", "min": 6, "max": 24, "step": 1, "default": 12 },
 
     { "type": "header", "content": "余白 / 背景" },
-    { "type": "range", "id": "padding-block-start", "label": "上余白", "min": 0, "max": 100, "step": 1, "unit": "px", "default": 36 },
-    { "type": "range", "id": "padding-block-end", "label": "下余白", "min": 0, "max": 100, "step": 1, "unit": "px", "default": 36 },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "上余白",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "下余白",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 36
+    },
     { "type": "color", "id": "bg_color", "label": "背景色", "default": "#F5F6F9" },
 
     { "type": "color_scheme", "id": "color_scheme", "label": "配色（Horizonのスキーム）", "default": "scheme-1" },
     { "type": "color", "id": "accent_color", "label": "アクセントカラー（左線／丸アイコン）", "default": "#E63946" }
   ],
-  "presets": [
-    { "name": "ブログ記事（Custom）" }
-  ]
+  "presets": [{ "name": "ブログ記事（Custom）" }]
 }
 {% endschema %}

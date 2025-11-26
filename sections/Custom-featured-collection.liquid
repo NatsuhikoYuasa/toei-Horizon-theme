@@ -32,12 +32,11 @@
         {% if the_collection.products_count > 0 %}
           <div class="cfc-grid">
             {% for product in the_collection.products limit: 4 %}
-
               {%- comment -%} display_start_at / display_end_at による表示ロック判定 {%- endcomment -%}
               {% liquid
-                assign display_locked    = false
+                assign display_locked = false
                 assign display_start_raw = product.metafields.product.display_start_at
-                assign display_end_raw   = product.metafields.product.display_end_at
+                assign display_end_raw = product.metafields.product.display_end_at
 
                 if display_start_raw != blank or display_end_raw != blank
                   assign now_ts = 'now' | date: '%s'
@@ -75,12 +74,12 @@
                 締切間近 … 各バリアントの variant.sell_end_at を見て 10 日前〜当日
               {%- endcomment -%}
 
-              {%- assign now_ts    = 'now' | date: '%s' | plus: 0 -%}
-              {%- assign new_days  = section.settings.new_days | default: 14 | plus: 0 -%}
-              {%- assign days_sec  = new_days | times: 86400 -%}
+              {%- assign now_ts = 'now' | date: '%s' | plus: 0 -%}
+              {%- assign new_days = section.settings.new_days | default: 14 | plus: 0 -%}
+              {%- assign days_sec = new_days | times: 86400 -%}
               {%- assign cutoff_ts = now_ts | minus: days_sec -%}
 
-              {%- comment %} ========== NEW（公開日 / tag:new / metafield new_until） ========== {%- endcomment -%}
+              {%- comment %} ========== NEW（公開日 / tag:new / metafield new_until） ========== {%- endcomment %}
               {%- assign pub_ts = 0 -%}
               {%- if product.published_at != blank -%}
                 {%- assign pub_ts = product.published_at | date: '%s' | plus: 0 -%}
@@ -88,7 +87,7 @@
               {%- assign is_new_published = false -%}
               {%- if pub_ts != 0 and pub_ts > cutoff_ts -%}{%- assign is_new_published = true -%}{%- endif -%}
 
-              {%- assign tags_lc   = product.tags | join: ',' | downcase -%}
+              {%- assign tags_lc = product.tags | join: ',' | downcase -%}
               {%- assign tags_wrap = ',' | append: tags_lc | append: ',' -%}
               {%- assign is_new_tag = false -%}
               {%- if tags_wrap contains ',new,' -%}{%- assign is_new_tag = true -%}{%- endif -%}
@@ -102,35 +101,36 @@
               {%- assign is_new = false -%}
               {%- if is_new_published or is_new_tag or is_new_mf -%}{%- assign is_new = true -%}{%- endif -%}
 
-              {%- comment %} ========== 予約受付中（PRE-ORDER 判定） ========== {%- endcomment -%}
+              {%- comment %} ========== 予約受付中（PRE-ORDER 判定） ========== {%- endcomment %}
               {%- assign t_suffix = product.template_suffix | downcase | default: '' -%}
 
               {%- assign pre_ok = false -%}
-              {%- if t_suffix contains 'preorder' or
-                    tags_wrap contains ',preorder,' or
-                    tags_wrap contains ',pre-order,' or
-                    tags_wrap contains ',pre order,' or
-                    tags_lc  contains '予約' or
-                    tags_lc  contains '先行' or
-                    tags_lc  contains '先行予約' or
-                    product.metafields.custom.preorder -%}
+              {%- if t_suffix contains 'preorder'
+                or tags_wrap contains ',preorder,'
+                or tags_wrap contains ',pre-order,'
+                or tags_wrap contains ',pre order,'
+                or tags_lc contains '予約'
+                or tags_lc contains '先行'
+                or tags_lc contains '先行予約'
+                or product.metafields.custom.preorder
+              -%}
                 {%- assign pre_ok = true -%}
               {%- endif -%}
 
               {%- comment -%} ========== 初回特典 / 早期予約特典 / 締切間近 ========== {%- endcomment -%}
-              {%- assign first_bonus_low        = false -%}
-              {%- assign early_bonus           = false -%}
-              {%- assign closing_soon          = false -%}
+              {%- assign first_bonus_low = false -%}
+              {%- assign early_bonus = false -%}
+              {%- assign closing_soon = false -%}
 
-              {%- assign first_bonus_threshold = 10     | plus: 0 -%}
-              {%- assign ten_days_sec          = 864000 | plus: 0 -%}
-              {%- assign first_bonus_total     = 0      | plus: 0 -%}
-              {%- assign min_end_ts            = 0      | plus: 0 -%}
+              {%- assign first_bonus_threshold = 10 | plus: 0 -%}
+              {%- assign ten_days_sec = 864000 | plus: 0 -%}
+              {%- assign first_bonus_total = 0 | plus: 0 -%}
+              {%- assign min_end_ts = 0 | plus: 0 -%}
 
               {%- for v in product.variants -%}
-                {%- assign v_inventory       = v.inventory_quantity | default: 0 | plus: 0 -%}
-                {%- assign v_first_bonus    = v.metafields.custom.is_first_bonus -%}
-                {%- assign v_early_bonus    = v.metafields.custom.is_early_bonus -%}
+                {%- assign v_inventory = v.inventory_quantity | default: 0 | plus: 0 -%}
+                {%- assign v_first_bonus = v.metafields.custom.is_first_bonus -%}
+                {%- assign v_early_bonus = v.metafields.custom.is_early_bonus -%}
 
                 {%- comment -%} ▼ 初回特典残りわずか（対象バリアントの在庫合計） {%- endcomment -%}
                 {%- if v_first_bonus and v_inventory > 0 -%}
@@ -366,10 +366,39 @@
   "name": "特集コレクション（Custom）",
   "settings": [
     { "type": "collection", "id": "collection", "label": "コレクションを選択" },
-    { "type": "checkbox", "id": "show_badges", "label": "商品ラベル（NEW / 予約受付中 / 初回特典残りわずか / 早期予約特典あり / 締切間近）を表示", "default": true },
-    { "type": "range", "id": "new_days", "label": "NEW 判定（日数以内の公開）", "min": 1, "max": 60, "step": 1, "default": 14 },
-    { "type": "range", "id": "card_gap", "label": "（PC）商品カードの間隔 (px)", "min": 8, "max": 32, "step": 2, "default": 16 },
-    { "type": "range", "id": "card_gap_mobile", "label": "（スマホ）商品カードの間隔 (px)", "min": 6, "max": 24, "step": 1, "default": 12 }
+    {
+      "type": "checkbox",
+      "id": "show_badges",
+      "label": "商品ラベル（NEW / 予約受付中 / 初回特典残りわずか / 早期予約特典あり / 締切間近）を表示",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "new_days",
+      "label": "NEW 判定（日数以内の公開）",
+      "min": 1,
+      "max": 60,
+      "step": 1,
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "card_gap",
+      "label": "（PC）商品カードの間隔 (px)",
+      "min": 8,
+      "max": 32,
+      "step": 2,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "card_gap_mobile",
+      "label": "（スマホ）商品カードの間隔 (px)",
+      "min": 6,
+      "max": 24,
+      "step": 1,
+      "default": 12
+    }
   ],
   "presets": [{ "name": "特集コレクション（Custom）", "category": "コレクション" }]
 }

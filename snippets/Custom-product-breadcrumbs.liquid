@@ -6,9 +6,9 @@
 {%- liquid
   assign p = product
 
-  assign genre_obj    = p.metafields.custom.product_genre_object.value
-  assign index_obj    = p.metafields.custom.product_index_object.value
-  assign work_obj     = p.metafields.custom.product_the_work.value
+  assign genre_obj = p.metafields.custom.product_genre_object.value
+  assign index_obj = p.metafields.custom.product_index_object.value
+  assign work_obj = p.metafields.custom.product_the_work.value
   assign category_obj = p.metafields.custom.product_product_category_object.value
 -%}
 
@@ -89,7 +89,7 @@
     white-space: nowrap;
   }
   .wb-breadcrumb__item + .wb-breadcrumb__item::before {
-    content: "›";
+    content: '›';
     margin: 0 0.4em;
     color: #999;
   }

@@ -103,8 +103,8 @@ class PredictiveSearchComponent extends Component {
     const containers = Array.from(
       this.querySelectorAll(
         '.predictive-search-results__wrapper-queries, ' +
-          '.predictive-search-results__wrapper-products, ' +
-          '.predictive-search-results__list'
+        '.predictive-search-results__wrapper-products, ' +
+        '.predictive-search-results__list'
       )
     );
 
@@ -336,7 +336,7 @@ class PredictiveSearchComponent extends Component {
     if (viewedProducts.length === 0) return null;
 
     const url = new URL(Theme.routes.search_url, location.origin);
-    url.searchParams.set('q', viewedProducts.map(/** @param {string} id */ (id) => `id:${id}`).join(' OR '));
+    url.searchParams.set('q', viewedProducts.map(/** @param {string} id */(id) => `id:${id}`).join(' OR '));
     url.searchParams.set('resources[type]', 'product');
 
     return sectionRenderer.getSectionHTML(this.dataset.sectionId, false, url);
@@ -417,8 +417,6 @@ if (!customElements.get('predictive-search-component')) {
 }
 
 
-
-
 // wb03 add
 document.addEventListener('click', function (event) {
   const chip = event.target.closest('.predictive-search-keyword-chip');
@@ -440,7 +438,7 @@ document.addEventListener('click', function (event) {
   input.dispatchEvent(new Event('input', { bubbles: true }));
 
   // すぐ検索結果ページに飛ばしたい場合はフォーム送信も
-   if (input.form) {
-     input.form.submit();
-   }
+  if (input.form) {
+    input.form.submit();
+  }
 });
