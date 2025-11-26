@@ -6,11 +6,40 @@
  * or related systems. Please exercise caution as any changes
  * made to this file may be overwritten.
  * ------------------------------------------------------------
- */{
+ */
+{
   "sections": {
     "main": {
       "type": "product-information",
       "blocks": {
+        "advanced_wishlist_wishlist_btn_FfGYAa": {
+          "type": "shopify://apps/advanced-wishlist/blocks/wishlist-btn/330d9272-08ea-4193-b3e0-475a69fa65fa",
+          "settings": {
+            "button_style": "style_1",
+            "button_border": 0,
+            "button_font_size": 16,
+            "button_font_weight": "500",
+            "button_border_radius": 0,
+            "button_vertical_space": 9,
+            "button_horizontal_space": 16,
+            "button_text_color": "#ffffff",
+            "button_background": "#5c6ac4",
+            "border_color": "#5c6ac4",
+            "hover_button_text_color": "#ffffff",
+            "hover_button_background_color": "#5c6ac4",
+            "hover_button_border_color": "#5c6ac4",
+            "is_new_icon_settings": false,
+            "icon_type": "outline",
+            "icon_size": 16,
+            "icon_background_type": "icon_round_background",
+            "icon_background_color": "#5c6ac4",
+            "icon_fill_color": "#ffffff",
+            "icon_border_color": "#ffffff",
+            "icon_hover_color": "#5c6ac4",
+            "selected_icon_fill_color": "#5c6ac4",
+            "selected_icon_border_color": "#5c6ac4"
+          }
+        },
         "media-gallery": {
           "type": "_product-media-gallery",
           "static": true,
@@ -70,7 +99,6 @@
               "type": "group",
               "name": "Header",
               "settings": {
-                "open_in_new_tab": false,
                 "content_direction": "column",
                 "vertical_on_mobile": true,
                 "horizontal_alignment": "flex-start",
@@ -98,6 +126,9 @@
                 "overlay_color": "#00000026",
                 "overlay_style": "solid",
                 "gradient_direction": "to top",
+                "link": "",
+                "open_in_new_tab": false,
+                "placeholder": "",
                 "padding-block-start": 0,
                 "padding-block-end": 0,
                 "padding-inline-start": 0,
@@ -188,6 +219,7 @@
               "settings": {
                 "stacking": true,
                 "show_pickup_availability": false,
+                "gift_card_form": true,
                 "padding-block-start": 0,
                 "padding-block-end": 0,
                 "padding-inline-start": 0,
@@ -253,6 +285,9 @@
           ]
         }
       },
+      "block_order": [
+        "advanced_wishlist_wishlist_btn_FfGYAa"
+      ],
       "settings": {
         "content_width": "content-center-aligned",
         "desktop_media_position": "left",
