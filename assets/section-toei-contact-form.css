@@ -1,0 +1,247 @@
+.toei-contact {
+  padding: 40px 0 72px;
+}
+
+.toei-contact__inner {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.toei-contact__header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.toei-contact__title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.toei-contact__description {
+  color: #333;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.toei-contact__description a {
+  color: #2879ff;
+  text-decoration: underline;
+}
+
+.toei-contact__card {
+  background: #f5f6f8;
+  border: 1px solid #e5e5e5;
+  border-radius: 0;
+  padding: 36px;
+  box-shadow: none;
+}
+
+.toei-contact__cardHeader {
+  background: #f5f6f8;
+  border-bottom: 1px solid #dadde2;
+  border-radius: 0;
+  color: #111;
+  font-weight: 600;
+  padding: 14px 16px;
+  margin: 0 0 24px;
+}
+
+.toei-contact__rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.toei-contact__row {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  column-gap: 24px;
+  align-items: start;
+}
+
+.toei-contact__row + .toei-contact__row {
+  border-top: 1px solid #e5e5e5;
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.toei-contact__labelWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  border-right: 1px solid #dadde2; /* PC用の仕切り線 */
+}
+
+/* ここからSP用 override */
+@media (max-width: 960px) {
+  .toei-contact__badge {
+    flex: 1; /* SPでは少し細くする */
+  }
+
+  .toei-contact__labelWrap {
+    border-right: none; /* SPでは仕切り線なし */
+  }
+}
+
+.toei-contact__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  background: #000;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.2;
+  border-radius: 6px;
+  flex: 1.5; /* PC用 */
+}
+
+.toei-contact__label {
+  font-weight: 600;
+  font-size: 13px;
+  flex: 8;
+}
+
+.toei-contact__field {
+  width: 100%;
+}
+
+.toei-contact__input {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+  background: #fff;
+}
+
+.toei-contact__field select.toei-contact__input {
+  background-position: calc(100% - 20px) center;
+}
+
+.toei-contact__input:focus {
+  outline: 2px solid #f04949;
+  border-color: #f04949;
+}
+
+.toei-contact__row--textarea .toei-contact__field textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+
+.toei-contact__field--name {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.toei-contact__alert {
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.toei-contact__alert--success {
+  background: #f0f8f0;
+  border: 1px solid #b6e3b6;
+  color: #1a7a1a;
+}
+
+.toei-contact__alert--error {
+  background: #fff2f2;
+  border: 1px solid #f5b5b5;
+  color: #b3261e;
+}
+
+.toei-contact__alert ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.toei-contact__actions {
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.toei-contact__button {
+  min-width: 150px;
+  padding: 14px 18px;
+  font-size: 14px;
+  line-height: 1.2;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.toei-contact__button--secondary {
+  background: #fff;
+  color: #d60000;
+  border-color: #d60000;
+}
+
+.toei-contact__button--primary {
+  background: #d60000;
+  color: #fff;
+  border-color: #d60000;
+}
+
+.toei-contact__button:hover,
+.toei-contact__button:focus-visible {
+  opacity: 0.9;
+}
+
+@media (max-width: 960px) {
+  .toei-contact__inner {
+    padding: 0 20px;
+  }
+
+  .toei-contact__card {
+    padding: 28px 20px;
+  }
+
+  .toei-contact__row {
+    grid-template-columns: 1fr;
+    row-gap: 10px;
+  }
+
+  .toei-contact__labelWrap {
+    padding-top: 0;
+    justify-content: flex-start;
+  }
+
+  .toei-contact__field--name {
+    grid-template-columns: 1fr;
+  }
+
+  .toei-contact__actions {
+    justify-content: center;
+  }
+
+  .toei-contact__button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .toei-contact {
+    padding: 32px 0 56px;
+  }
+
+  .toei-contact__title {
+    font-size: 24px;
+  }
+
+  .toei-contact__description {
+    font-size: 13px;
+  }
+}
