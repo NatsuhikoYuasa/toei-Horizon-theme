@@ -76,84 +76,18 @@
 </results-list>
 
 {% stylesheet %}
-  .main-collection-grid {
-    grid-column: var(--grid-column--mobile);
-
-    @media screen and (min-width: 750px) {
-      grid-column: var(--grid-column--desktop);
-    }
-  }
-
   .collection-wrapper {
-    @media screen and (min-width: 750px) {
-      grid-template-columns:
-        1fr repeat(
-          var(--centered-column-number),
-          minmax(0, calc((var(--page-width) - var(--page-margin) * 2) / var(--centered-column-number)))
-        )
-        1fr;
-    }
+    display: grid;
+    row-gap: var(--gap-lg);
   }
 
-  .collection-wrapper:has(.facets-block-wrapper--full-width),
-  .collection-wrapper:has(.collection-wrapper--full-width) {
-    @media screen and (min-width: 750px) {
-      grid-column: 1 / -1;
-      grid-template-columns:
-        minmax(var(--page-margin), 1fr) repeat(
-          var(--centered-column-number),
-          minmax(0, calc((var(--page-width) - var(--page-margin) * 2) / var(--centered-column-number)))
-        )
-        minmax(var(--page-margin), 1fr);
-    }
+  .main-collection-grid {
+    grid-column: 1 / -1;
   }
 
-  .collection-wrapper:has(.facets--vertical)
-    .facets-block-wrapper--vertical:not(.hidden)
-    ~ .main-collection-grid {
-    @media screen and (min-width: 750px) {
-      grid-column: var(--facets-vertical-col-width) / var(--full-width-column-number);
-    }
-  }
-
-  .collection-wrapper:has(.facets-block-wrapper--vertical:not(#filters-drawer)):has(.collection-wrapper--full-width) {
-    @media screen and (min-width: 750px) {
-      grid-column: 1 / -1;
-      grid-template-columns: 0fr repeat(var(--centered-column-number), minmax(0, 1fr)) 0fr;
-    }
-  }
-
-  :is(.collection-wrapper--full-width, .collection-wrapper--full-width-on-mobile)
-    [product-grid-view='default']
-    .product-grid__card {
-    @media screen and (max-width: 749px) {
-      padding-inline-start: max(var(--padding-xs), var(--padding-inline-start));
-      padding-inline-end: max(var(--padding-xs), var(--padding-inline-end));
-    }
-  }
-
-  :is(.collection-wrapper--full-width, .collection-wrapper--full-width-on-mobile)
-    [product-grid-view='mobile-single']
-    .product-grid__card {
-    @media screen and (max-width: 749px) {
-      padding-inline-start: max(var(--padding-xs), var(--padding-inline-start));
-      padding-inline-end: max(var(--padding-xs), var(--padding-inline-end));
-    }
-  }
-
-  /* Make product media go edge-to-edge by using negative margins */
-  :is(.collection-wrapper--full-width) .card-gallery,
-  :is(.collection-wrapper--full-width-on-mobile) .card-gallery {
-    @media screen and (max-width: 749px) {
-      margin-inline-start: calc(-1 * max(var(--padding-xs), var(--padding-inline-start)));
-      margin-inline-end: calc(-1 * max(var(--padding-xs), var(--padding-inline-end)));
-    }
-  }
-
-  /* ===== toei 用：PCでフィルター左／商品右の2カラムレイアウト ===== */
+  /* ===== PC layout: facets left, products right ===== */
   @media screen and (min-width: 990px) {
     .collection-wrapper {
-      display: grid;
       grid-template-columns: 280px minmax(0, 1fr);
       column-gap: 32px;
       max-width: var(--page-width);
@@ -176,6 +110,49 @@
       box-shadow: 0 4px 12px rgb(0 0 0 / 0.06);
       padding: 24px 20px;
     }
+
+    .collection-wrapper .product-grid.product-grid--grid {
+      --product-grid-columns-desktop: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  /* Mobile-first alignment */
+  @media screen and (max-width: 989px) {
+    .collection-wrapper {
+      padding-inline: var(--page-margin);
+    }
+  }
+
+  /* Mobile controls row */
+  .collection-wrapper .facets-toggle {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: var(--gap-md);
+    justify-content: space-between;
+    padding: 12px 0;
+  }
+
+  .collection-wrapper .facets-toggle__wrapper {
+    flex: 1;
+  }
+
+  .collection-wrapper .facets-mobile-wrapper {
+    width: 100%;
+    justify-content: flex-end;
+    gap: var(--gap-md);
+  }
+
+  @media screen and (min-width: 990px) {
+    .collection-wrapper .facets-toggle {
+      display: none;
+    }
+  }
+
+  /* Ensure badges and media are not clipped */
+  .collection-wrapper .product-grid__item,
+  .collection-wrapper .product-grid__card {
+    overflow: visible;
   }
 {% endstylesheet %}
 
