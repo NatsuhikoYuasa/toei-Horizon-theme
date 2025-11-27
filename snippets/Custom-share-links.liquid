@@ -1,0 +1,68 @@
+{% liquid
+  assign product_resource = product | default: closest.product
+  assign share_title = product_resource.title
+  assign share_url = product_resource.url | prepend: shop.url
+%}
+
+<div class="product-share">
+  <p class="product-share__title">この商品をシェアする</p>
+  <div class="product-share__links">
+    <a
+      class="product-share__link"
+      href="https://twitter.com/intent/tweet?text={{ share_title | url_encode }}&url={{ share_url | url_encode }}"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Xでシェア"
+    >
+      {% render 'icon', icon: 'x' %}
+    </a>
+    <a
+      class="product-share__link"
+      href="https://www.facebook.com/sharer/sharer.php?u={{ share_url | url_encode }}"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Facebookでシェア"
+    >
+      {% render 'icon', icon: 'facebook' %}
+    </a>
+    <a
+      class="product-share__link"
+      href="https://social-plugins.line.me/lineit/share?url={{ share_url | url_encode }}"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="LINEでシェア"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 3C6.477 3 2 6.91 2 11.73c0 3.065 1.983 5.734 4.98 7.09-.069.848-.363 2.2-1.437 3.767 0 0-.117.165-.006.228.111.064.257.017.257.017 1.688-.236 3.16-1.108 3.652-1.437.947.142 1.93.216 2.954.216 5.523 0 10-3.91 10-8.731C22 6.91 17.523 3 12 3Zm-3.067 9.427c0 .287-.235.52-.525.52h-2.02V9.563c0-.288.236-.522.526-.522.29 0 .526.234.526.521v1.264h.967c.29 0 .526.233.526.52Zm2.963.52c-.29 0-.526-.233-.526-.52v-1.26c0-.287-.235-.52-.525-.52-.29 0-.526.233-.526.52v1.26c0 .287-.235.52-.525.52-.29 0-.526-.233-.526-.52v-2.61c0-.287.236-.521.526-.521.29 0 .525.234.525.52v.03c.217-.227.523-.38.865-.38.657 0 1.19.523 1.19 1.17v1.79c0 .287-.235.52-.527.52Zm3.246 0c-.118 0-.231-.037-.325-.104l-1.213-.885v.246c0 .287-.236.52-.526.52-.29 0-.526-.233-.526-.52V9.563c0-.288.236-.522.526-.522.29 0 .526.234.526.521v1.347l1.513-1.107c.105-.078.23-.12.36-.12.29 0 .526.234.526.522 0 .166-.079.323-.214.423l-1.143.838 1.143.838c.135.1.214.257.214.423 0 .288-.236.521-.526.521Zm3.092-.92c0 .287-.236.52-.526.52-.29 0-.525-.233-.525-.52V9.563c0-.288.235-.522.525-.522.29 0 .526.234.526.521v2.465Zm-.529-3.337c-.32 0-.578-.255-.578-.568 0-.313.259-.568.579-.568.32 0 .578.255.578.568 0 .313-.259.568-.579.568Z" />
+      </svg>
+    </a>
+    <a
+      class="product-share__link product-share__link--copy"
+      href="#"
+      role="button"
+      data-copy-url="{{ share_url }}"
+    >
+      {% render 'icon', icon: 'link' %}
+    </a>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('click', function (event) {
+    var target = event.target.closest('[data-copy-url]');
+    if (!target) return;
+    event.preventDefault();
+    var url = target.getAttribute('data-copy-url');
+    if (!url) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).catch(function () {});
+    } else {
+      var textarea = document.createElement('textarea');
+      textarea.value = url;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+  });
+</script>

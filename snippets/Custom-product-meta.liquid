@@ -1,0 +1,30 @@
+{% liquid
+  assign product_resource = product | default: closest.product
+  assign selected_variant = selected_variant | default: product_resource.selected_or_first_available_variant
+  assign release_date_value = selected_variant.metafields.variant.release_date
+  assign sku_value = selected_variant.sku
+%}
+
+<div class="product-meta">
+  {% if release_date_value != blank %}
+    <div class="product-meta__row">
+      <span class="product-meta__label">発売日：</span>
+      <span class="product-meta__value">{{ release_date_value | date: "%Y年%-m月%-d日" }}</span>
+    </div>
+  {% endif %}
+
+  {% if sku_value != blank %}
+    <div class="product-meta__row">
+      <span class="product-meta__label">商品番号：</span>
+      <span class="product-meta__value">{{ sku_value }}</span>
+    </div>
+  {% endif %}
+</div>
+
+{% if product_resource.tags.size > 0 %}
+  <div class="product-meta__tags">
+    {% for tag in product_resource.tags %}
+      <span class="product-meta__tag">{{ tag }}</span>
+    {% endfor %}
+  </div>
+{% endif %}

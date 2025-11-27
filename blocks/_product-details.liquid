@@ -16,15 +16,30 @@
   {% endif %}
 >
   {% capture children %}
-    <div class="view-product-title">
-      <a
-        href="{{ product.selected_or_first_available_variant.url }}"
-        class="link"
-      >
-        {{- product.title }}
-      </a>
+    <div class="product-details__stack">
+      <div class="product-details__badges">
+        {% render 'Custom-product-badges', product: product %}
+      </div>
+
+      <div class="view-product-title">
+        <a
+          href="{{ product.selected_or_first_available_variant.url }}"
+          class="link"
+        >
+          {{- product.title }}
+        </a>
+      </div>
+
+      {% render 'Custom-product-meta', product: product, selected_variant: product.selected_or_first_available_variant %}
+
+      <div class="product-details__blocks">
+        {% content_for 'blocks' %}
+      </div>
+
+      {% render 'Custom-share-links', product: product %}
+
+      {% render 'Custom-product-accordion', product: product, selected_variant: product.selected_or_first_available_variant %}
     </div>
-    {% content_for 'blocks' %}
   {% endcapture %}
 
   {% render 'group', children: children, settings: block_settings, shopify_attributes: block.shopify_attributes %}
@@ -40,6 +55,154 @@
 
   .view-product-title {
     display: none;
+  }
+
+  .product-details__stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .product-details__blocks > * + * {
+    margin-top: 0.5rem;
+  }
+
+  .csh-badges--product {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .product-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 14px;
+    color: var(--text-color, #1f1f1f);
+  }
+
+  .product-meta__row {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+  }
+
+  .product-meta__label {
+    min-width: 80px;
+    font-weight: 600;
+  }
+
+  .product-meta__value {
+    font-weight: 500;
+  }
+
+  .product-meta__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .product-meta__tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border: 1px solid #ff7a7a;
+    color: #ff4d4f;
+    font-size: 12px;
+    border-radius: 4px;
+    background: #fff5f5;
+    line-height: 1.4;
+  }
+
+  .product-share {
+    padding: 12px 16px;
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .product-share__title {
+    margin: 0;
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .product-share__links {
+    display: inline-flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .product-share__link {
+    display: inline-flex;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: 50%;
+    color: var(--text-color, #1f1f1f);
+    background: #fff;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .product-share__link svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .product-share__link:hover {
+    background: #f7f7f7;
+    border-color: #ccc;
+  }
+
+  .product-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .product-accordion details {
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+
+  .product-accordion__summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .product-accordion__summary .svg-wrapper {
+    width: 16px;
+    height: 16px;
+  }
+
+  .product-accordion__body {
+    margin-top: 10px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .product-accordion__list {
+    margin: 0;
+    padding-left: 1em;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  @media screen and (max-width: 749px) {
+    .product-share {
+      flex-direction: column;
+      align-items: flex-start;
+    }
   }
 
   /* Container styles */
