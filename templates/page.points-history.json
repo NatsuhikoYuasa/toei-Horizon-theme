@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "main": {
+      "type": "points-history",
+      "settings": {}
+    }
+  },
+  "order": ["main"]
+}
