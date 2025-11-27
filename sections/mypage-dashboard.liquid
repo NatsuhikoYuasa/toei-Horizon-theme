@@ -1,4 +1,13 @@
 {% if customer %}
+  {% liquid
+    assign wishlist_prefix = shop.metafields.hulkapps_wishlist.hulkapps_wishlist_general.app_proxy_prefix
+    assign wishlist_path = shop.metafields.hulkapps_wishlist.hulkapps_wishlist_general.app_proxy_path
+    assign wishlist_url = '/apps/advanced-wishlist'
+
+    if wishlist_prefix != blank and wishlist_path != blank
+      assign wishlist_url = '/' | append: wishlist_prefix | append: '/' | append: wishlist_path
+    endif
+  %}
   <div class="mypage-wrapper">
     <h1 class="mypage-title">マイページ</h1>
 
@@ -42,16 +51,11 @@
           <li><a href="{{ routes.account_url }}">購入履歴</a></li>
           <li><a href="/pages/points-history">ポイント履歴</a></li>
           <!-- TODO: points-history テンプレート実装後に動作確認 -->
-          <li><a href="/apps/advanced-wishlist">お気に入り一覧</a></li>
-          <!-- TODO: 実際の Wishlist URLに合わせて調整 -->
           <li>
-            お気に入り点数：<span class="mypage-wishlist-count">0</span>件
-            <!-- TODO: Advanced Wishlist のJSで件数を上書き -->
+            <a href="{{ wishlist_url }}">お気に入り一覧</a>
+            <!-- Advanced Wishlist 一覧ページのURL。app proxy 設定があればそれを使用 -->
           </li>
         </ul>
-        <div class="mypage-wishlist-embed">
-          <!-- TODO: Phase2以降で iframe またはスニペットを埋め込む -->
-        </div>
       </div>
 
       <div class="mypage-card">
