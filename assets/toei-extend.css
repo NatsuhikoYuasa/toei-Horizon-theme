@@ -321,3 +321,138 @@
     min-width: 520px;
   }
 }
+
+/* お知らせ一覧ページ全体 */
+.information-page {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 64px 16px 80px;
+}
+
+.information-page__header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.information-page__title {
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  margin-bottom: 16px;
+}
+
+.information-page__divider {
+  height: 1px;
+  background-color: #e5e5e5;
+}
+
+/* 一覧リスト */
+.information-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.information-list__item + .information-list__item {
+  border-top: 1px solid #f0f0f0;
+}
+
+.information-list__empty {
+  margin-top: 40px;
+  text-align: center;
+  color: #777;
+  font-size: 14px;
+}
+
+/* アコーディオン */
+.information-accordion {
+  padding: 16px 0;
+}
+
+.information-accordion__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.information-accordion__summary::-webkit-details-marker {
+  display: none;
+}
+
+.information-accordion__summary-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.information-accordion__date {
+  font-size: 11px;
+  color: #999;
+}
+
+.information-accordion__title {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* 矢印アイコン */
+.information-accordion__icon {
+  position: relative;
+  width: 12px;
+  height: 12px;
+}
+
+.information-accordion__icon::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 7px;
+  height: 7px;
+  border-right: 1px solid #333;
+  border-bottom: 1px solid #333;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+/* open時の上向き */
+.information-accordion[open] > .information-accordion__summary .information-accordion__icon::before {
+  transform: rotate(-135deg);
+}
+
+/* 開いた時のグレー背景 */
+.information-accordion__body {
+  margin-top: 16px;
+  background-color: #f5f7fa;
+  padding: 24px 24px 32px;
+}
+
+.information-accordion__body-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.information-accordion__title--body {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.6;
+  max-width: calc(100% - 40px);
+}
+
+.information-accordion__content {
+  font-size: 13px;
+  line-height: 2;
+}
+
+/* SP */
+@media (max-width: 749px) {
+  .information-page {
+    padding-top: 40px;
+    padding-bottom: 56px;
+  }
+  .information-accordion__body {
+    padding: 20px 16px 24px;
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "sections": {
+    "main": {
+      "type": "information-list",
+      "settings": {
+        "heading": "お知らせ",
+        "blog": "information",
+        "open_first": true
+      }
+    }
+  },
+  "order": [
+    "main"
+  ]
+}
