@@ -642,9 +642,10 @@
   /* 上部ヘッダーの白い帯に角丸＋シャドウを付ける */
   .header__row--top .header__columns {
     background-color: var(--color-background);
-    /* border-radius: 9999px; */
+    border-radius: 10px;
     box-shadow: 0 8px 24px rgb(0 0 0 / 0.06);
     padding: 20px;
+    margin: 20px;
   }
 
   @media screen and (max-width: 749px) {
@@ -679,6 +680,7 @@
 
     .header__row--top .header__columns {
           padding: 20px 16px 20px 0px;
+          margin: 16px;
     }
   }
 {% endstylesheet %}
