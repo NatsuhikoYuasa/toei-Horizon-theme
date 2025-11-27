@@ -7,17 +7,30 @@
 <header-actions
   {{- block.shopify_attributes -}}
 >
+  {%- comment -%} ① アカウント（人アイコン） {%- endcomment -%}
   {% if shop.customer_accounts_enabled %}
     {% render 'account-popover' %}
     {% render 'account-drawer' %}
   {% endif %}
 
+  {%- comment -%} ② お気に入り（ウィッシュリスト・ハート） {%- endcomment -%}
+  <a
+    href="/apps/advanced-wishlist"
+    class="header-actions__action header-actions__action--wishlist"
+    aria-label="お気に入り"
+  >
+    <span class="svg-wrapper">
+      <span class="icon-wishlist-heart-empty"></span>
+    </span>
+  </a>
+
+  {%- comment -%} ④ カートアイコン {%- endcomment -%}
   {% if settings.cart_type == 'drawer' and template.name != 'cart' %}
     {% render 'cart-drawer' %}
   {% else %}
     <a
       href="{{ routes.cart_url }}"
-      class="header-actions__action action__cart"
+      class="header-actions__action action__cart header-actions__cart-icon"
       aria-label="{{ 'accessibility.cart' | t }}"
       aria-describedby="cart-bubble-text"
     >
@@ -267,5 +280,107 @@
 
   .cart-bubble--animating .cart-bubble__text {
     animation: cartBubbleSlideIn var(--animation-speed) var(--animation-easing);
+  }
+
+  header-actions {
+    display: flex;
+    gap: var(--gap-xs); /* アイコン同士の間隔 */
+  }
+
+  .header__column--right header-actions {
+    margin-inline-start: 0; /* 右端のマイナス余白を打ち消してきれいに揃える */
+  }
+
+  .header__column--right {
+        gap: 1.25em;
+  }  
+
+  /* 丸いグレー背景：アカウント・ハート・カート全部ここで統一 */
+  .header-actions__action {
+    --button-color: var(--color-foreground);
+
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--button-size);
+    height: var(--button-size);
+    border-radius: 9999px;
+    background-color: rgb(var(--color-foreground-rgb) / 0.06);
+  }
+
+  /* 中のアイコンサイズ（SVG & ハート） */
+  .header-actions__action svg,
+  .header-actions__action .icon-wishlist-heart-empty {
+    display: grid;
+  }
+
+  /* カートバブル位置調整は元のまま維持 */
+  .header-actions__cart-icon {
+    --cart-bubble-size: 20px;
+    --cart-bubble-top: 4.5px;
+    --cart-bubble-right: 2.5px;
+
+    position: relative;
+  }
+
+  .header-actions__cart-icon .cart-bubble {
+    position: absolute;
+    width: var(--cart-bubble-size, 20px);
+    top: var(--cart-bubble-top);
+    right: var(--cart-bubble-right);
+  }
+
+  /* ハート（wishlist）だけの微調整：ど真ん中＋ちょい大きめ */
+  .header-actions__action--wishlist .icon-wishlist-heart-empty::before {
+    margin: 0;        /* アプリ側の margin-left / margin-top を打ち消す */
+    font-size: 18px;  /* 好みで 16〜20px に微調整 */
+    line-height: 1;
+  }
+
+  @media screen and (max-width: 749px) {
+    /* ヘッダー全体を左右で分ける */
+    .header__columns {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      column-gap: var(--gap-xs);
+    }
+
+    /* 左：ハンバーガー + ロゴだけ */
+    .header__column--left {
+      display: flex;
+      align-items: center;
+      gap: var(--gap-xs);
+    }
+
+    /* 右：検索 + アカウント + ハート + カート */
+    .header__column--right {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: var(--gap-xs);
+    }
+
+    /* モバイル時は左側の検索アイコンを消す */
+    .header__column--left .search-action {
+      display: none !important;
+    }
+
+    /* 代わりに右列の検索アイコンを表示（mobile:hidden を上書き） */
+    .header__column--right .search-action {
+      display: flex !important;
+    }
+
+    /* 丸アイコン群の間隔とサイズを少しだけコンパクトに */
+    header-actions {
+      display: flex;
+      gap: var(--gap-xs);
+    }
+
+    .header-actions__action .svg-wrapper {
+      width: 38px;
+      height: 38px;
+    }
   }
 {% endstylesheet %}
