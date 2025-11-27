@@ -125,7 +125,7 @@
         "disabled": false,
         "settings": {
           "primary_color": "#5936e3",
-          "enable_my_account": false
+          "enable_my_account": true
         }
       }
     },
