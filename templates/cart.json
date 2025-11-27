@@ -262,12 +262,21 @@
     "1764257722f5ddb46e": {
       "type": "_blocks",
       "blocks": {
+        "easypoints_account_points_WyQkQj": {
+          "type": "shopify://apps/easypoints/blocks/account_points/f0862409-7105-4920-b523-5bd76a964d4a",
+          "settings": {
+            "points_balance_label": "",
+            "expiration_display": false,
+            "expiration_opacity": 0.7
+          }
+        },
         "easypoints_redemption_Mamfzk": {
           "type": "shopify://apps/easypoints/blocks/redemption/f0862409-7105-4920-b523-5bd76a964d4a",
           "settings": {}
         }
       },
       "block_order": [
+        "easypoints_account_points_WyQkQj",
         "easypoints_redemption_Mamfzk"
       ],
       "settings": {
