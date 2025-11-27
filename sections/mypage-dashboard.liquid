@@ -1,4 +1,13 @@
 {% if customer %}
+  {% liquid
+    assign wishlist_prefix = shop.metafields.hulkapps_wishlist.hulkapps_wishlist_general.app_proxy_prefix
+    assign wishlist_path = shop.metafields.hulkapps_wishlist.hulkapps_wishlist_general.app_proxy_path
+    assign wishlist_url = '/apps/advanced-wishlist'
+
+    if wishlist_prefix != blank and wishlist_path != blank
+      assign wishlist_url = '/' | append: wishlist_prefix | append: '/' | append: wishlist_path
+    endif
+  %}
   <div class="mypage-wrapper">
     <h1 class="mypage-title">マイページ</h1>
 
@@ -42,15 +51,22 @@
           <li><a href="{{ routes.account_url }}">購入履歴</a></li>
           <li><a href="/pages/points-history">ポイント履歴</a></li>
           <!-- TODO: points-history テンプレート実装後に動作確認 -->
-          <li><a href="/apps/advanced-wishlist">お気に入り一覧</a></li>
-          <!-- TODO: 実際の Wishlist URLに合わせて調整 -->
           <li>
-            お気に入り点数：<span class="mypage-wishlist-count">0</span>件
-            <!-- TODO: Advanced Wishlist のJSで件数を上書き -->
+            <a href="{{ wishlist_url }}">お気に入り一覧</a>
+            <!-- Advanced Wishlist 一覧ページのURL。app proxy 設定があればそれを使用 -->
+          </li>
+          <li>
+            お気に入り点数：<span class="mypage-wishlist-count" data-totalwishlistitems>0</span>件
+            <!-- Advanced Wishlist のJSで件数を上書き -->
           </li>
         </ul>
         <div class="mypage-wishlist-embed">
-          <!-- TODO: Phase2以降で iframe またはスニペットを埋め込む -->
+          <iframe
+            src="{{ wishlist_url }}"
+            class="mypage-wishlist-iframe"
+            loading="lazy"
+            title="Wishlist items"
+          ></iframe>
         </div>
       </div>
 
@@ -82,3 +98,50 @@
     <a class="mypage-login-button button button--primary" href="{{ routes.account_login_url }}">ログインページへ</a>
   </div>
 {% endif %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var wishlistCountEl = document.querySelector('.mypage-wishlist-count');
+
+    if (!wishlistCountEl) {
+      return;
+    }
+
+    var updateCountText = function (value) {
+      if (value === null || value === undefined) {
+        return;
+      }
+
+      var numericValue = parseInt(value, 10);
+
+      if (!isNaN(numericValue)) {
+        wishlistCountEl.textContent = numericValue;
+      }
+    };
+
+    if (
+      window.HulkappsWishlist &&
+      typeof window.HulkappsWishlist.getCount === 'function'
+    ) {
+      try {
+        window.HulkappsWishlist.getCount(function (count) {
+          updateCountText(count);
+        });
+      } catch (e) {
+        // Advanced Wishlist の実装に依存するため、失敗時は安全に何もしない
+      }
+    }
+
+    var observer = new MutationObserver(function (mutations) {
+      mutations.forEach(function (mutation) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'data-totalwishlistitems') {
+          updateCountText(wishlistCountEl.getAttribute('data-totalwishlistitems'));
+        }
+      });
+    });
+
+    observer.observe(wishlistCountEl, { attributes: true });
+
+    updateCountText(wishlistCountEl.getAttribute('data-totalwishlistitems'));
+  });
+</script>
