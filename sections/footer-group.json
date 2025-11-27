@@ -179,7 +179,59 @@
               "type": "text",
               "name": "t:names.text",
               "settings": {
-                "text": "<p><a href=\"/policies/terms-of-service\" title=\"Terms of Service\">特定商取引法</a></p>",
+                "text": "<p><a href=\"https://corp.toei-video.co.jp/company/overview\" target=\"_blank\" title=\"https://corp.toei-video.co.jp/company/overview\">会社概要</a></p>",
+                "width": "fit-content",
+                "max_width": "normal",
+                "alignment": "left",
+                "type_preset": "paragraph",
+                "font": "var(--font-body--family)",
+                "font_size": "1rem",
+                "line_height": "normal",
+                "letter_spacing": "normal",
+                "case": "none",
+                "wrap": "pretty",
+                "color": "var(--color-foreground)",
+                "background": false,
+                "background_color": "#00000026",
+                "corner_radius": 0,
+                "padding-block-start": 0,
+                "padding-block-end": 0,
+                "padding-inline-start": 0,
+                "padding-inline-end": 0
+              },
+              "blocks": {}
+            },
+            "text_mAgBUa": {
+              "type": "text",
+              "name": "t:names.text",
+              "settings": {
+                "text": "<p><a href=\"/policies/privacy-policy\" title=\"Privacy Policy\">プライバシーポリシー</a></p>",
+                "width": "fit-content",
+                "max_width": "normal",
+                "alignment": "left",
+                "type_preset": "paragraph",
+                "font": "var(--font-body--family)",
+                "font_size": "1rem",
+                "line_height": "normal",
+                "letter_spacing": "normal",
+                "case": "none",
+                "wrap": "pretty",
+                "color": "var(--color-foreground)",
+                "background": false,
+                "background_color": "#00000026",
+                "corner_radius": 0,
+                "padding-block-start": 0,
+                "padding-block-end": 0,
+                "padding-inline-start": 0,
+                "padding-inline-end": 0
+              },
+              "blocks": {}
+            },
+            "text_H6yXzK": {
+              "type": "text",
+              "name": "t:names.text",
+              "settings": {
+                "text": "<p><a href=\"/pages/contact\" title=\"お問い合わせ\">お問い合わせ</a></p>",
                 "width": "fit-content",
                 "max_width": "normal",
                 "alignment": "left",
@@ -206,7 +258,9 @@
             "text_EYGNNg",
             "text_M8G4Ft",
             "text_qx7wjj",
-            "text_tiBMEt"
+            "text_tiBMEt",
+            "text_mAgBUa",
+            "text_H6yXzK"
           ]
         },
         "menu_6x3G4w": {
