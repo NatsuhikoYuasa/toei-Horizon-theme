@@ -93,14 +93,6 @@
           "barcode_displayed": false
         }
       },
-      "18421699284197576312": {
-        "type": "shopify://apps/easypoints/blocks/sdk/f0862409-7105-4920-b523-5bd76a964d4a",
-        "disabled": true,
-        "settings": {
-          "primary_color": "#5936e3",
-          "enable_my_account": false
-        }
-      },
       "384495262013941155": {
         "type": "shopify://apps/advanced-wishlist/blocks/collection-btn/330d9272-08ea-4193-b3e0-475a69fa65fa",
         "disabled": true,
@@ -127,6 +119,14 @@
         "type": "shopify://apps/advanced-wishlist/blocks/app/330d9272-08ea-4193-b3e0-475a69fa65fa",
         "disabled": false,
         "settings": {}
+      },
+      "18421699284197576312": {
+        "type": "shopify://apps/easypoints/blocks/sdk/f0862409-7105-4920-b523-5bd76a964d4a",
+        "disabled": false,
+        "settings": {
+          "primary_color": "#5936e3",
+          "enable_my_account": false
+        }
       }
     },
     "color_schemes": {
