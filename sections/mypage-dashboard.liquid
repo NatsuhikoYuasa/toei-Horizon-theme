@@ -1,0 +1,113 @@
+{% if customer %}
+  {% liquid
+    assign wishlist_prefix = shop.metafields.hulkapps_wishlist.hulkapps_wishlist_general.app_proxy_prefix
+    assign wishlist_path = shop.metafields.hulkapps_wishlist.hulkapps_wishlist_general.app_proxy_path
+    assign wishlist_url = '/apps/advanced-wishlist'
+
+    if wishlist_prefix != blank and wishlist_path != blank
+      assign wishlist_url = '/' | append: wishlist_prefix | append: '/' | append: wishlist_path
+    endif
+  %}
+  <div class="mypage-wrapper">
+    <h1 class="mypage-title">マイページ</h1>
+
+    <section class="mypage-hero">
+      <div class="mypage-hero__left">
+        <div class="mypage-hero__icon" aria-hidden="true">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.5" />
+            <path d="M4 19.5C4 15.9101 7.13401 13 10.75 13H13.25C16.866 13 20 15.9101 20 19.5V20H4V19.5Z" stroke="currentColor" stroke-width="1.5" />
+          </svg>
+        </div>
+        <div class="mypage-hero__profile">
+          <p class="mypage-hero__greeting">{{ customer.first_name }} {{ customer.last_name }} 様</p>
+        </div>
+      </div>
+
+      <div class="mypage-hero__right">
+        <div class="mypage-hero__item">
+          <span class="mypage-hero__label">現在のポイント</span>
+          <span class="mypage-hero__value">
+            {%- render 'easypoints-customer-points' -%}
+          </span>
+          <!-- easyPoints の現在ポイントスニペットを表示。セットアップ完了後に中身を差し替え -->
+        </div>
+
+        <a class="mypage-hero__link" href="/pages/points-history">ポイント履歴はこちら</a>
+        <!-- /pages/points-history（page.points-history テンプレート） -->
+
+        <div class="mypage-hero__item">
+          <span class="mypage-hero__label">現在の会員ランク</span>
+          <span class="mypage-hero__value">
+            {%- render 'easypoints-customer-tier' -%}
+          </span>
+          <!-- easyPoints のランクスニペットを表示。セットアップ完了後に中身を差し替え -->
+        </div>
+
+        {%- liquid
+          assign gold_threshold = 50000
+          assign platinum_threshold = 100000
+          # TODO: easyPoints の実際のランク条件と合わせてしきい値を調整
+        -%}
+
+        {%- if customer.total_spent < gold_threshold -%}
+          {%- assign remain = gold_threshold | minus: customer.total_spent -%}
+          <p class="mypage-hero__note">
+            来月までにあと {{ remain | money_without_trailing_zeros }} ご購入でゴールド会員にランクアップ
+          </p>
+        {%- elsif customer.total_spent < platinum_threshold -%}
+          {%- assign remain = platinum_threshold | minus: customer.total_spent -%}
+          <p class="mypage-hero__note">
+            来月までにあと {{ remain | money_without_trailing_zeros }} ご購入でプラチナ会員にランクアップ
+          </p>
+        {%- else -%}
+          <p class="mypage-hero__note">現在最高ランクです。いつもご利用ありがとうございます。</p>
+        {%- endif -%}
+
+        <a class="mypage-hero__link" href="/pages/member-rank">会員ランクについて詳しくはこちら</a>
+        <!-- TODO: /pages/member-rank ページ公開後にリンク確認 -->
+      </div>
+    </section>
+
+    <section class="mypage-grid">
+      <div class="mypage-card">
+        <h2 class="mypage-card__title">お買い物情報</h2>
+        <ul class="mypage-card__list">
+          <li><a href="{{ routes.account_url }}">購入履歴</a></li>
+          <li><a href="/pages/points-history">ポイント履歴</a></li>
+          <!-- /pages/points-history（ポイント履歴ページ） -->
+          <li>
+            <a href="{{ wishlist_url }}">お気に入り一覧</a>
+            <!-- Advanced Wishlist 一覧ページのURL。app proxy 設定があればそれを使用 -->
+          </li>
+        </ul>
+      </div>
+
+      <div class="mypage-card">
+        <h2 class="mypage-card__title">会員情報設定</h2>
+        <ul class="mypage-card__list">
+          <li><a href="{{ routes.account_url }}">会員情報の変更</a></li>
+          <li><a href="{{ routes.account_addresses_url }}">アドレス帳の確認</a></li>
+          <li><a href="/pages/mail-magazine">メールニュース登録</a></li>
+          <!-- TODO: /pages/mail-magazine ページがない場合は作成後にリンク確認 -->
+        </ul>
+      </div>
+
+      <div class="mypage-card">
+        <h2 class="mypage-card__title">その他</h2>
+        <ul class="mypage-card__list">
+          <li><a href="/pages/contact">お問い合わせ</a></li>
+          <li><a href="/pages/withdrawal">退会</a></li>
+          <!-- TODO: /pages/withdrawal ページ公開後にリンク確認 -->
+          <li><a href="{{ routes.account_logout_url }}">ログアウト</a></li>
+        </ul>
+      </div>
+    </section>
+  </div>
+{% else %}
+  <div class="mypage-wrapper mypage-wrapper--guest">
+    <h1 class="mypage-title">マイページ</h1>
+    <p class="mypage-guest-message">マイページを表示するにはログインが必要です。</p>
+    <a class="mypage-login-button button button--primary" href="{{ routes.account_login_url }}">ログインページへ</a>
+  </div>
+{% endif %}

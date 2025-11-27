@@ -77,7 +77,7 @@
     "clear_all": "全ての絞り込み条件を解除",
     "remove": "削除",
     "view_in_your_space": "スペースに表示",
-    "show_filters": "フィルター",
+    "show_filters": "絞り込み",
     "clear": "透明",
     "continue_shopping": "買い物を続ける",
     "log_in_html": "アカウントをお持ちですか？<a href=\"{{ link }}\">ログイン</a>することで、チェックアウトがスピーディーに行えます。",

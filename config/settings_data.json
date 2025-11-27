@@ -9,6 +9,7 @@
  */
 {
   "current": {
+    "logo": "shopify://shop_images/logo.svg",
     "logo_height": 36,
     "logo_height_mobile": 28,
     "type_body_font": "inter_n4",
@@ -18,29 +19,29 @@
     "type_size_paragraph": "14",
     "type_line_height_paragraph": "body-loose",
     "type_font_h1": "heading",
-    "type_size_h1": "56",
-    "type_line_height_h1": "display-tight",
+    "type_size_h1": "32",
+    "type_line_height_h1": "display-normal",
     "type_letter_spacing_h1": "heading-normal",
     "type_case_h1": "none",
     "type_font_h2": "heading",
-    "type_size_h2": "48",
-    "type_line_height_h2": "display-tight",
+    "type_size_h2": "20",
+    "type_line_height_h2": "display-normal",
     "type_letter_spacing_h2": "heading-normal",
     "type_case_h2": "none",
     "type_font_h3": "heading",
-    "type_size_h3": "32",
+    "type_size_h3": "18",
     "type_line_height_h3": "display-normal",
     "type_letter_spacing_h3": "heading-normal",
     "type_case_h3": "none",
     "type_font_h4": "heading",
-    "type_size_h4": "24",
-    "type_line_height_h4": "display-tight",
+    "type_size_h4": "16",
+    "type_line_height_h4": "display-normal",
     "type_font_h5": "subheading",
     "type_size_h5": "14",
-    "type_line_height_h5": "display-loose",
+    "type_line_height_h5": "display-normal",
     "type_font_h6": "subheading",
     "type_size_h6": "12",
-    "type_line_height_h6": "display-loose",
+    "type_line_height_h6": "display-normal",
     "page_width": "narrow",
     "page_transition_enabled": false,
     "transition_to_main_product": false,
@@ -78,6 +79,50 @@
     "variant_button_width": "equal-width-buttons",
     "content_for_index": [],
     "blocks": {
+      "4599818392069375057": {
+        "type": "shopify://apps/easypoints/blocks/widget2/f0862409-7105-4920-b523-5bd76a964d4a",
+        "disabled": false,
+        "settings": {
+          "primary_color": "#5936e3",
+          "position": "right",
+          "bottom_offset": 16,
+          "horizontal_offset": 16,
+          "z_index": "999",
+          "icon_only": false,
+          "highlighted_bonus_collection": "",
+          "barcode_displayed": false
+        }
+      },
+      "18421699284197576312": {
+        "type": "shopify://apps/easypoints/blocks/sdk/f0862409-7105-4920-b523-5bd76a964d4a",
+        "disabled": true,
+        "settings": {
+          "primary_color": "#5936e3",
+          "enable_my_account": false
+        }
+      },
+      "384495262013941155": {
+        "type": "shopify://apps/advanced-wishlist/blocks/collection-btn/330d9272-08ea-4193-b3e0-475a69fa65fa",
+        "disabled": true,
+        "settings": {
+          "is_added_selector": false,
+          "collection_icon_selector": ".card__heading",
+          "collection_icon_type": "outline",
+          "collection_icon_background_type": "icon_no_background",
+          "collection_icon_size": 16,
+          "collection_icon_background_color": "#ffffff",
+          "collection_icon_fill_color": "#5c6ac4",
+          "collection_icon_border_color": "#5c6ac4",
+          "collection_icon_hover_color": "#f5f5f5",
+          "collection_selected_icon_fill_color": "#5c6ac4",
+          "collection_selected_icon_border_color": "#5c6ac4",
+          "custom_wishlist_icon": true,
+          "custom_wishlist_icon_right": "true",
+          "collection_count_layout": "top_count",
+          "collection_count_background_color": "#5c6ac4",
+          "collection_count_color": "#ffffff"
+        }
+      },
       "1744347199190486471": {
         "type": "shopify://apps/advanced-wishlist/blocks/app/330d9272-08ea-4193-b3e0-475a69fa65fa",
         "disabled": false,
@@ -126,16 +171,16 @@
       },
       "scheme-2": {
         "settings": {
-          "background": "#f5f5f5",
+          "background": "#e6e8ee",
           "foreground_heading": "#000000",
           "foreground": "#000000cf",
           "primary": "#000000cf",
           "primary_hover": "#ffffff",
-          "border": "#dfdfdf",
+          "border": "#e6e8ee",
           "shadow": "#000000",
           "primary_button_background": "#000000",
           "primary_button_text": "#ffffff",
-          "primary_button_border": "#000000",
+          "primary_button_border": "#00000026",
           "primary_button_hover_background": "#333333",
           "primary_button_hover_text": "#ffffff",
           "primary_button_hover_border": "#333333",
