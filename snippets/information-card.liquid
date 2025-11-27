@@ -12,11 +12,11 @@
   </summary>
 
   <div class="information-accordion__body">
-    <div class="information-accordion__body-header">
+    {% comment %} <div class="information-accordion__body-header">
       <p class="information-accordion__date information-accordion__date--body">{{ date_text }}</p>
       <p class="information-accordion__title information-accordion__title--body">{{ article.title }}</p>
       <span class="information-accordion__icon information-accordion__icon--body" aria-hidden="true"></span>
-    </div>
+    </div> {% endcomment %}
 
     <div class="information-accordion__content rte">
       {{ article.content }}

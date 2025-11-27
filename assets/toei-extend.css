@@ -350,6 +350,7 @@
   list-style: none;
   margin: 0;
   padding: 0;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .information-list__item + .information-list__item {
