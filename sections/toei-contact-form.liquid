@@ -7,7 +7,8 @@
 <section class="toei-contact" id="ContactFormWrapper">
   <div class="page-width toei-contact__inner">
     <div class="toei-contact__header">
-      <h1 class="toei-contact__title">お問い合わせ</h1>
+      {%- render 'page-breadcrumbs', current_title: page.title -%}
+      <h1 class="toei-contact__title">{{ page.title }}</h1>
       {% if section.settings.description != blank %}
         <div class="toei-contact__description rte">{{ section.settings.description }}</div>
       {% endif %}
