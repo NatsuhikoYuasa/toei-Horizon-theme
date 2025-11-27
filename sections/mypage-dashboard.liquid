@@ -9,6 +9,7 @@
     endif
   %}
   <div class="mypage-wrapper">
+    {%- render 'page-breadcrumbs', current_title: 'マイページ' -%}
     <h1 class="mypage-title">マイページ</h1>
 
     <section class="mypage-hero">
@@ -106,6 +107,7 @@
   </div>
 {% else %}
   <div class="mypage-wrapper mypage-wrapper--guest">
+    {%- render 'page-breadcrumbs', current_title: 'マイページ' -%}
     <h1 class="mypage-title">マイページ</h1>
     <p class="mypage-guest-message">マイページを表示するにはログインが必要です。</p>
     <a class="mypage-login-button button button--primary" href="{{ routes.account_login_url }}">ログインページへ</a>
