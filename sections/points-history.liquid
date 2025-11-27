@@ -1,5 +1,6 @@
 {% if customer %}
   <div class="points-history-wrapper">
+    {%- render 'page-breadcrumbs', level_1_title: 'マイページ', level_1_url: '/pages/mypage', current_title: 'ポイント履歴' -%}
     <h1 class="points-history-title">ポイント履歴</h1>
 
     <section class="points-history-hero">
@@ -51,6 +52,7 @@
   </div>
 {% else %}
   <div class="points-history-wrapper points-history-wrapper--guest">
+    {%- render 'page-breadcrumbs', level_1_title: 'マイページ', level_1_url: '/pages/mypage', current_title: 'ポイント履歴' -%}
     <h1 class="points-history-title">ポイント履歴</h1>
     <p class="points-history-guest-message">ポイント履歴を表示するにはログインが必要です。</p>
     <a class="button button--primary points-history-login-button" href="{{ routes.account_login_url }}">ログインページへ</a>

@@ -1,0 +1,82 @@
+{% comment %}
+  Generic breadcrumbs using Horizon breadcrumb styles.
+  Parameters:
+  - top_label (optional): label for the root link. defaults to "トップ".
+  - top_url (optional): href for the root link. defaults to routes.root_url.
+  - level_1_title (optional): label for the first intermediate level.
+  - level_1_url (optional): href for the first intermediate level.
+  - level_2_title (optional): label for the second intermediate level.
+  - level_2_url (optional): href for the second intermediate level.
+  - current_title (required): label for the current page (no link).
+{% endcomment %}
+
+{%- liquid
+  assign top_label = top_label | default: 'トップ'
+  assign top_url = top_url | default: routes.root_url
+  assign current_title = current_title | default: ''
+-%}
+
+<nav class="wb-breadcrumb" aria-label="パンくずリスト">
+  <ol class="wb-breadcrumb__list">
+    <li class="wb-breadcrumb__item">
+      <a href="{{ top_url }}">{{ top_label }}</a>
+    </li>
+
+    {%- if level_1_title -%}
+      <li class="wb-breadcrumb__item">
+        {%- if level_1_url -%}
+          <a href="{{ level_1_url }}">{{ level_1_title }}</a>
+        {%- else -%}
+          {{ level_1_title }}
+        {%- endif -%}
+      </li>
+    {%- endif -%}
+
+    {%- if level_2_title -%}
+      <li class="wb-breadcrumb__item">
+        {%- if level_2_url -%}
+          <a href="{{ level_2_url }}">{{ level_2_title }}</a>
+        {%- else -%}
+          {{ level_2_title }}
+        {%- endif -%}
+      </li>
+    {%- endif -%}
+
+    <li class="wb-breadcrumb__item wb-breadcrumb__item--current" aria-current="page">{{ current_title }}</li>
+  </ol>
+</nav>
+
+<style>
+  .wb-breadcrumb {
+    margin-block: 1rem 0.75rem;
+    font-size: 13px;
+  }
+  .wb-breadcrumb__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .wb-breadcrumb__item {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+  .wb-breadcrumb__item + .wb-breadcrumb__item::before {
+    content: '›';
+    margin: 0 0.4em;
+    color: #999;
+  }
+  .wb-breadcrumb__item a {
+    text-decoration: none;
+    color: inherit;
+  }
+  .wb-breadcrumb__item a:hover {
+    text-decoration: underline;
+  }
+  .wb-breadcrumb__item--current {
+    color: #777;
+  }
+</style>
