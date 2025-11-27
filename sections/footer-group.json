@@ -153,7 +153,7 @@
               "type": "text",
               "name": "t:names.text",
               "settings": {
-                "text": "<p><a href=\"/policies/terms-of-service\" title=\"Terms of Service\">特定商取引法</a></p>",
+                "text": "<p><a href=\"/policies/legal-notice\" title=\"Legal Notice\">特定商取引法</a></p>",
                 "width": "fit-content",
                 "max_width": "normal",
                 "alignment": "left",
