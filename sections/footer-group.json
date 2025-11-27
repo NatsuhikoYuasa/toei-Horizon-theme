@@ -63,7 +63,7 @@
           "settings": {
             "content_direction": "row",
             "vertical_on_mobile": true,
-            "horizontal_alignment": "flex-start",
+            "horizontal_alignment": "center",
             "vertical_alignment": "center",
             "align_baseline": false,
             "horizontal_alignment_flex_direction_column": "flex-start",
@@ -389,7 +389,7 @@
         "section_width": "page-width",
         "gap": 20,
         "color_scheme": "scheme-2",
-        "padding-block-start": 36,
+        "padding-block-start": 0,
         "padding-block-end": 36
       }
     }
