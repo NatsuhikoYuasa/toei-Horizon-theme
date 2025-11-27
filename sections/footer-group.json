@@ -127,7 +127,7 @@
               "type": "text",
               "name": "t:names.text",
               "settings": {
-                "text": "<p><a href=\"/policies/legal-notice\" title=\"Legal Notice\">利用規約</a></p>",
+                "text": "<p><a href=\"/policies/terms-of-service\" title=\"Terms of Service\">利用規約</a></p>",
                 "width": "fit-content",
                 "max_width": "normal",
                 "alignment": "left",
