@@ -88,7 +88,11 @@
       {%- endfor -%}
     {% endif %}
   {%- endfor -%}
-  {% if should_show_clear_all and is_active %}
+  {% comment %} wb03 blocked&add
+   {% if should_show_clear_all and is_active %}
+  {% endcomment %}
+  {% if should_show_clear_all %}
+    
     <facet-remove-component
       data-url="{{ results_url }}"
     >

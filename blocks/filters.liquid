@@ -1,4 +1,3 @@
-
 {%- doc -%}
   Renders the facet filtering component
 
@@ -19,6 +18,9 @@
   assign sort_by = results.sort_by | default: results.default_sort_by
   assign filters = filters | default: results.filters
   assign total_active_values = 0
+
+  assign desktop_form_id = 'FacetFiltersForm--' | append: section.id | append: '-desktop'
+  assign limit_param = request.params.limit
 
   # Calculate facets margin style
   capture facets_margin_style
@@ -72,33 +74,40 @@
 -%}
 
 {% if block_settings.enable_filtering or block_settings.enable_sorting or block_settings.enable_grid_density %}
+  {%- comment -%}
+    フィルタが縦レイアウトのときだけ、
+    コレクション上部ツールバー（1〜8件（全8件）＋並び替え＋表示件数）を表示
+  {%- endcomment -%}
   {% if block_settings.filter_style == 'vertical' %}
-    {% # These elements are always rendered in the horizontal bar that's why we apply the .facets--horizontal class %}
     <div
-      class="facets facets--horizontal facets-controls-wrapper spacing-style"
+      class="facets facets--horizontal facets-controls-wrapper spacing-style wb-collection-toolbar"
       style="{% render 'spacing-style', settings: block_settings %}{% if block_settings.text_label_case == 'uppercase' %} --facet-label-transform: uppercase;{% endif %}"
     >
-      {% if block_settings.enable_filtering %}
-        <h4 class="facets--filters-title">{{ 'content.filters' | t }}</h4>
-      {% endif %}
-
-      <div class="products-count-wrapper">
-        <span title="{{ 'content.product_count' | t }}">
-          {{- 'content.item_count' | t: count: products_count -}}
+      {%- comment -%} 左：件数表示 {%- endcomment -%}
+      <div class="products-count-wrapper wb-collection-count">
+        <span>
+          {% if results_label != blank %}
+            {{ results_label }}
+          {% else %}
+            {{ 'content.item_count' | t: count: products_count }}
+          {% endif %}
         </span>
       </div>
 
-      {% if block_settings.enable_sorting %}
-        {% render 'sorting',
-          results: results,
-          sort_by: sort_by,
-          filter_style: block_settings.filter_style,
-          suffix: 'desktop',
-          sort_position: 'desktop',
-          should_use_select_on_mobile: false,
-          section_id: section.id
-        %}
-      {% endif %}
+      {%- comment -%} 右：並び替えのみ {%- endcomment -%}
+      <div class="wb-collection-toolbar-right">
+        {% if block_settings.enable_sorting %}
+          {% render 'sorting',
+            results: results,
+            sort_by: sort_by,
+            filter_style: block_settings.filter_style,
+            suffix: 'desktop',
+            sort_position: 'desktop',
+            should_use_select_on_mobile: false,
+            section_id: section.id
+          %}
+        {% endif %}
+      </div>
 
       {% if block_settings.enable_grid_density %}
         {% render 'grid-density-controls', viewport: 'desktop' %}
@@ -212,6 +221,11 @@
                 {% endif %}
               </div>
 
+              {%- comment -%} wb03 add フィルター下部の常時表示クリアボタン {%- endcomment -%}
+              <div class="wb-facets-footer">
+                <a href="{{ collection.url }}" class="wb-facets-clear"> 全ての絞り込み条件を解除 </a>
+              </div>
+
               {% render 'facets-actions',
                 results_url: results_url,
                 is_active: is_active,
@@ -316,6 +330,19 @@
       {% endif %}
     </div>
   </div>
+
+  {% if block_settings.filter_style == 'vertical' %}
+    <div class="wb-collection-count wb-collection-count-mobile">
+      <span>
+        {% if results_label != blank %}
+          {{ results_label }}
+        {% else %}
+          {{ 'content.item_count' | t: count: products_count }}
+        {% endif %}
+      </span>
+    </div>
+  {% endif %}
+
 {% else %}
   <div></div>
 {% endif %}
@@ -1057,6 +1084,311 @@
       z-index: var(--facets-open-z-index);
     }
   }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media screen and (min-width: 990px) {
+    .wb-collection-count {
+      margin-left: 25% !important;
+    }
+  }
+
+  /* --- コレクション上部ツールバー（件数＋並び替え） --- */
+  @media screen and (min-width: 750px) {
+    .wb-collection-toolbar {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: var(--gap-sm);
+      /* フィルター縦型のとき、商品グリッドと同じ列に揃える */
+      grid-column: var(--facets-vertical-col-width) / var(--full-width-column-number);
+      margin-bottom: 10px;
+    }
+  }
+
+  @media screen and (min-width: 750px) and (max-width: 989px) {
+    .facets--horizontal .products-count-wrapper {
+      margin-left: inherit;
+    }
+
+    .facets-block-wrapper.facets-block-wrapper--vertical {
+      margin: 0 0 3rem !important;
+    }
+  }
+
+  @media screen and (max-width: 750px) {
+    .facets-block-wrapper.facets-block-wrapper--vertical {
+      background-color: #f5f6f8;
+    }
+  }
+
+  /* 1〜8件（全8件） – 上部ツールバー用 */
+  .wb-collection-toolbar .wb-collection-count {
+    display: flex !important;
+    align-items: center;
+    margin-right: auto;
+    font-size: 13px;
+  }
+
+  .wb-collection-toolbar .wb-collection-count span {
+    display: inline-block;
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+
+  .wb-collection-count__current {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  /* 右側（並び替え） */
+  .wb-collection-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+    margin-left: auto;
+  }
+
+  .wb-collection-sort-summary {
+    min-width: 96px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-background);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  /* =====================================================
+     wb03 custom – SP 絞り込みデザイン調整
+     ===================================================== */
+
+  /* ▼ SP の最初の「絞り込み」ボタン（トグル） */
+  @media screen and (max-width: 749px) {
+    .facets-toggle {
+      padding-inline: var(--page-margin-inline-offset, 16px);
+    }
+
+    .facets-toggle__wrapper {
+      width: 100%;
+    }
+
+    .facets-toggle__button {
+      width: 100%;
+      justify-content: space-between;
+      border-radius: 5px;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      /* background-color: #ffffff; */
+      padding: 10px 16px;
+      font-size: 14px;
+      line-height: 1.4;
+      box-shadow: none;
+    }
+
+    .facets-toggle__button .svg-wrapper {
+      margin-right: 6px;
+    }
+
+    #ResultsList {
+      margin-top: 1em;
+    }
+
+    h2#filters-drawer-heading {
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .facets__title-wrapper,
+    .sorting-filter__select {
+      background-color: #f5f6f8;
+    }
+  }
+
+  /* ▼ ドロワー全体の背景やフォントサイズ調整 */
+  .facets--drawer {
+    background-color: #f7f7f7;
+  }
+
+  .facets--drawer .facets__form-wrapper {
+    font-size: 13px;
+  }
+
+  .facets--drawer .facets__label {
+    font-size: 13px;
+  }
+
+  /* セクション見出し（商品種別 / 作品 …） */
+  .facets--drawer .facets__item > summary.facets__summary {
+    font-size: 14px;
+    font-weight: 600;
+    padding: 12px 16px;
+    background-color: #ffffff;
+  }
+
+  /* 見出しの下の入力エリアをカード風に */
+  .facets--drawer .facets__inputs-wrapper {
+    margin-block: 0;
+  }
+
+  /* チェックボックス行 */
+  .facets--drawer .facets__inputs-wrapper .facets__inputs-list li,
+  .facets--drawer .facets__inputs-wrapper .facets__inputs-list .facet-checkbox {
+    font-size: 13px;
+  }
+
+  .facets__inputs-wrapper .facets__inputs-list {
+    gap: 20px;
+  }
+
+  /* 「この条件で絞り込み」ボタン（A：赤背景・白文字） */
+  .facets--drawer .facets__see-results {
+    width: 100%;
+    justify-content: center;
+    border-radius: 999px;
+    padding-block: 14px;
+    background-color: #d9363e; /* お好みで色調整可 */
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 14px;
+    border: none;
+  }
+
+  /* === SP（〜749px） 絞り込みまわりデザイン調整 === */
+  @media screen and (max-width: 749px) {
+    /* ▼ 一番上の「絞り込み」トグルボタン */
+    .facets-toggle__button.button-unstyled {
+      border-radius: 8px;
+      background-color: #f5f6f8;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      padding-inline: 16px;
+      height: 40px;
+      font-size: 13px;
+    }
+
+    /* ▼ ドロワー本体の背景色 */
+    .facets--drawer {
+      background-color: #f5f6f8;
+    }
+
+    /* ▼ ドロワー上部の「絞り込み」タイトル */
+    .facets--drawer .facets-drawer__title,
+    .facets--drawer .facets__label {
+      font-size: 16px !important;
+      line-height: 1.4;
+    }
+
+    /* ▼ セクション見出し */
+    .facets--drawer .facets__summary {
+      font-size: 14px;
+    }
+
+    /* ▼ 下部 2 ボタンのレイアウト（縦並び） */
+    .facets--drawer .facets__actions {
+      position: static;
+      padding: 16px;
+      margin-top: 8px;
+      box-shadow: none;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .facets-toggle {
+      padding: 0 !important;
+      justify-content: center !important;
+    }
+
+    .facets-toggle__wrapper span.svg-wrapper,
+    .facet-remove-component {
+      order: 2;
+    }
+
+    div#filter-count-bubble-toggle,
+    span.bubble.facets__bubble {
+      display: none;
+    }
+
+    .facets__clear-all--disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    /* フィルタードロワーだけアニメーションを少しゆっくりにする */
+    dialog-component#filters-drawer .dialog-drawer {
+      animation-duration: 0.35s !important; /* 開く速度 */
+    }
+
+    /* 閉じる時のアニメーションも同じくらいに */
+    dialog-component#filters-drawer .dialog-drawer[closing] {
+      animation-duration: 0.35s !important;
+    }
+  }
+
+  /* モバイル用 件数表示「1〜20件（全20件）」 */
+  @media screen and (max-width: 749px) {
+    .wb-collection-count-mobile {
+      display: flex;
+      align-items: center;
+      padding: 36px 2px 0px;
+      font-size: 13px;
+    }
+  }
+
+  @media screen and (min-width: 750px) {
+    .wb-collection-count-mobile {
+      display: none;
+    }
+  }
+
+  /* === SP ドロワー：ボタン常時表示＋順番調整 ========================= */
+@media screen and (max-width: 749px) {
+  /* アクティブかどうかに関係なく、ドロワー内の actions を表示 */
+  .facets--drawer .facets__actions,
+  .facets--drawer .facets__actions:not(.facets__actions--active) {
+    display: flex !important;
+  }
+
+  /* 下部 2ボタンのレイアウト（縦並び） */
+  .facets--drawer .facets__actions {
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    margin-top: 8px;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  /* 上：赤背景「この条件で絞り込み」 */
+  .facets--drawer .facets__see-results {
+    width: 100%;
+    border-radius: 8px;
+    padding-block: 12px;
+  }
+
+  /* 下：白背景＋赤枠「全ての絞り込み条件を解除」 */
+  .facets--drawer .facets__clear-all {
+    width: 100%;
+    border-radius: 8px;
+    padding-block: 12px;
+    background-color: #ffffff;
+    border: 1px solid #e84141;
+    color: #e84141;
+    justify-content: center;
+  }
+}
+
 {% endstylesheet %}
 
 {% schema %}
