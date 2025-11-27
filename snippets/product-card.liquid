@@ -21,73 +21,6 @@
 {% endstyle %}
 
 {% comment %} wb03 blocked&add start {% endcomment %}
-{% comment %}
-  {% liquid
-    assign has_quick_add = false
-    if settings.quick_add and product.available
-      assign has_quick_add = true
-    endif
-
-    assign has_mobile_quick_add = false
-    if has_quick_add and settings.mobile_quick_add
-      assign has_mobile_quick_add = true
-    endif
-
-    assign product_card_id = 'product-card-link-' | append: block.id | append: '-' | append: product.id
-    assign product_card_gap_value = product_card_gap | default: block_settings.product_card_gap
-
-    # Logic to determine which variant URL to use (matching swatch selection logic)
-    assign variant_to_link = product.selected_or_first_available_variant
-    assign combined_listing_count = product.options_with_values | map: 'values' | map: 'product_url' | compact | size
-    assign no_swatch_selected = null
-
-    unless combined_listing_count > 0
-      # Simple direct check: which variant owns the featured image?
-      if product.featured_media
-        assign found_variant = false
-
-        for variant in product.variants
-          if variant.featured_media.id == product.featured_media.id
-            assign variant_to_link = variant
-            assign found_variant = true
-            break
-          endif
-        endfor
-
-        # Check if we need to set no_swatch_selected
-        unless found_variant
-          # Featured image is not a variant image
-          # Check if product has swatches
-          for option in product.options_with_values
-            assign swatch_count = option.values | map: 'swatch' | compact | size
-            if swatch_count > 1
-              # Multiple swatches exist but featured image doesn't match any
-              assign no_swatch_selected = true
-              break
-            endif
-          endfor
-        endunless
-      endif
-    endunless
-
-    if settings.transition_to_main_product
-      assign featured_image = variant_to_link.featured_image
-      if featured_image == blank
-        assign featured_image = product.featured_media.preview_image
-      endif
-
-      if featured_image != blank
-        assign featured_media_url = featured_image | image_url: width: 500
-      endif
-    endif
-
-    assign onboarding = false
-    if product.id == empty or product == blank
-      assign onboarding = true
-    endif
-  %}
-{% endcomment %}
-
 {% liquid
   assign has_quick_add = false
   if settings.quick_add and product.available
@@ -152,11 +85,11 @@
     assign onboarding = true
   endif
 
-  # ===== 表示制御：display_start_at / display_end_at =====
+  # ===== 表示制御：display_start_at / display_end_at ===== wb03 =====
   assign disabled = false
 
   assign display_start_raw = product.metafields.product.display_start_at
-  assign display_end_raw = product.metafields.product.display_end_at
+  assign display_end_raw   = product.metafields.product.display_end_at
 
   if display_start_raw != blank or display_end_raw != blank
     assign now_ts = 'now' | date: '%s'
@@ -189,7 +122,7 @@
     endif
   endif
 %}
-{% comment %} wb03 blocked&add end {% endcomment %}
+{% comment %} wb03 blocked&add end  {% endcomment %}
 
 {%- if settings.transition_to_main_product -%}
   <product-card-link
@@ -203,10 +136,8 @@
 {%- endif -%}
 <product-card
   {% comment %} wb03 blocked&add start {% endcomment %}
-  {% comment %} class="product-card" {% endcomment %}
-  class="product-card{% if disabled %} product-card--disabled{% endif %}"
+   class="product-card{% if disabled %} product-card--disabled{% endif %}"
   {% comment %} wb03 blocked&add end {% endcomment %}
-
   data-product-id="{{ product.id }}"
   data-product-variants-size="{{ product.variants.size }}"
   id="product-card-{{ block.id }}"
@@ -220,30 +151,20 @@
   {% endif %}
 >
   {% comment %} wb03 blocked&add start {% endcomment %}
-  {% comment %}
-    <a
-      id="{{ product_card_id | md5 }}"
-      {% unless onboarding %}
-        href="{{ variant_to_link.url }}"
-      {% endunless %}
-      class="product-card__link"
-      ref="productCardLink"
-    >
-  {% endcomment %}
   <a
     id="{{ product_card_id | md5 }}"
     {% unless onboarding or disabled %}
-      href="{{ variant_to_link.url }}"
+      href="{{ variant_to_link.url }}
     {% endunless %}
     class="product-card__link"
     ref="productCardLink"
   >
-    {% comment %} wb03 blocked&add end {% endcomment %}
-
+  {% comment %} wb03 blocked&add end {% endcomment %}
     <span class="visually-hidden">
       {{ product.title }}
     </span>
   </a>
+
   <div
     class="
       product-card__content
@@ -269,6 +190,145 @@
     "
   >
     {{ children }}
+
+    {% comment %} wb03 add start : 5 badges (NEW / 予約受付中 / 初回特典残りわずか / 早期予約特典あり / 締切間近) {% endcomment %}
+    {% unless onboarding %}
+      {% liquid
+        #### ▼ 5種類バッジ用ロジック（商品オブジェクト = p）
+        assign p = product
+
+        assign now_ts   = 'now' | date: '%s' | plus: 0
+        assign new_days = 14 | plus: 0
+        assign days_sec = new_days | times: 86400
+        assign cutoff_ts = now_ts | minus: days_sec
+
+        ##### --- NEW（公開日 / tag:new / metafield new_until） ---
+        assign pub_ts = 0
+        if p.published_at != blank
+          assign pub_ts = p.published_at | date: '%s' | plus: 0
+        endif
+
+        assign is_new_published = false
+        if pub_ts != 0 and pub_ts > cutoff_ts
+          assign is_new_published = true
+        endif
+
+        assign tags_lc   = p.tags | join: ',' | downcase
+        assign tags_wrap = ',' | append: tags_lc | append: ','
+
+        assign is_new_tag = false
+        if tags_wrap contains ',new,'
+          assign is_new_tag = true
+        endif
+
+        assign is_new_mf = false
+        if p.metafields.custom.new_until != blank
+          assign new_until_ts = p.metafields.custom.new_until | date: '%s' | plus: 0
+          if new_until_ts > now_ts
+            assign is_new_mf = true
+          endif
+        endif
+
+        assign is_new = false
+        if is_new_published or is_new_tag or is_new_mf
+          assign is_new = true
+        endif
+
+        ##### --- 予約受付中（pre_ok） ---
+        assign t_suffix = p.template_suffix | downcase | default: ''
+        assign pre_ok   = false
+
+        if t_suffix contains 'preorder'
+          assign pre_ok = true
+        elsif tags_wrap contains ',preorder,'
+          assign pre_ok = true
+        elsif tags_wrap contains ',pre-order,'
+          assign pre_ok = true
+        elsif tags_wrap contains ',pre order,'
+          assign pre_ok = true
+        elsif tags_lc contains '予約' or tags_lc contains '先行' or tags_lc contains '先行予約'
+          assign pre_ok = true
+        elsif p.metafields.custom.preorder
+          assign pre_ok = true
+        endif
+
+        ##### --- 初回特典残りわずか / 早期予約特典あり / 締切間近 ---
+        assign first_bonus_total = 0
+        assign first_bonus_low   = false
+        assign early_bonus       = false
+        assign closing_soon      = false
+
+        assign first_bonus_threshold = 10 | plus: 0
+        assign ten_days_sec  = 864000 | plus: 0
+        assign min_end_ts    = 0
+
+        for v in p.variants
+          assign v_inventory      = v.inventory_quantity | default: 0 | plus: 0
+          assign v_is_first_bonus = v.metafields.custom.is_first_bonus.value
+          assign v_is_early_bonus = v.metafields.custom.is_early_bonus.value
+
+          # 初回特典残りわずか：対象バリアントの在庫合計
+          if v_is_first_bonus and v_inventory > 0
+            assign first_bonus_total = first_bonus_total | plus: v_inventory
+          endif
+
+          # 早期予約特典あり：予約商品かつ is_early_bonus が true のバリアントあり
+          if pre_ok and v_is_early_bonus
+            assign early_bonus = true
+          endif
+
+          # 締切間近：各 variant.sell_end_at の最も近い日時を拾う
+          assign v_end_raw = v.metafields.variant.sell_end_at
+          if v_end_raw != blank
+            assign v_end_ts = v_end_raw | date: '%s' | plus: 0
+            if min_end_ts == 0 or v_end_ts < min_end_ts
+              assign min_end_ts = v_end_ts
+            endif
+          endif
+        endfor
+
+        if first_bonus_total > 0 and first_bonus_total <= first_bonus_threshold
+          assign first_bonus_low = true
+        endif
+
+        if min_end_ts != 0
+          assign closing_from_ts = min_end_ts | minus: ten_days_sec
+          if now_ts >= closing_from_ts and now_ts <= min_end_ts
+            assign closing_soon = true
+          endif
+        endif
+
+        assign has_wb_badges = false
+        if is_new or pre_ok or first_bonus_low or early_bonus or closing_soon
+          assign has_wb_badges = true
+        endif
+      %}
+
+      {% if has_wb_badges %}
+        <div class="csh-badges csh-badges--below csh-badges--collection" data-has-wb-badges="{{ has_wb_badges }}">
+          {% if is_new and pre_ok == false %}
+            <span class="csh-badge csh-badge--new">NEW</span>
+          {% endif %}
+
+          {% if pre_ok %}
+            <span class="csh-badge csh-badge--pre">予約受付中</span>
+          {% endif %}
+
+          {% if first_bonus_low %}
+            <span class="csh-badge csh-badge--first-bonus">初回特典残りわずか</span>
+          {% endif %}
+
+          {% if early_bonus %}
+            <span class="csh-badge csh-badge--early">早期予約特典あり</span>
+          {% endif %}
+
+          {% if closing_soon %}
+            <span class="csh-badge csh-badge--closing">締切間近</span>
+          {% endif %}
+        </div>
+      {% endif %}
+    {% endunless %}
+    {% comment %} wb03 add end {% endcomment %}
   </div>
 </product-card>
 {%- if settings.transition_to_main_product -%}
@@ -291,56 +351,6 @@
     }
   }
 
-  /* Hide the variant swatches for product cards that show a swatches variant picker */
-  :is(.product-card):has(swatches-variant-picker-component) .quick-add .variant-option--swatches {
-    display: none;
-  }
-
-  /* Hide "Add" button for single option product cards that show a swatches variant picker */
-  :is(.product-card:not([data-no-swatch-selected])):has(.quick-add__product-form-component--single-option):has(
-      swatches-variant-picker-component
-    )
-    .quick-add__button--choose {
-    display: none;
-  }
-
-  /* Hide "Add" button for single option product cards that show a swatches variant picker */
-  :is(.product-card[data-no-swatch-selected]):has(.quick-add__product-form-component--single-option):has(
-      swatches-variant-picker-component
-    )
-    add-to-cart-component {
-    display: none;
-  }
-
-  /* Hide "add" button for multi-variant product cards that don't show a swatches variant picker */
-  :is(.product-card):has(.quick-add__product-form-component--multi-variant):not(:has(swatches-variant-picker-component))
-    .quick-add__button--add {
-    display: none;
-  }
-
-  /* Hover effect for single variant product cards and product blocks */
-
-  /* stylelint-disable selector-max-specificity */
-  :is(.product-card):has(.quick-add__product-form-component--single-variant) .card-gallery:hover {
-    & .quick-add__button--choose {
-      display: none;
-    }
-
-    & .quick-add__button--add {
-      display: grid;
-    }
-  }
-
-  .product-card[data-no-swatch-selected] slideshow-component[data-generic-media-size='1'] slideshow-arrows {
-    display: none;
-  }
-
-  .product-card[data-no-swatch-selected]
-    slideshow-component[data-generic-media-size='1']
-    slideshow-arrows:has(+ slideshow-slides slideshow-slide[variant-image]:not([hidden])) {
-    display: flex;
-  }
-
   .product-card .variant-option__swatch svg {
     display: none;
   }
@@ -348,4 +358,73 @@
   .product-card [data-available-count='0'] ~ svg {
     display: block;
   }
+
+  /* ===== wb03: 5種類バッジの見た目 ===== */
+  .product-grid__card {
+    position: relative;
+  }
+
+  .csh-badges--collection {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px 6px;
+    margin-top: 8px;
+  }
+
+  .csh-badge {
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    padding: 6px 8px;
+    color: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .15);
+    display: inline-flex !important;
+    align-items: center;
+    white-space: nowrap !important;
+    min-width: max-content;
+  }
+
+  .csh-badge--new         { background:#e63946; }
+  .csh-badge--pre         { background:#3B82F6; }
+  .csh-badge--first-bonus { background:#ef4444; }
+  .csh-badge--early       { background:#22c55e; }
+  .csh-badge--closing     { background:#f97316; }
+  /* ===== wb03: 画像 → バッジ → タイトル・価格 の順に並び替え ===== */
+
+  /* 1) product-card__content を縦並びフレックスに */
+  .product-card__content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 2) ひとまず直下の子は全部「2番目」扱い */
+  .product-card__content > * {
+    order: 2;
+  }
+
+  /* 3) 画像＋クイック追加が入っている .card-gallery を 0番目（一番上）に */
+  .product-card__content > .card-gallery {
+    order: 0;
+  }
+
+  /* 4) 自作バッジ（.csh-badges--collection）を 1番目 → 画像のすぐ下に */
+  .product-card__content > .csh-badges--collection {
+    order: 1;
+  }
+
+  .main-collection-grid .product-card .text-block--align-left.rte {
+      order: 2;
+  }
+  
+  /* ===== wb03: コレクション一覧では product-card の grid を無効化 ===== */
+  .main-collection-grid .product-grid__item > .product-card {
+    display: block !important;
+    height: auto !important;
+  }
+
+    /* ===== wb03: デフォルトの SALE / SOLD OUT バッジを非表示（コレクション一覧のみ） ===== */
+  .main-collection-grid .product-badges__badge {
+    display: none !important;
+  }
+
 {% endstylesheet %}

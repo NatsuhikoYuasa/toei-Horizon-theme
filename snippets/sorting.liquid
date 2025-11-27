@@ -83,7 +83,8 @@
       on:toggle="/handleToggle"
     >
       <summary
-        class="facets__summary"
+        {% comment %} wb03 add wb-collection-sort-summary クラス名追加 {% endcomment %}
+        class="facets__summary wb-collection-sort-summary"
         role="button"
         aria-expanded="false"
         aria-controls="sorting-options-{{ section_id }}"
