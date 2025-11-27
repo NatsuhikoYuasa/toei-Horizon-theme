@@ -1,0 +1,25 @@
+{%- liquid
+  assign date_text = article.published_at | date: "%Y.%m.%d"
+-%}
+
+<details class="information-accordion" {% if open %}open{% endif %}>
+  <summary class="information-accordion__summary">
+    <div class="information-accordion__summary-text">
+      <p class="information-accordion__date">{{ date_text }}</p>
+      <p class="information-accordion__title">{{ article.title }}</p>
+    </div>
+    <span class="information-accordion__icon" aria-hidden="true"></span>
+  </summary>
+
+  <div class="information-accordion__body">
+    <div class="information-accordion__body-header">
+      <p class="information-accordion__date information-accordion__date--body">{{ date_text }}</p>
+      <p class="information-accordion__title information-accordion__title--body">{{ article.title }}</p>
+      <span class="information-accordion__icon information-accordion__icon--body" aria-hidden="true"></span>
+    </div>
+
+    <div class="information-accordion__content rte">
+      {{ article.content }}
+    </div>
+  </div>
+</details>
