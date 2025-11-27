@@ -266,7 +266,7 @@
       "key": "sales_period_status",
       "namespace": "product",
       "name": "販売ステータス",
-      "description": null,
+      "description": "",
       "type": {
         "name": "single_line_text_field",
         "category": "TEXT"
