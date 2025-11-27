@@ -101,7 +101,7 @@
               "type": "text",
               "name": "t:names.text",
               "settings": {
-                "text": "<p><a href=\"/pages/guide\" title=\"ご利用ガイド\">利用ガイド</a></p>",
+                "text": "<p><a href=\"/pages/guide\" title=\"ご利用ガイド\">ご利用ガイド</a></p>",
                 "width": "fit-content",
                 "max_width": "normal",
                 "alignment": "left",
@@ -127,7 +127,7 @@
               "type": "text",
               "name": "t:names.text",
               "settings": {
-                "text": "<p><a href=\"/pages/guide\" title=\"ご利用ガイド\">利用ガイド</a></p>",
+                "text": "<p><a href=\"/policies/legal-notice\" title=\"Legal Notice\">利用規約</a></p>",
                 "width": "fit-content",
                 "max_width": "normal",
                 "alignment": "left",
