@@ -18,18 +18,36 @@
       <div class="mypage-hero__right">
         <div class="mypage-hero__item">
           <span class="mypage-hero__label">現在のポイント</span>
-          <span class="mypage-hero__value">XXXX pt</span>
-          <!-- TODO: easyPointsの現在ポイントスニペットに差し替え -->
+          <span class="mypage-hero__value">
+            {%- render 'easypoints-customer-points' -%}
+          </span>
+          <!-- easyPointsの現在ポイントスニペットを表示 -->
         </div>
         <a class="mypage-hero__link" href="/pages/points-history">ポイント履歴はこちら</a>
         <!-- TODO: points-history テンプレート実装後に動作確認 -->
         <div class="mypage-hero__item">
           <span class="mypage-hero__label">現在の会員ランク</span>
-          <span class="mypage-hero__value">レギュラー</span>
-          <!-- TODO: easyPoints のランクスニペットに差し替え -->
+          <span class="mypage-hero__value">
+            {%- render 'easypoints-customer-tier' -%}
+          </span>
+          <!-- easyPoints のランクスニペットを表示 -->
         </div>
-        <p class="mypage-hero__note">来月までにあと XX,XXX 円ご購入でゴールド会員にランクアップ</p>
-        <!-- TODO: customer.total_spent を使ってランクアップ条件を計算 -->
+        {%- liquid
+          assign gold_threshold = 50000
+          assign platinum_threshold = 100000
+          # TODO: easyPoints の実際のランク条件と合わせてしきい値を調整
+        -%}
+
+        {%- if customer.total_spent < gold_threshold -%}
+          {%- assign remain = gold_threshold | minus: customer.total_spent -%}
+          <p class="mypage-hero__note">来月までにあと {{ remain | money_without_trailing_zeros }} ご購入でゴールド会員にランクアップ</p>
+        {%- elsif customer.total_spent < platinum_threshold -%}
+          {%- assign remain = platinum_threshold | minus: customer.total_spent -%}
+          <p class="mypage-hero__note">来月までにあと {{ remain | money_without_trailing_zeros }} ご購入でプラチナ会員にランクアップ</p>
+        {%- else -%}
+          <p class="mypage-hero__note">現在最高ランクです。いつもご利用ありがとうございます。</p>
+        {%- endif -%}
+
         <a class="mypage-hero__link" href="/pages/member-rank">会員ランクについて詳しくはこちら</a>
         <!-- TODO: member-rank ページ公開後にリンク確認 -->
       </div>
