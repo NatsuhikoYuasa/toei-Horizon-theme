@@ -55,10 +55,6 @@
             <a href="{{ wishlist_url }}">お気に入り一覧</a>
             <!-- Advanced Wishlist 一覧ページのURL。app proxy 設定があればそれを使用 -->
           </li>
-          <li>
-            お気に入り点数：<span class="mypage-wishlist-count" data-totalwishlistitems>0</span>件
-            <!-- Advanced Wishlist のJSで件数を上書き -->
-          </li>
         </ul>
         <div class="mypage-wishlist-embed">
           <iframe
@@ -98,50 +94,3 @@
     <a class="mypage-login-button button button--primary" href="{{ routes.account_login_url }}">ログインページへ</a>
   </div>
 {% endif %}
-
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    var wishlistCountEl = document.querySelector('.mypage-wishlist-count');
-
-    if (!wishlistCountEl) {
-      return;
-    }
-
-    var updateCountText = function (value) {
-      if (value === null || value === undefined) {
-        return;
-      }
-
-      var numericValue = parseInt(value, 10);
-
-      if (!isNaN(numericValue)) {
-        wishlistCountEl.textContent = numericValue;
-      }
-    };
-
-    if (
-      window.HulkappsWishlist &&
-      typeof window.HulkappsWishlist.getCount === 'function'
-    ) {
-      try {
-        window.HulkappsWishlist.getCount(function (count) {
-          updateCountText(count);
-        });
-      } catch (e) {
-        // Advanced Wishlist の実装に依存するため、失敗時は安全に何もしない
-      }
-    }
-
-    var observer = new MutationObserver(function (mutations) {
-      mutations.forEach(function (mutation) {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'data-totalwishlistitems') {
-          updateCountText(wishlistCountEl.getAttribute('data-totalwishlistitems'));
-        }
-      });
-    });
-
-    observer.observe(wishlistCountEl, { attributes: true });
-
-    updateCountText(wishlistCountEl.getAttribute('data-totalwishlistitems'));
-  });
-</script>
