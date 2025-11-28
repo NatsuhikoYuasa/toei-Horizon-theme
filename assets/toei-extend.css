@@ -89,6 +89,9 @@
   align-items: center;
   gap: 16px;
   min-width: 0;
+  border-right: 1px solid #e5e7eb;
+  padding-right: 24px;
+  margin-right: 24px;
 }
 
 .mypage-hero__icon {
@@ -115,6 +118,7 @@
   flex-direction: column;
   gap: 12px;
   min-width: 0;
+  padding-left: 6px;
 }
 
 .mypage-hero__item {
@@ -127,6 +131,7 @@
 .mypage-hero__label {
   font-size: 1.3rem;
   color: #4b5563;
+  min-width: 120px;
 }
 
 .mypage-hero__value {
