@@ -3,36 +3,40 @@
   assign info_blog = blogs[blog_handle]
 %}
 
-<section class="information-page page-width">
-  {%- render 'page-breadcrumbs',
-    top_label: 'トップ',
-    top_url: routes.root_url,
-    current_title: section.settings.heading
-  -%}
+<section class="l-page">
+  <div class="l-container">
+    <div class="information-page">
+      {%- render 'page-breadcrumbs',
+        top_label: 'トップ',
+        top_url: routes.root_url,
+        current_title: section.settings.heading
+      -%}
 
-  <header class="information-page__header">
-    <h1 class="information-page__title">
-      {{ section.settings.heading }}
-    </h1>
-    <div class="information-page__divider"></div>
-  </header>
+      <header class="information-page__header">
+        <h1 class="heading-page information-page__title">
+          {{ section.settings.heading }}
+        </h1>
+        <div class="information-page__divider"></div>
+      </header>
 
-  {% if info_blog != blank and info_blog.articles_count > 0 %}
-    <ul class="information-list">
-      {% for article in info_blog.articles %}
-        <li class="information-list__item">
-          {% render 'information-card',
-            article: article,
-            open: section.settings.open_first and forloop.first
-          %}
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="information-list__empty">
-      現在、お知らせはございません。
-    </p>
-  {% endif %}
+      {% if info_blog != blank and info_blog.articles_count > 0 %}
+        <ul class="information-list">
+          {% for article in info_blog.articles %}
+            <li class="information-list__item">
+              {% render 'information-card',
+                article: article,
+                open: section.settings.open_first and forloop.first
+              %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="information-list__empty">
+          現在、お知らせはございません。
+        </p>
+      {% endif %}
+    </div>
+  </div>
 </section>
 
 {% schema %}
