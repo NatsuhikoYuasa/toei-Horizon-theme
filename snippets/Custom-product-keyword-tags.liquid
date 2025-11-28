@@ -1,0 +1,30 @@
+{%- liquid
+  # 商品オブジェクトを取得（product / card_product どちらでも動くように）
+  assign product_resource = product | default: card_product
+
+  assign seen_keywords = ''
+-%}
+
+{%- if product_resource and product_resource.collections.size > 0 -%}
+  <div class="product-keyword-tags">
+    {%- for coll in product_resource.collections -%}
+      {%- assign keyword_mf = coll.metafields.custom.search_keyword -%}
+      {%- assign keyword = keyword_mf.value | default: keyword_mf -%}
+
+      {%- if keyword != blank -%}
+        {%- assign token = '|' | append: keyword | append: '|' -%}
+
+        {%- unless seen_keywords contains token -%}
+          <a
+            class="product-keyword-tags__item"
+            href="{{ coll.url }}"
+          >
+            {{ keyword }}
+          </a>
+
+          {%- assign seen_keywords = seen_keywords | append: token -%}
+        {%- endunless -%}
+      {%- endif -%}
+    {%- endfor -%}
+  </div>
+{%- endif -%}

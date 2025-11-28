@@ -13,28 +13,138 @@
     data-view-transition-type="product-details"
   {% endif %}
 >
-  {%- comment -%}
-    子要素をまとめて group ブロックに渡す
-  {%- endcomment -%}
   {% capture children %}
     <div class="product-details__stack">
       {%- comment -%}
         ① バッジ（Custom-product-badges）
-        ※ ここが常に一番上に出ます
       {%- endcomment -%}
       <div class="product-details__badges">
         {% render 'Custom-product-badges', product: closest.product %}
       </div>
 
       {%- comment -%}
-        ② ここから下は、テーマエディタで並べたブロックたち
-           - Product title
-           - 価格ブロック
-           - 発売日・商品番号用ブロック（あとで追加）
-           - バリアントピッカー
-           - お気に入りアプリ など
+        ② テーマエディタで並べたブロック（タイトル・価格・バリアントピッカー・カートボタン・お気に入りなど）
       {%- endcomment -%}
       {% content_for 'blocks' %}
+
+      {%- comment -%}
+        ③ 発売日／商品番号／予約情報（バリアントメタフィールド）
+           - 発売日: variant.release_date (日付)
+           - 予約情報: variant.release_note (1行テキスト)
+      {%- endcomment -%}
+      {%- liquid
+        assign product_resource = closest.product
+        assign selected_variant = product_resource.selected_or_first_available_variant
+
+        assign release_date_mf = selected_variant.metafields.variant.release_date
+        assign release_note_mf = selected_variant.metafields.variant.release_note
+      -%}
+
+      <div class="product-meta">
+        {%- if release_date_mf %}
+          <div class="product-meta__row product-meta__row--release">
+            <span class="product-meta__label">発売日</span>
+            <span class="product-meta__value">
+              {{ release_date_mf.value | date: '%Y年%-m月%-d日' }}
+            </span>
+          </div>
+        {%- endif %}
+
+        {%- if selected_variant.sku != blank %}
+          <div class="product-meta__row product-meta__row--sku">
+            <span class="product-meta__label">商品番号</span>
+            <span class="product-meta__value">
+              {{ selected_variant.sku }}
+            </span>
+          </div>
+        {%- endif %}
+
+        {%- if release_note_mf %}
+          <div class="product-meta__row product-meta__row--note">
+            <span class="product-meta__label">予約情報</span>
+            <span class="product-meta__value">
+              {{ release_note_mf.value | newline_to_br }}
+            </span>
+          </div>
+        {%- endif %}
+      </div>
+
+            {%- comment -%}
+        ④ この商品をシェアする（SNSシェアボックス）
+      {%- endcomment -%}
+      {%- assign share_url = product_resource.url | prepend: shop.url -%}
+      {%- assign instagram_url = settings.social_instagram_link | default: '#' -%}
+
+      <div class="product-share">
+        <p class="product-share__heading">この商品をシェアする</p>
+        <ul class="product-share__list">
+          <li class="product-share__item">
+            <a
+              href="https://x.com/intent/tweet?url={{ share_url | url_encode }}&text={{ product_resource.title | url_encode }}"
+              target="_blank"
+              rel="noopener"
+              aria-label="Xでシェア"
+            >
+              <img
+                src="//cdn.shopify.com/s/files/1/0754/4078/3603/files/twitter-new-2023-x-logo-white-background-vector_1017-45422.avif?v=1764154462"
+                alt="X"
+                class="product-share__icon-image"
+                loading="lazy"
+              >
+            </a>
+          </li>
+          <li class="product-share__item">
+            <a
+              href="https://www.facebook.com/sharer/sharer.php?u={{ share_url | url_encode }}"
+              target="_blank"
+              rel="noopener"
+              aria-label="Facebookでシェア"
+            >
+              <img
+                src="//cdn.shopify.com/s/files/1/0754/4078/3603/files/facebook-logo-vector-icon-logotype-vector-eps_901408-408.avif?v=1764316253"
+                alt="Facebook"
+                class="product-share__icon-image"
+                loading="lazy"
+              >
+            </a>
+          </li>
+          <li class="product-share__item">
+            <a
+              href="{{ instagram_url }}"
+              target="_blank"
+              rel="noopener"
+              aria-label="Instagramを見る"
+            >
+              <img
+                src="//cdn.shopify.com/s/files/1/0754/4078/3603/files/instagram-vector-logo-icon-social-media-logotype_901408-392.avif?v=1764316254"
+                alt="Instagram"
+                class="product-share__icon-image"
+                loading="lazy"
+              >
+            </a>
+          </li>
+          <li class="product-share__item">
+            <a
+              href="https://social-plugins.line.me/lineit/share?url={{ share_url | url_encode }}"
+              target="_blank"
+              rel="noopener"
+              aria-label="LINEでシェア"
+            >
+              <img
+                src="//cdn.shopify.com/s/files/1/0754/4078/3603/files/art-illustration_1166422-334.avif?v=1764154608"
+                alt="LINE"
+                class="product-share__icon-image"
+                loading="lazy"
+              >
+            </a>
+          </li>
+        </ul>
+      </div>
+
+
+      {%- comment -%} 検索キーワードタグ（コレクションのメタフィールド） {%- endcomment -%}
+      {% render 'Custom-product-keyword-tags', product: product_resource %}
+      
     </div>
   {% endcapture %}
 
@@ -69,6 +179,71 @@
     margin-bottom: 4px;
   }
 
+  /* 発売日／商品番号／予約情報 */
+  .product-meta {
+    margin-top: 8px;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 1.3rem;
+  }
+
+  .product-meta__row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .product-meta__label {
+    min-width: 5em;
+    color: rgb(var(--color-foreground-rgb) / 0.7);
+  }
+
+  .product-meta__value {
+    flex: 1;
+  }
+
+  /* この商品をシェアする */
+  .product-share {
+    margin-top: 16px;
+    padding: 16px 20px;
+    border-radius: 8px;
+    background-color: rgb(var(--color-foreground-rgb) / 0.03);
+  }
+
+  .product-share__heading {
+    margin: 0 0 12px;
+    font-size: 1.4rem;
+    font-weight: 600;
+  }
+
+  .product-share__list {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .product-share__item a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 1px rgb(var(--color-foreground-rgb) / 0.08);
+    text-decoration: none;
+  }
+
+  .product-share__icon-text {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: rgb(var(--color-foreground-rgb));
+  }
+
   @media screen and (min-width: 750px) {
     .product-details > .group-block {
       height: min-content;
@@ -84,6 +259,53 @@
       align-self: var(--details-position, 'flex-start');
     }
   }
+
+  .product-keyword-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 16px;
+    margin-bottom: 8px;
+  }
+
+  .product-keyword-tags__item {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    font-size: .65rem;
+    line-height: 1.4;
+    border: 1px solid #ff6f6f; /* 必要なら色は後で微調整 */
+    background: #fff;
+    color: #ff6f6f;
+    text-decoration: none;
+  }
+
+  .product-keyword-tags__item:hover {
+    text-decoration: none;
+    background: #ff6f6f;
+    color: #fff;
+  }
+
+  .product-share__item a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 1px rgb(var(--color-foreground-rgb) / 0.08);
+    text-decoration: none;
+  }
+
+  .product-share__icon-image {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    display: block;
+  }
+
+
 {% endstylesheet %}
 
 {% schema %}
@@ -126,6 +348,11 @@
     {
       "type": "price"
     },
+    
+    {
+      "type": "Custom-product-share"
+    },
+
     {
       "type": "variant-picker"
     },
@@ -470,263 +697,7 @@
         "border": "none",
         "border_width": 1,
         "border_opacity": 100
-      },
-      "blocks": {
-        "text_TMtYp8": {
-          "type": "text",
-          "settings": {
-            "text": "t:html_defaults.home_to_shirts",
-            "alignment": "left",
-            "padding-block-start": 16,
-            "padding-inline-end": 0,
-            "padding-block-end": 0,
-            "padding-inline-start": 0
-          }
-        },
-        "heading_m7KmQQ": {
-          "type": "text",
-          "settings": {
-            "text": "<h1>{{ closest.product.title }}</h1>",
-            "type_preset": "h2",
-            "alignment": "left"
-          }
-        },
-        "text_GMQR8L": {
-          "type": "text",
-          "settings": {
-            "text": "t:html_defaults.reviews",
-            "alignment": "left"
-          }
-        },
-        "price_a7krng": {
-          "type": "price",
-          "settings": {
-            "show_tax_info": true,
-            "type_preset": "h4",
-            "alignment": "left"
-          }
-        },
-        "variant_picker_R3rGDr": {
-          "type": "variant-picker",
-          "settings": {
-            "variant_style": "pills",
-            "padding-block-start": 0,
-            "padding-block-end": 8,
-            "padding-inline-start": 0,
-            "padding-inline-end": 0
-          }
-        },
-        "buy_buttons_eYQEYi": {
-          "type": "buy-buttons",
-          "settings": {
-            "padding-block-start": 0,
-            "padding-block-end": 0,
-            "padding-inline-start": 0,
-            "padding-inline-end": 0
-          },
-          "blocks": {
-            "add-to-cart": {
-              "type": "add-to-cart",
-              "static": true,
-              "settings": {
-                "style_class": "button-secondary"
-              }
-            },
-            "accelerated-checkout": {
-              "type": "accelerated-checkout",
-              "static": true
-            }
-          },
-          "block_order": []
-        },
-        "group_Q4eVWb": {
-          "type": "group",
-          "settings": {
-            "width": "custom",
-            "custom_width": 100,
-            "padding-block-start": 8,
-            "padding-block-end": 4,
-            "padding-inline-start": 0,
-            "padding-inline-end": 0,
-            "content_direction": "column",
-            "horizontal_alignment": "flex-start",
-            "vertical_alignment": "center",
-            "horizontal_alignment_flex_direction_column": "flex-start",
-            "vertical_alignment_flex_direction_column": "center",
-            "gap": 8,
-            "inherit_color_scheme": true,
-            "color_scheme": "",
-            "video_position": "cover",
-            "background_image_position": "cover",
-            "border": "none",
-            "border_width": 1,
-            "border_opacity": 100
-          },
-          "blocks": {
-            "group_Hrq6NU": {
-              "type": "group",
-              "settings": {
-                "width": "custom",
-                "custom_width": 100,
-                "padding-block-start": 0,
-                "padding-block-end": 0,
-                "padding-inline-start": 0,
-                "padding-inline-end": 0,
-                "content_direction": "row",
-                "horizontal_alignment": "flex-start",
-                "vertical_alignment": "center",
-                "horizontal_alignment_flex_direction_column": "flex-start",
-                "vertical_alignment_flex_direction_column": "center",
-                "gap": 12,
-                "inherit_color_scheme": true,
-                "color_scheme": "",
-                "video_position": "cover",
-                "background_image_position": "cover",
-                "border": "none",
-                "border_width": 1,
-                "border_opacity": 100
-              },
-              "blocks": {
-                "icon_bBpnME": {
-                  "type": "icon",
-                  "settings": {
-                    "icon": "truck",
-                    "width": 16
-                  }
-                },
-                "text_83R7CQ": {
-                  "type": "text",
-                  "settings": {
-                    "text": "t:html_defaults.free_shipping_over",
-                    "alignment": "left",
-                    "padding-block-start": 0,
-                    "padding-block-end": 0,
-                    "padding-inline-start": 0,
-                    "padding-inline-end": 0
-                  }
-                }
-              },
-              "block_order": ["icon_bBpnME", "text_83R7CQ"]
-            },
-            "group_WbpVdV": {
-              "type": "group",
-              "settings": {
-                "width": "custom",
-                "custom_width": 100,
-                "padding-block-start": 0,
-                "padding-block-end": 0,
-                "padding-inline-start": 0,
-                "padding-inline-end": 0,
-                "content_direction": "row",
-                "horizontal_alignment": "flex-start",
-                "vertical_alignment": "center",
-                "horizontal_alignment_flex_direction_column": "flex-start",
-                "vertical_alignment_flex_direction_column": "center",
-                "gap": 12,
-                "inherit_color_scheme": true,
-                "color_scheme": "",
-                "video_position": "cover",
-                "background_image_position": "cover",
-                "border": "none",
-                "border_width": 1,
-                "border_opacity": 100
-              },
-              "blocks": {
-                "icon_FVd3C4": {
-                  "type": "icon",
-                  "settings": {
-                    "icon": "return",
-                    "width": 16
-                  }
-                },
-                "text_EmGGUV": {
-                  "type": "text",
-                  "settings": {
-                    "text": "t:html_defaults.free_returns",
-                    "alignment": "left",
-                    "padding-block-start": 0,
-                    "padding-block-end": 0,
-                    "padding-inline-start": 0,
-                    "padding-inline-end": 0
-                  }
-                }
-              },
-              "block_order": ["icon_FVd3C4", "text_EmGGUV"]
-            }
-          },
-          "block_order": ["group_Hrq6NU", "group_WbpVdV"]
-        },
-        "accordion": {
-          "type": "accordion",
-          "settings": {},
-          "blocks": {
-            "accordion-row-1": {
-              "type": "_accordion-row",
-              "settings": {
-                "heading": "t:text_defaults.materials"
-              },
-              "blocks": {
-                "text": {
-                  "type": "text"
-                }
-              },
-              "block_order": ["text"]
-            },
-            "accordion-row-2": {
-              "type": "_accordion-row",
-              "settings": {
-                "heading": "t:text_defaults.care_instructions"
-              },
-              "blocks": {
-                "text": {
-                  "type": "text"
-                }
-              },
-              "block_order": ["text"]
-            },
-            "accordion-row-3": {
-              "type": "_accordion-row",
-              "settings": {
-                "heading": "t:text_defaults.fit"
-              },
-              "blocks": {
-                "text": {
-                  "type": "text"
-                }
-              },
-              "block_order": ["text"]
-            }
-          },
-          "block_order": ["accordion-row-1", "accordion-row-2", "accordion-row-3"]
-        },
-        "complementary_products": {
-          "type": "product-recommendations",
-          "settings": {
-            "recommendation_type": "complementary"
-          },
-          "blocks": {
-            "recommendations-header": {
-              "type": "text",
-              "settings": {
-                "text": "t:html_defaults.styled_with",
-                "type_preset": "h5"
-              }
-            }
-          },
-          "block_order": ["recommendations-header"]
-        }
-      },
-      "block_order": [
-        "text_TMtYp8",
-        "heading_m7KmQQ",
-        "text_GMQR8L",
-        "price_a7krng",
-        "variant_picker_R3rGDr",
-        "buy_buttons_eYQEYi",
-        "group_Q4eVWb",
-        "accordion",
-        "complementary_products"
-      ]
+      }
     }
   ]
 }

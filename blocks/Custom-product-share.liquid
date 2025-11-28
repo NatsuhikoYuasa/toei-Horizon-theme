@@ -1,0 +1,253 @@
+{%- liquid
+  assign product_resource = closest.product | default: product
+
+  if product_resource
+    assign share_url = product_resource.url | prepend: shop.url
+  else
+    assign share_url = shop.url
+  endif
+
+  if block.settings.share_url_override != blank
+    assign share_url = block.settings.share_url_override
+  endif
+
+  assign heading = block.settings.heading | default: 'この商品をシェアする'
+
+  assign encoded_url   = share_url | url_encode
+  assign encoded_title = product_resource.title | escape | url_encode
+
+  assign x_share_url = 'https://x.com/intent/tweet?url=' | append: encoded_url | append: '&text=' | append: encoded_title
+  assign facebook_share_url = 'https://www.facebook.com/sharer/sharer.php?u=' | append: encoded_url
+
+  assign line_share_url_default = 'https://social-plugins.line.me/lineit/share?url=' | append: encoded_url
+  assign line_share_url = block.settings.line_url | default: line_share_url_default
+
+  assign instagram_url = block.settings.instagram_url
+-%}
+
+<div class="product-share">
+  <p class="product-share__title">
+    {{ heading }}
+  </p>
+
+  <div class="product-share__buttons">
+
+    {%- if block.settings.show_x -%}
+      <a
+        class="product-share__button product-share__button--x"
+        href="{{ x_share_url }}"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {%- if block.settings.icon_x != blank -%}
+          <img
+            src="{{ block.settings.icon_x | image_url: width: 40 }}"
+            alt="X"
+            loading="lazy"
+          >
+        {%- else -%}
+          X
+        {%- endif -%}
+      </a>
+    {%- endif -%}
+
+    {%- if block.settings.show_facebook -%}
+      <a
+        class="product-share__button product-share__button--facebook"
+        href="{{ facebook_share_url }}"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {%- if block.settings.icon_facebook != blank -%}
+          <img
+            src="{{ block.settings.icon_facebook | image_url: width: 40 }}"
+            alt="Facebook"
+            loading="lazy"
+          >
+        {%- else -%}
+          f
+        {%- endif -%}
+      </a>
+    {%- endif -%}
+
+    {%- if block.settings.show_instagram and instagram_url != blank -%}
+      <a
+        class="product-share__button product-share__button--instagram"
+        href="{{ instagram_url }}"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {%- if block.settings.icon_instagram != blank -%}
+          <img
+            src="{{ block.settings.icon_instagram | image_url: width: 40 }}"
+            alt="Instagram"
+            loading="lazy"
+          >
+        {%- else -%}
+          IG
+        {%- endif -%}
+      </a>
+    {%- endif -%}
+
+    {%- if block.settings.show_line -%}
+      <a
+        class="product-share__button product-share__button--line"
+        href="{{ line_share_url }}"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {%- if block.settings.icon_line != blank -%}
+          <img
+            src="{{ block.settings.icon_line | image_url: width: 40 }}"
+            alt="LINE"
+            loading="lazy"
+          >
+        {%- else -%}
+          LINE
+        {%- endif -%}
+      </a>
+    {%- endif -%}
+
+  </div>
+</div>
+
+{% stylesheet %}
+  .product-share {
+    margin-block: 16px 24px;
+    padding: 16px 20px;
+    border-radius: 8px;
+    background: rgb(var(--color-foreground-rgb) / 0.02);
+  }
+
+  .product-share__title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin: 0 0 12px;
+  }
+
+  .product-share__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .product-share__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    border: 1px solid rgb(var(--color-border-rgb, var(--color-foreground-rgb)) / 0.15);
+    background: #fff;
+    text-decoration: none;
+    font-size: 1.2rem;
+  }
+
+  .product-share__button img {
+    display: block;
+    max-width: 24px;
+    max-height: 24px;
+  }
+
+  @media screen and (max-width: 749px) {
+    .product-share {
+      margin-block: 12px 20px;
+      padding-inline: 12px;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "商品シェア",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "見出し",
+      "default": "この商品をシェアする"
+    },
+    {
+      "type": "url",
+      "id": "share_url_override",
+      "label": "シェアURLを上書き",
+      "info": "空の場合はこの商品のURLを使います"
+    },
+
+    {
+      "type": "header",
+      "content": "X（旧Twitter）"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_x",
+      "label": "Xボタンを表示する",
+      "default": true
+    },
+    {
+      "type": "image_picker",
+      "id": "icon_x",
+      "label": "Xアイコン画像（任意）"
+    },
+
+    {
+      "type": "header",
+      "content": "Facebook"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_facebook",
+      "label": "Facebookボタンを表示する",
+      "default": true
+    },
+    {
+      "type": "image_picker",
+      "id": "icon_facebook",
+      "label": "Facebookアイコン画像（任意）"
+    },
+
+    {
+      "type": "header",
+      "content": "Instagram"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_instagram",
+      "label": "Instagramボタンを表示する",
+      "default": true
+    },
+    {
+      "type": "url",
+      "id": "instagram_url",
+      "label": "InstagramのURL（公式アカウントなど）"
+    },
+    {
+      "type": "image_picker",
+      "id": "icon_instagram",
+      "label": "Instagramアイコン画像（任意）"
+    },
+
+    {
+      "type": "header",
+      "content": "LINE"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_line",
+      "label": "LINEボタンを表示する",
+      "default": true
+    },
+    {
+      "type": "url",
+      "id": "line_url",
+      "label": "LINEシェアURL（空の場合は自動生成）"
+    },
+    {
+      "type": "image_picker",
+      "id": "icon_line",
+      "label": "LINEアイコン画像（任意）"
+    }
+  ]
+}
+{% endschema %}
