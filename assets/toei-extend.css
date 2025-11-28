@@ -47,6 +47,8 @@
   max-width: 100%;
   margin: 0;
   padding: 0;
+  font-size: 1.4rem;
+  line-height: 1.45;
 }
 
 .mypage-wrapper--guest {
@@ -73,11 +75,11 @@
 .mypage-hero {
   display: flex;
   justify-content: space-between;
-  gap: 32px;
+  gap: 16px;
   background: #f7f8fa;
-  padding: 28px;
+  padding: 16px 18px;
   border-radius: 8px;
-  margin-bottom: 40px;
+  margin-bottom: 28px;
   align-items: center;
 }
 
@@ -87,11 +89,14 @@
   align-items: center;
   gap: 16px;
   min-width: 0;
+  border-right: 1px solid #e5e7eb;
+  padding-right: 24px;
+  margin-right: 24px;
 }
 
 .mypage-hero__icon {
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -102,44 +107,70 @@
 
 .mypage-hero__greeting {
   margin: 0;
-  font-size: 1.7rem;
+  font-size: 1.4rem;
   font-weight: 600;
+  line-height: 1.45;
 }
 
 .mypage-hero__right {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   min-width: 0;
+  padding-left: 6px;
 }
 
 .mypage-hero__item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 16px;
+  row-gap: 6px;
+  align-items: baseline;
 }
 
 .mypage-hero__label {
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   color: #4b5563;
+  min-width: 120px;
 }
 
 .mypage-hero__value {
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 700;
+  line-height: 1.4;
 }
 
 .mypage-hero__note {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   color: #374151;
+  line-height: 1.5;
 }
 
 .mypage-hero__link {
-  color: #0a5fb4;
-  font-size: 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #111827;
+  font-size: 1.25rem;
+  text-decoration: none;
+}
+
+.mypage-hero__link::after {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-right: 1px solid #9ca3af;
+  border-bottom: 1px solid #9ca3af;
+  transform: rotate(-45deg);
+  margin-top: 1px;
+}
+
+.mypage-hero__link:hover,
+.mypage-hero__link:focus-visible {
+  color: #0f172a;
   text-decoration: underline;
 }
 
@@ -153,24 +184,24 @@
   background: #fff;
   border: 1px solid #e2e2e2;
   border-radius: 8px;
-  padding: 24px;
+  padding: 20px;
 }
 
 .mypage-card__title {
   margin: 0 0 16px;
-  font-size: 1.6rem;
-  line-height: 1.4;
+  font-size: 1.4rem;
+  line-height: 1.38;
 }
 
 .mypage-card__list {
   list-style: none;
   padding: 0;
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 1.3rem;
 }
 
 .mypage-card__list li {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .mypage-card__list li:last-child {
@@ -188,17 +219,53 @@
 @media (max-width: 768px) {
   .mypage-wrapper {
     margin: 0;
+    font-size: 1.3rem;
+    line-height: 1.45;
   }
 
   .mypage-hero {
     flex-direction: column;
     align-items: flex-start;
-    gap: 20px;
-    padding: 24px;
+    gap: 16px;
+    padding: 16px;
+    margin-bottom: 24px;
+  }
+
+  .mypage-hero__left {
+    border-right: none;
+    padding-right: 0;
+    margin-right: 0;
+  }
+
+  .mypage-hero__greeting {
+    font-size: 1.3rem;
+  }
+
+  .mypage-hero__label {
+    font-size: 1.2rem;
+  }
+
+  .mypage-hero__value {
+    font-size: 1.45rem;
+  }
+
+  .mypage-hero__note,
+  .mypage-hero__link {
+    font-size: 1.2rem;
+  }
+
+  .mypage-hero__item {
+    grid-template-columns: 1fr;
+    row-gap: 4px;
   }
 
   .mypage-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .mypage-card {
+    padding: 16px;
   }
 }
 
