@@ -90,7 +90,7 @@
           "name": "t:names.button",
           "settings": {
             "label": "買い物を続ける",
-            "link": "shopify://collections",
+            "link": "",
             "open_in_new_tab": false,
             "style_class": "button-secondary",
             "width": "fit-content",
