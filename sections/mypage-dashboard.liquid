@@ -28,47 +28,48 @@
           </div>
 
           <div class="mypage-hero__right">
-            <div class="mypage-hero__item">
-              <span class="mypage-hero__label">現在のポイント</span>
-              <span class="mypage-hero__value">
-                {%- render 'easypoints-customer-points' -%}
-              </span>
-              <!-- easyPoints の現在ポイントスニペットを表示。セットアップ完了後に中身を差し替え -->
+
+            <!-- 行1：現在のポイント -->
+            <div class="mypage-hero__row">
+              <div class="mypage-hero__label">現在のポイント</div>
+              <div class="mypage-hero__detail">
+                <p class="mypage-hero__value">
+                  {%- render 'easypoints-customer-points' -%}
+                </p>
+                <a class="mypage-hero__link" href="/pages/points-history">ポイント履歴はこちら</a>
+              </div>
             </div>
 
-            <a class="mypage-hero__link" href="/pages/points-history">ポイント履歴はこちら</a>
-            <!-- /pages/points-history（page.points-history テンプレート） -->
+            <!-- 行2：現在の会員ランク -->
+            <div class="mypage-hero__row">
+              <div class="mypage-hero__label">現在の会員ランク</div>
+              <div class="mypage-hero__detail">
+                <p class="mypage-hero__value">
+                  {%- render 'easypoints-customer-tier' -%}
+                </p>
 
-            <div class="mypage-hero__item">
-              <span class="mypage-hero__label">現在の会員ランク</span>
-              <span class="mypage-hero__value">
-                {%- render 'easypoints-customer-tier' -%}
-              </span>
-              <!-- easyPoints のランクスニペットを表示。セットアップ完了後に中身を差し替え -->
+                {%- liquid
+                  assign gold_threshold = 50000
+                  assign platinum_threshold = 100000
+                -%}
+                {%- if customer.total_spent < gold_threshold -%}
+                  {%- assign remain = gold_threshold | minus: customer.total_spent -%}
+                  <p class="mypage-hero__note">
+                    来月までにあと {{ remain | money_without_trailing_zeros }} ご購入でゴールド会員にランクアップ
+                  </p>
+                {%- elsif customer.total_spent < platinum_threshold -%}
+                  {%- assign remain = platinum_threshold | minus: customer.total_spent -%}
+                  <p class="mypage-hero__note">
+                    来月までにあと {{ remain | money_without_trailing_zeros }} ご購入でプラチナ会員にランクアップ
+                  </p>
+                {%- else -%}
+                  <p class="mypage-hero__note">現在最高ランクです。いつもご利用ありがとうございます。</p>
+                {%- endif -%}
+
+                <a class="mypage-hero__link" href="/pages/member-rank">会員ランクについて詳しくはこちら</a>
+              </div>
             </div>
 
-            {%- liquid
-              assign gold_threshold = 50000
-              assign platinum_threshold = 100000
-              # TODO: easyPoints の実際のランク条件と合わせてしきい値を調整
-            -%}
-
-            {%- if customer.total_spent < gold_threshold -%}
-              {%- assign remain = gold_threshold | minus: customer.total_spent -%}
-              <p class="mypage-hero__note">
-                来月までにあと {{ remain | money_without_trailing_zeros }} ご購入でゴールド会員にランクアップ
-              </p>
-            {%- elsif customer.total_spent < platinum_threshold -%}
-              {%- assign remain = platinum_threshold | minus: customer.total_spent -%}
-              <p class="mypage-hero__note">
-                来月までにあと {{ remain | money_without_trailing_zeros }} ご購入でプラチナ会員にランクアップ
-              </p>
-            {%- else -%}
-              <p class="mypage-hero__note">現在最高ランクです。いつもご利用ありがとうございます。</p>
-            {%- endif -%}
-
-            <a class="mypage-hero__link" href="/pages/member-rank">会員ランクについて詳しくはこちら</a>
-            <!-- TODO: /pages/member-rank ページ公開後にリンク確認 -->
           </div>
         </section>
 
