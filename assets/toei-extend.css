@@ -354,9 +354,10 @@
 
 /* お知らせ一覧ページ全体 */
 .information-page {
-  max-width: 880px;
-  margin: 0 auto;
-  padding: 64px 16px 80px;
+  /* 幅や余白は .l-page / .l-container が担当 */
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .information-page__header {
@@ -365,7 +366,6 @@
 }
 
 .information-page__title {
-  font-size: 20px;
   letter-spacing: 0.08em;
   margin-bottom: 16px;
 }
@@ -480,8 +480,8 @@
 /* SP */
 @media (max-width: 749px) {
   .information-page {
-    padding-top: 40px;
-    padding-bottom: 56px;
+    /* 余白は .l-page が担当 */
+    padding: 0;
   }
   .information-accordion__body {
     padding: 20px 16px 24px;
