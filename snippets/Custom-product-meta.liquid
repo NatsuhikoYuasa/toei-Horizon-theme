@@ -1,0 +1,49 @@
+{%- comment -%}
+  商品メタ情報まとめ
+  - 発売日（variant.release_note）
+  - 商品番号（variant.sku）
+  - 予約情報（variant.information_release_note）
+{%- endcomment -%}
+
+{%- liquid
+  assign product_resource = closest.product
+  assign selected_variant = product_resource.selected_or_first_available_variant
+
+  assign release_note = selected_variant.metafields.custom.release_note
+  assign information_release_note = selected_variant.metafields.custom.information_release_note
+-%}
+
+<div class="product-meta">
+  {%- if release_note != blank -%}
+    <p class="product-meta__release">
+      {{ release_note }}
+    </p>
+  {%- endif -%}
+
+  {%- if selected_variant.sku != blank -%}
+    <p class="product-meta__sku">
+      商品番号：{{ selected_variant.sku }}
+    </p>
+  {%- endif -%}
+
+  {%- if information_release_note != blank -%}
+    <p class="product-meta__reserve-note">
+      {{ information_release_note }}
+    </p>
+  {%- endif -%}
+</div>
+
+
+{% stylesheet %}
+  .product-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .product-meta__release {
+    font-weight: 600;
+  }
+{% endstylesheet %}
