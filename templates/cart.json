@@ -12,6 +12,10 @@
     "cart-section": {
       "type": "main-cart",
       "blocks": {
+        "easypoints_redemption_Xtn7w9": {
+          "type": "shopify://apps/easypoints/blocks/redemption/f0862409-7105-4920-b523-5bd76a964d4a",
+          "settings": {}
+        },
         "cart-page-title": {
           "type": "_cart-title",
           "static": true,
@@ -57,6 +61,9 @@
           "blocks": {}
         }
       },
+      "block_order": [
+        "easypoints_redemption_Xtn7w9"
+      ],
       "settings": {
         "section_width": "page-width",
         "color_scheme": "",
@@ -106,15 +113,7 @@
             "padding-inline-start": 0,
             "padding-inline-end": 0
           },
-          "blocks": {
-            "easypoints_redemption_ptdgtq": {
-              "type": "shopify://apps/easypoints/blocks/redemption/f0862409-7105-4920-b523-5bd76a964d4a",
-              "settings": {}
-            }
-          },
-          "block_order": [
-            "easypoints_redemption_ptdgtq"
-          ]
+          "blocks": {}
         }
       },
       "block_order": [
