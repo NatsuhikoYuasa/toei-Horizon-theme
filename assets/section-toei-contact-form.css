@@ -1,10 +1,13 @@
 .toei-contact {
-  padding: 40px 0 72px;
+  /* 幅や余白は .l-page / .l-container が担当 */
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .toei-contact__inner {
-  max-width: 960px;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
 }
 
 .toei-contact__header {
@@ -13,7 +16,7 @@
 }
 
 .toei-contact__title {
-  font-size: 28px;
+  /* タイトルのベースデザイン（サイズ・行間など）は .heading-page が担当 */
   font-weight: 700;
   margin: 0 0 12px;
 }
@@ -201,10 +204,6 @@
 }
 
 @media (max-width: 960px) {
-  .toei-contact__inner {
-    padding: 0 20px;
-  }
-
   .toei-contact__card {
     padding: 28px 20px;
   }
@@ -233,14 +232,7 @@
 }
 
 @media (max-width: 520px) {
-  .toei-contact {
-    padding: 32px 0 56px;
-  }
-
-  .toei-contact__title {
-    font-size: 24px;
-  }
-
+  /* タイトルの font-size は .heading-page に統一 */
   .toei-contact__description {
     font-size: 13px;
   }

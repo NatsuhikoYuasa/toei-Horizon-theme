@@ -4,111 +4,115 @@
 
 {{ 'section-toei-contact-form.css' | asset_url | stylesheet_tag }}
 
-<section class="toei-contact" id="ContactFormWrapper">
-  <div class="page-width toei-contact__inner">
-    <div class="toei-contact__header">
-      {%- render 'page-breadcrumbs', current_title: page.title -%}
-      <h1 class="toei-contact__title">{{ page.title }}</h1>
-      {% if section.settings.description != blank %}
-        <div class="toei-contact__description rte">{{ section.settings.description }}</div>
-      {% endif %}
-    </div>
-
-    {% form 'contact', id: 'ContactForm' %}
-      <div class="toei-contact__card">
-        {% if form.posted_successfully? %}
-          <div class="toei-contact__alert toei-contact__alert--success" role="status">
-            {{ 'contact.form.post_success' | t }}
-          </div>
-        {% elsif form.errors %}
-          <div class="toei-contact__alert toei-contact__alert--error" role="alert">
-            <ul>
-              {% for field in form.errors %}
-                <li>{{ form.errors.messages[field] }}</li>
-              {% endfor %}
-            </ul>
-          </div>
-        {% endif %}
-
-        <div class="toei-contact__cardHeader">
-          お問い合わせ内容の入力
+<div class="l-page">
+  <div class="l-container">
+    <section class="toei-contact" id="ContactFormWrapper">
+      <div class="toei-contact__inner">
+        <div class="toei-contact__header">
+          {%- render 'page-breadcrumbs', current_title: page.title -%}
+          <h1 class="heading-page toei-contact__title">{{ page.title }}</h1>
+          {% if section.settings.description != blank %}
+            <div class="toei-contact__description rte">{{ section.settings.description }}</div>
+          {% endif %}
         </div>
 
-        <div class="toei-contact__rows">
-          <div class="toei-contact__row">
-            <div class="toei-contact__labelWrap">
-              <span class="toei-contact__badge">必須</span>
-              <label for="ContactCategory" class="toei-contact__label">お問い合わせ件名</label>
-            </div>
-            <div class="toei-contact__field">
-              <select id="ContactCategory" name="contact[category]" required class="toei-contact__input">
-                <option value="" disabled selected>選択してください</option>
-                <option value="商品について">商品について</option>
-                <option value="ご注文について">ご注文について</option>
-                <option value="配送について">配送について</option>
-                <option value="その他">その他</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="toei-contact__row toei-contact__row--textarea">
-            <div class="toei-contact__labelWrap">
-              <span class="toei-contact__badge">必須</span>
-              <label for="ContactBody" class="toei-contact__label">お問い合わせ内容（本文）</label>
-            </div>
-            <div class="toei-contact__field">
-              <textarea id="ContactBody" name="contact[body]" rows="6" class="toei-contact__input" required placeholder="お問い合わせ内容"></textarea>
-            </div>
-          </div>
-
-          <div class="toei-contact__row toei-contact__row--name">
-            <div class="toei-contact__labelWrap">
-              <span class="toei-contact__badge">必須</span>
-              <label for="ContactLastName" class="toei-contact__label">氏名</label>
-            </div>
-            <div class="toei-contact__field toei-contact__field--name">
-              <div class="toei-contact__nameInput">
-                <input id="ContactLastName" type="text" name="contact[last_name]" class="toei-contact__input" placeholder="姓" required>
+        {% form 'contact', id: 'ContactForm' %}
+          <div class="toei-contact__card">
+            {% if form.posted_successfully? %}
+              <div class="toei-contact__alert toei-contact__alert--success" role="status">
+                {{ 'contact.form.post_success' | t }}
               </div>
-              <div class="toei-contact__nameInput">
-                <input id="ContactFirstName" type="text" name="contact[first_name]" class="toei-contact__input" placeholder="名" required>
+            {% elsif form.errors %}
+              <div class="toei-contact__alert toei-contact__alert--error" role="alert">
+                <ul>
+                  {% for field in form.errors %}
+                    <li>{{ form.errors.messages[field] }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+
+            <div class="toei-contact__cardHeader">
+              お問い合わせ内容の入力
+            </div>
+
+            <div class="toei-contact__rows">
+              <div class="toei-contact__row">
+                <div class="toei-contact__labelWrap">
+                  <span class="toei-contact__badge">必須</span>
+                  <label for="ContactCategory" class="toei-contact__label">お問い合わせ件名</label>
+                </div>
+                <div class="toei-contact__field">
+                  <select id="ContactCategory" name="contact[category]" required class="toei-contact__input">
+                    <option value="" disabled selected>選択してください</option>
+                    <option value="商品について">商品について</option>
+                    <option value="ご注文について">ご注文について</option>
+                    <option value="配送について">配送について</option>
+                    <option value="その他">その他</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="toei-contact__row toei-contact__row--textarea">
+                <div class="toei-contact__labelWrap">
+                  <span class="toei-contact__badge">必須</span>
+                  <label for="ContactBody" class="toei-contact__label">お問い合わせ内容（本文）</label>
+                </div>
+                <div class="toei-contact__field">
+                  <textarea id="ContactBody" name="contact[body]" rows="6" class="toei-contact__input" required placeholder="お問い合わせ内容"></textarea>
+                </div>
+              </div>
+
+              <div class="toei-contact__row toei-contact__row--name">
+                <div class="toei-contact__labelWrap">
+                  <span class="toei-contact__badge">必須</span>
+                  <label for="ContactLastName" class="toei-contact__label">氏名</label>
+                </div>
+                <div class="toei-contact__field toei-contact__field--name">
+                  <div class="toei-contact__nameInput">
+                    <input id="ContactLastName" type="text" name="contact[last_name]" class="toei-contact__input" placeholder="姓" required>
+                  </div>
+                  <div class="toei-contact__nameInput">
+                    <input id="ContactFirstName" type="text" name="contact[first_name]" class="toei-contact__input" placeholder="名" required>
+                  </div>
+                </div>
+              </div>
+
+              <div class="toei-contact__row">
+                <div class="toei-contact__labelWrap">
+                  <span class="toei-contact__badge">必須</span>
+                  <label for="ContactEmail" class="toei-contact__label">メールアドレス</label>
+                </div>
+                <div class="toei-contact__field">
+                  <input id="ContactEmail" type="email" name="contact[email]" class="toei-contact__input" required placeholder="sample@sample.com">
+                </div>
+              </div>
+
+              <div class="toei-contact__row">
+                <div class="toei-contact__labelWrap">
+                  <span class="toei-contact__badge">必須</span>
+                  <label for="ContactPhone" class="toei-contact__label">電話番号</label>
+                </div>
+                <div class="toei-contact__field">
+                  <input id="ContactPhone" type="tel" name="contact[phone]" class="toei-contact__input" required placeholder="123-4567-8901">
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="toei-contact__row">
-            <div class="toei-contact__labelWrap">
-              <span class="toei-contact__badge">必須</span>
-              <label for="ContactEmail" class="toei-contact__label">メールアドレス</label>
-            </div>
-            <div class="toei-contact__field">
-              <input id="ContactEmail" type="email" name="contact[email]" class="toei-contact__input" required placeholder="sample@sample.com">
-            </div>
+          <div class="toei-contact__actions">
+            {% if section.settings.back_link != blank %}
+              <a class="toei-contact__button toei-contact__button--secondary" href="{{ section.settings.back_link }}">戻る</a>
+            {% endif %}
+            <button type="submit" class="toei-contact__button toei-contact__button--primary">
+              {{ section.settings.submit_label | default: '確認する' }}
+            </button>
           </div>
-
-          <div class="toei-contact__row">
-            <div class="toei-contact__labelWrap">
-              <span class="toei-contact__badge">必須</span>
-              <label for="ContactPhone" class="toei-contact__label">電話番号</label>
-            </div>
-            <div class="toei-contact__field">
-              <input id="ContactPhone" type="tel" name="contact[phone]" class="toei-contact__input" required placeholder="123-4567-8901">
-            </div>
-          </div>
-        </div>
+        {% endform %}
       </div>
-
-      <div class="toei-contact__actions">
-        {% if section.settings.back_link != blank %}
-          <a class="toei-contact__button toei-contact__button--secondary" href="{{ section.settings.back_link }}">戻る</a>
-        {% endif %}
-        <button type="submit" class="toei-contact__button toei-contact__button--primary">
-          {{ section.settings.submit_label | default: '確認する' }}
-        </button>
-      </div>
-    {% endform %}
+    </section>
   </div>
-</section>
+</div>
 
 {% schema %}
 {
