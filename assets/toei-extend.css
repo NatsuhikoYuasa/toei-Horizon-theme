@@ -144,15 +144,15 @@
 
 .mypage-hero__value {
   font-size: 1rem;
-  font-weight: normal;
+  font-weight: 600;
   line-height: 1.4;
   text-align: left;
 }
 
 .mypage-hero__note {
   margin: 0;
-  font-size: 1.25rem;
-  color: #374151;
+  font-size: 1rem;
+  color: #E03635;
   line-height: 1.5;
 }
 
@@ -162,7 +162,7 @@
   align-items: center;
   gap: 4px;
   color: #111827;
-  font-size: 1.25rem;
+  font-size: 1rem;
   text-decoration: none;
 }
 .mypage-hero__link::after {
@@ -249,7 +249,7 @@
   }
   .mypage-hero__note,
   .mypage-hero__link {
-    font-size: 1.2rem;
+    font-size: 1rem;
   }
   .mypage-grid {
     grid-template-columns: 1fr;
