@@ -1,63 +1,67 @@
-{% if customer %}
-  <div class="points-history-wrapper">
-    {%- render 'page-breadcrumbs', level_1_title: 'マイページ', level_1_url: '/pages/mypage', current_title: 'ポイント履歴' -%}
-    <h1 class="points-history-title">ポイント履歴</h1>
+<div class="l-page">
+  <div class="l-container">
+    {% if customer %}
+      <div class="points-history-wrapper">
+        {%- render 'page-breadcrumbs', level_1_title: 'マイページ', level_1_url: '/pages/mypage', current_title: 'ポイント履歴' -%}
+        <h1 class="heading-page points-history-title">ポイント履歴</h1>
 
-    <section class="points-history-hero">
-      <div class="points-history-hero__left">
-        <div class="points-history-hero__icon" aria-hidden="true">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.5" />
-            <path
-              d="M4 19.5C4 15.9101 7.13401 13 10.75 13H13.25C16.866 13 20 15.9101 20 19.5V20H4V19.5Z"
-              stroke="currentColor"
-              stroke-width="1.5"
-            />
-          </svg>
+        <section class="points-history-hero">
+          <div class="points-history-hero__left">
+            <div class="points-history-hero__icon" aria-hidden="true">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.5" />
+                <path
+                  d="M4 19.5C4 15.9101 7.13401 13 10.75 13H13.25C16.866 13 20 15.9101 20 19.5V20H4V19.5Z"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+              </svg>
+            </div>
+            <p class="points-history-hero__name">{{ customer.first_name }} {{ customer.last_name }} 様</p>
+          </div>
+
+          <div class="points-history-hero__right">
+            <p class="points-history-hero__current-points">
+              <span class="points-history-hero__label">現在のポイント</span>
+              <span class="points-history-hero__value">{%- render 'easypoints-customer-points' -%}</span>
+              <span class="points-history-hero__expiry">（有効期限XX年XX月XX日）</span>
+              <!-- TODO: easyPoints の仕様確定後に有効期限表示に差し替え -->
+            </p>
+          </div>
+        </section>
+
+        <section class="points-history-section">
+          <div class="points-history-table-wrapper">
+            <table class="points-history-table">
+              <thead>
+                <tr>
+                  <th>ポイント利用・獲得区分</th>
+                  <th>日付</th>
+                  <th>ポイント数</th>
+                  <th>備考</th>
+                </tr>
+              </thead>
+              <tbody class="points-history-table__body">
+                {%- render 'easypoints-history' -%}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div class="points-history-footer">
+          <a href="/pages/mypage" class="button button--primary points-history-back-button">マイページに戻る</a>
         </div>
-        <p class="points-history-hero__name">{{ customer.first_name }} {{ customer.last_name }} 様</p>
       </div>
-
-      <div class="points-history-hero__right">
-        <p class="points-history-hero__current-points">
-          <span class="points-history-hero__label">現在のポイント</span>
-          <span class="points-history-hero__value">{%- render 'easypoints-customer-points' -%}</span>
-          <span class="points-history-hero__expiry">（有効期限XX年XX月XX日）</span>
-          <!-- TODO: easyPoints の仕様確定後に有効期限表示に差し替え -->
-        </p>
+    {% else %}
+      <div class="points-history-wrapper points-history-wrapper--guest">
+        {%- render 'page-breadcrumbs', level_1_title: 'マイページ', level_1_url: '/pages/mypage', current_title: 'ポイント履歴' -%}
+        <h1 class="heading-page points-history-title">ポイント履歴</h1>
+        <p class="points-history-guest-message">ポイント履歴を表示するにはログインが必要です。</p>
+        <a class="button button--primary points-history-login-button" href="{{ routes.account_login_url }}">ログインページへ</a>
       </div>
-    </section>
-
-    <section class="points-history-section">
-      <div class="points-history-table-wrapper">
-        <table class="points-history-table">
-          <thead>
-            <tr>
-              <th>ポイント利用・獲得区分</th>
-              <th>日付</th>
-              <th>ポイント数</th>
-              <th>備考</th>
-            </tr>
-          </thead>
-          <tbody class="points-history-table__body">
-            {%- render 'easypoints-history' -%}
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <div class="points-history-footer">
-      <a href="/pages/mypage" class="button button--primary points-history-back-button">マイページに戻る</a>
-    </div>
+    {% endif %}
   </div>
-{% else %}
-  <div class="points-history-wrapper points-history-wrapper--guest">
-    {%- render 'page-breadcrumbs', level_1_title: 'マイページ', level_1_url: '/pages/mypage', current_title: 'ポイント履歴' -%}
-    <h1 class="points-history-title">ポイント履歴</h1>
-    <p class="points-history-guest-message">ポイント履歴を表示するにはログインが必要です。</p>
-    <a class="button button--primary points-history-login-button" href="{{ routes.account_login_url }}">ログインページへ</a>
-  </div>
-{% endif %}
+</div>
 
 {% schema %}
 {
