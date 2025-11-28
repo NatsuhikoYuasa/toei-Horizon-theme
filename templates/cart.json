@@ -12,14 +12,6 @@
     "cart-section": {
       "type": "main-cart",
       "blocks": {
-        "easypoints_redemption_RKBdAc": {
-          "type": "shopify://apps/easypoints/blocks/redemption/f0862409-7105-4920-b523-5bd76a964d4a",
-          "settings": {}
-        },
-        "easypoints_redemption_AUEX6U": {
-          "type": "shopify://apps/easypoints/blocks/redemption/f0862409-7105-4920-b523-5bd76a964d4a",
-          "settings": {}
-        },
         "cart-page-title": {
           "type": "_cart-title",
           "static": true,
@@ -65,10 +57,6 @@
           "blocks": {}
         }
       },
-      "block_order": [
-        "easypoints_redemption_RKBdAc",
-        "easypoints_redemption_AUEX6U"
-      ],
       "settings": {
         "section_width": "page-width",
         "color_scheme": "",
