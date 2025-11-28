@@ -122,11 +122,10 @@
 }
 
 .mypage-hero__item {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  column-gap: 16px;
-  row-gap: 6px;
-  align-items: baseline;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .mypage-hero__label {
@@ -149,28 +148,8 @@
 }
 
 .mypage-hero__link {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: #111827;
+  color: #0a5fb4;
   font-size: 1.25rem;
-  text-decoration: none;
-}
-
-.mypage-hero__link::after {
-  content: "";
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-right: 1px solid #9ca3af;
-  border-bottom: 1px solid #9ca3af;
-  transform: rotate(-45deg);
-  margin-top: 1px;
-}
-
-.mypage-hero__link:hover,
-.mypage-hero__link:focus-visible {
-  color: #0f172a;
   text-decoration: underline;
 }
 
@@ -231,12 +210,6 @@
     margin-bottom: 24px;
   }
 
-  .mypage-hero__left {
-    border-right: none;
-    padding-right: 0;
-    margin-right: 0;
-  }
-
   .mypage-hero__greeting {
     font-size: 1.3rem;
   }
@@ -252,11 +225,6 @@
   .mypage-hero__note,
   .mypage-hero__link {
     font-size: 1.2rem;
-  }
-
-  .mypage-hero__item {
-    grid-template-columns: 1fr;
-    row-gap: 4px;
   }
 
   .mypage-grid {
