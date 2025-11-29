@@ -1,0 +1,2079 @@
+{% liquid
+  assign product_resource = closest.product | default: product
+  assign product = product_resource
+
+  if section.settings.desktop_media_position == 'left'
+    assign render_order = 'media,product-details'
+  else
+    assign render_order = 'product-details,media'
+  endif
+
+  assign product_has_media = true
+  if product_resource.media.size == 0
+    assign product_has_media = false
+  endif
+
+  assign product_grid_class = 'product-information__grid'
+
+  if product_has_media == false
+    assign product_grid_class = product_grid_class | append: ' product-information--media-none'
+  elsif section.settings.desktop_media_position == 'right'
+    assign product_grid_class = product_grid_class | append: ' product-information--media-right'
+  else
+    assign product_grid_class = product_grid_class | append: ' product-information--media-left'
+  endif
+
+  if section.settings.equal_columns
+    assign product_grid_class = product_grid_class | append: ' product-information__grid--half'
+
+    if section.settings.limit_details_width
+      assign product_grid_class = product_grid_class | append: ' product-information__grid--limit-details'
+    endif
+  endif
+
+  case section.settings.content_width
+    when 'content-center-aligned'
+      assign content_width = 'page-width'
+    when 'content-full-width'
+      assign content_width = 'full-width'
+  endcase
+
+  assign selected_variant = product.selected_or_first_available_variant
+
+  # ===== 予約テンプレ判定 =====
+  assign is_preorder_template = false
+  if template.suffix contains 'preorder'
+    assign is_preorder_template = true
+  endif
+
+  # ===== NEW（公開日60日以内 / テンプレ関係なし） =====
+  assign now_ts_badge = 'now' | date: '%s' | plus: 0
+  assign new_days = 60 | plus: 0
+  assign days_sec = new_days | times: 86400
+  assign cutoff_ts = now_ts_badge | minus: days_sec
+
+  assign pub_ts = 0
+  if product.published_at != blank
+    assign pub_ts = product.published_at | date: '%s' | plus: 0
+  endif
+
+  assign badge_new = false
+  if pub_ts != 0 and pub_ts > cutoff_ts
+    assign badge_new = true
+  endif
+
+  # ===== 予約受付中（preorderテンプレだけ） =====
+  assign badge_preorder = false
+  if is_preorder_template
+    assign badge_preorder = true
+  endif
+%}
+
+<script type="application/ld+json">
+  {{ product | structured_data }}
+</script>
+
+<div class="section-background color-{{ section.settings.color_scheme }}"></div>
+<div
+  class="product-information section section--{{ content_width }} spacing-style color-{{ section.settings.color_scheme }} relative"
+  style="{% render 'spacing-style', settings: section.settings %} --gap: {{ section.settings.gap }}px;"
+>
+  {% if section.settings.desktop_media_position == 'left' and product_has_media %}
+    {% assign product_href = '#ProductInformation-' | append: section.id %}
+    {% render 'skip-to-content-link', href: product_href, text: 'accessibility.skip_to_product_info' %}
+  {% endif %}
+
+  {%- comment -%} パンくず（既存） {%- endcomment -%}
+  {% render 'Custom-product-breadcrumbs' %}
+
+  <div
+    id="ProductInformation-{{ section.id }}"
+    class="{{ product_grid_class }}"
+    data-product-grid-content
+  >
+    {% assign render_order_array = render_order | split: ',' %}
+
+    {%- capture media -%}
+      <div
+        class="product-information__media"
+        data-testid="product-information-media"
+      >
+        {%- content_for 'block',
+          type: '_product-media-gallery',
+          id: 'media-gallery',
+          closest.product: product_resource
+        -%}
+
+        {%- comment -%}
+          ★ SP 用のサムネイル列
+          data-media-id で JS の updateGalleryByMediaId と連携
+        {%- endcomment -%}
+        <div class="toei-media-thumbs-sp">
+          {% for media_item in product.media %}
+            <button
+              type="button"
+              class="toei-media-thumb-sp"
+              data-media-id="{{ media_item.id }}"
+            >
+              {{ media_item
+                | image_url: width: 96
+                | image_tag: loading: 'lazy', alt: media_item.alt | escape
+              }}
+            </button>
+          {% endfor %}
+        </div>
+      </div>
+    {%- endcapture -%}
+
+    {%- capture details -%}
+      <div
+        class="product-details toei-product-details"
+        id="toei-product-{{ section.id }}"
+        data-product-id="{{ product.id }}"
+      >
+        {%- comment -%}
+          2. バッジ
+          ※とりあえず「NEW」タグのみ。細かいバッジロジックは後で拡張可能。
+        {%- endcomment -%}
+        <div class="toei-product-badges" data-toei-badges>
+          {% if badge_new %}
+            <span class="toei-badge toei-badge--new">NEW</span>
+          {% endif %}
+          {% if badge_preorder %}
+            <span class="toei-badge toei-badge--pre">予約受付中</span>
+          {% endif %}
+          {%- comment -%}
+            初回特典/早期/締切はバリエーションごとに JS で追加
+          {%- endcomment -%}
+        </div>
+
+        {%- comment -%} 3. 商品タイトル {%- endcomment -%}
+        <h1 class="toei-product-title">
+          {{ product.title }}
+        </h1>
+
+        {%- comment -%} 4. 価格（税込） {%- endcomment -%}
+        <div class="toei-product-price-row">
+          <p class="toei-product-price">
+            <span class="toei-product-price__amount" data-toei-price>
+              {{ selected_variant.price | money }}
+            </span>
+            <span class="toei-product-price__tax">（税込）</span>
+          </p>
+        </div>
+
+        {%- comment -%} 5. 発売日（バリエーションメタフィールド） {%- endcomment -%}
+        <div class="toei-product-meta toei-product-meta--release" data-toei-release-row>
+          <span class="toei-product-meta__value" data-toei-release-date>
+            {%- if selected_variant.metafields.variant.release_date != blank -%}
+              {{ selected_variant.metafields.variant.release_date | date: "%Y年%-m月%-d日発売" }}
+            {%- endif -%}
+          </span>
+        </div>
+
+        {%- comment -%} 6. 商品番号（SKU） {%- endcomment -%}
+        <div class="toei-product-meta toei-product-meta--sku" data-toei-sku-row>
+          <span class="toei-product-meta__label">商品番号：</span>
+          <span class="toei-product-meta__value" data-toei-sku>
+            {{ selected_variant.sku }}
+          </span>
+        </div>
+
+        {%- comment -%} 7. バリエーション選択（ラジオボタン） {%- endcomment -%}
+        {% if product.variants.size > 1 %}
+          <div class="toei-variant-selector">
+            <div class="toei-variant-radios">
+              {% for variant in product.variants %}
+                {% assign is_sold_out = variant.available | default: false | negate %}
+                <label
+                  class="toei-variant-radio{% unless variant.available %} toei-variant-radio--sold-out{% endunless %}"
+                >
+                  <input
+                    type="radio"
+                    name="toei-variant-{{ section.id }}"
+                    value="{{ variant.id }}"
+                    {% if variant.id == selected_variant.id %}checked{% endif %}
+                    data-variant-available="{{ variant.available }}"
+                    aria-disabled="{% if variant.available %}false{% else %}true{% endif %}
+                  >
+                  <span class="toei-variant-radio__label">
+                    {{ variant.title }}
+                  </span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        {%- comment -%} ★ 1つ目の @app ブロック（合計獲得ポイント） {%- endcomment -%}
+        {% assign app_index = 0 %}
+        {% for block in section.blocks %}
+          {% if block.type == '@app' %}
+            {% if app_index == 0 %}
+              <div class="toei-points-placeholder">
+                {% render block %}
+              </div>
+            {% endif %}
+            {% assign app_index = app_index | plus: 1 %}
+          {% endif %}
+        {% endfor %}
+
+        {%- comment -%}
+          12. 数量 + カートボタン
+          8, 9, 10, 11 はこの下にボックスとしてまとめる
+        {%- endcomment -%}
+        <form
+          method="post"
+          action="/cart/add"
+          id="product-form-{{ section.id }}"
+          class="product-form toei-product-form"
+        >
+          <input
+            type="hidden"
+            name="id"
+            value="{{ selected_variant.id }}"
+            data-toei-variant-id
+          >
+
+          {%- comment -%} 8〜11. 予約／販売情報ボックス {%- endcomment -%}
+          <div class="toei-reservation-box">
+            <h2 class="toei-reservation-title">
+              {%- if is_preorder_template -%}
+                予約情報
+              {%- else -%}
+                販売情報
+              {%- endif -%}
+            </h2>
+
+            <dl class="toei-reservation-list">
+              {%- assign reservation_text = selected_variant.metafields.variant.information_release_note -%}
+              {%- assign shipping_text   = selected_variant.metafields.variant.release_note -%}
+              {%- assign sell_start      = selected_variant.metafields.variant.sell_start_at -%}
+              {%- assign sell_end        = selected_variant.metafields.variant.sell_end_at -%}
+
+              <div class="toei-reservation-item">
+                <dt class="visually-hidden">
+                  {%- if is_preorder_template -%}予約情報{%- else -%}販売情報{%- endif -%}
+                </dt>
+                <dd data-toei-reservation-summary>
+                  {%- if is_preorder_template -%}
+                    {%- if reservation_text != blank -%}
+                      予約期間：{{ reservation_text }}<br>
+                    {%- endif -%}
+                    {%- if shipping_text != blank -%}
+                      配送予定時期：{{ shipping_text }}
+                    {%- endif -%}
+                  {%- else -%}
+                    {%- if sell_start != blank or sell_end != blank -%}
+                      販売期間：
+                      {%- if sell_start != blank -%}
+                        {{ sell_start | date: "%Y年%-m月%-d日 %-H時%-M分" }}
+                      {%- endif -%}
+                      {%- if sell_start != blank and sell_end != blank -%}
+                        〜
+                      {%- endif -%}
+                      {%- if sell_end != blank -%}
+                        {{ sell_end | date: "%Y年%-m月%-d日 %-H時%-M分" }}
+                      {%- endif -%}
+                    {%- endif -%}
+                  {%- endif -%}
+                </dd>
+              </div>
+
+              {%- if is_preorder_template -%}
+                <div class="toei-reservation-item toei-reservation-item--important">
+                  <dt class="visually-hidden">予約締切</dt>
+                  <dd data-toei-cutoff-note>
+                    {{ selected_variant.metafields.variant.initial_preorder_cutoff_note | strip_newlines }}までに予約頂いた場合は発売日にお届け予定です。
+                  </dd>
+                </div>
+              {%- endif -%}
+            </dl>
+          </div>
+
+          <div class="toei-buy-box">
+            <div class="toei-quantity">
+              <span class="toei-product-meta__label">数量</span>
+              <div class="toei-quantity-controls">
+                <button
+                  type="button"
+                  class="toei-qty-btn"
+                  data-toei-qty-minus
+                  aria-label="減らす"
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  name="quantity"
+                  min="1"
+                  value="1"
+                  class="toei-qty-input"
+                >
+                <button
+                  type="button"
+                  class="toei-qty-btn"
+                  data-toei-qty-plus
+                  aria-label="増やす"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              name="add"
+              class="toei-add-to-cart product-form__submit button button--primary"
+              data-toei-add-to-cart
+            >
+              {% if is_preorder_template %}
+                商品を予約する
+              {% else %}
+                カートに入れる
+              {% endif %}
+            </button>
+          </div>
+        </form>
+
+        {%- comment -%} 13. お気に入り（2つ目の @app ブロック） {%- endcomment -%}
+        {% assign app_index = 0 %}
+        {% for block in section.blocks %}
+          {% if block.type == '@app' %}
+            {% if app_index == 1 %}
+              <div class="toei-favorite-placeholder">
+                {% render block %}
+              </div>
+            {% endif %}
+            {% assign app_index = app_index | plus: 1 %}
+          {% endif %}
+        {% endfor %}
+
+        {%- comment -%} 14. この商品をシェアする（シンプル版） {%- endcomment -%}
+        <div class="toei-share">
+          <p class="toei-share__title">この商品をシェアする</p>
+
+          <div class="toei-share__icons">
+            {%- assign share_url = product.url | absolute_url | url_encode -%}
+            {%- assign share_text = product.title | url_encode -%}
+
+            <a
+              class="toei-share-icon toei-share-icon--x"
+              href="https://twitter.com/intent/tweet?url={{ share_url }}"
+              target="_blank"
+              rel="noopener"
+              aria-label="Xでシェア"
+            >
+              <img
+                class="toei-share__icon-img"
+                src="//cdn.shopify.com/s/files/1/0754/4078/3603/files/x.png?v=1764402481"
+                alt="Xでシェア"
+                loading="lazy"
+              >
+            </a>
+
+            <a
+              class="toei-share-icon toei-share-icon--facebook"
+              href="https://www.facebook.com/sharer/sharer.php?u={{ share_url }}"
+              target="_blank"
+              rel="noopener"
+              aria-label="Facebookでシェア"
+            >
+              <img
+                class="toei-share__icon-img"
+                src="//cdn.shopify.com/s/files/1/0754/4078/3603/files/facebook.png?v=1764403744"
+                alt="Facebookでシェア"
+                loading="lazy"
+              >
+            </a>
+
+            <a
+              class="toei-share-icon toei-share-icon--instagram"
+              href="https://www.instagram.com/ここにアカウント名/"
+              target="_blank"
+              rel="noopener"
+              aria-label="Instagramで見る"
+            >
+              <img
+                class="toei-share__icon-img"
+                src="//cdn.shopify.com/s/files/1/0754/4078/3603/files/insta.png?v=1764403744"
+                alt="Instagramで見る"
+                loading="lazy"
+              >
+            </a>
+
+            <a
+              class="toei-share-icon toei-share-icon--line"
+              href="https://line.me/R/msg/text/?{{ share_text }}%0A{{ share_url }}"
+              target="_blank"
+              rel="noopener"
+              aria-label="LINEでシェア"
+            >
+              <img
+                class="toei-share__icon-img"
+                src="//cdn.shopify.com/s/files/1/0754/4078/3603/files/line.png?v=1764402481"
+                alt="LINEでシェア"
+                loading="lazy"
+              >
+            </a>
+          </div>
+        </div>
+
+        {%- comment -%} 15. 商品タグ一覧 {%- endcomment -%}
+        {% if product.tags.size > 0 %}
+          <div class="toei-tags">
+            {% for tag in product.tags %}
+              <span class="toei-tag">{{ tag }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {%- comment -%} 16. 注意事項（notes） {%- endcomment -%}
+        <div class="toei-notes" data-toei-notes-wrapper>
+          <h2 class="toei-notes__title">注意事項</h2>
+          <div class="toei-notes__body" data-toei-notes-body>
+            {{ selected_variant.metafields.variant.notes | newline_to_br }}
+          </div>
+        </div>
+
+        {%- comment -%} 17. 特典情報を見る（bonus_info） {%- endcomment -%}
+        <details class="toei-accordion">
+          <summary class="toei-accordion__summary">
+            特典情報を見る
+          </summary>
+          <div class="toei-accordion__body" data-toei-bonus-body>
+            {{ selected_variant.metafields.variant.bonus_info | newline_to_br }}
+          </div>
+        </details>
+
+        {%- comment -%} 18. 商品の詳細を見る（description） {%- endcomment -%}
+        <details class="toei-accordion">
+          <summary class="toei-accordion__summary">
+            商品の詳細を見る
+          </summary>
+          <div class="toei-accordion__body" data-toei-description-body>
+            {{ selected_variant.metafields.variant.description | newline_to_br }}
+          </div>
+        </details>
+      </div>
+    {%- endcapture -%}
+
+    {% for block in render_order_array %}
+      {% if block == 'media' and product_has_media %}
+        {{ media }}
+      {% elsif block == 'product-details' %}
+        {{ details }}
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+{%- comment -%}
+  wb03 add start 最近見た：拡張保存
+{%- endcomment -%}
+
+{%- liquid
+  assign now_ts = 'now' | date: '%s' | plus: 0
+
+  # ▼ 初回特典 / 早期予約特典 / 締切間近 用の集計
+  assign first_bonus_total = 0
+  assign early_bonus = false
+  assign min_end_ts = 0
+  assign ten_days_sec = 864000 | plus: 0
+
+  for v in product.variants
+    assign v_inv = v.inventory_quantity | default: 0 | plus: 0
+
+    if v.metafields.custom.is_first_bonus and v_inv > 0
+      assign first_bonus_total = first_bonus_total | plus: v_inv
+    endif
+
+    if v.metafields.custom.is_early_bonus
+      assign early_bonus = true
+    endif
+
+    assign v_end_raw = v.metafields.variant.sell_end_at
+    if v_end_raw != blank
+      assign v_end_ts = v_end_raw | date: '%s' | plus: 0
+      if min_end_ts == 0 or v_end_ts < min_end_ts
+        assign min_end_ts = v_end_ts
+      endif
+    endif
+  endfor
+
+  assign closing_soon = false
+  if min_end_ts != 0
+    assign closing_from_ts = min_end_ts | minus: ten_days_sec
+    if now_ts >= closing_from_ts and now_ts <= min_end_ts
+      assign closing_soon = true
+    endif
+  endif
+
+  # ▼ display_start_at / display_end_at によるロック判定
+  assign ds_raw = product.metafields.product.display_start_at
+  assign de_raw = product.metafields.product.display_end_at
+
+  assign ds_ts = 0
+  assign de_ts = 0
+  assign display_lock = false
+
+  if ds_raw != blank
+    assign ds_ts = ds_raw | date: '%s' | plus: 0
+  endif
+
+  if de_raw != blank
+    assign de_ts = de_raw | date: '%s' | plus: 0
+  endif
+
+  if ds_raw != blank and de_raw != blank
+    if now_ts < ds_ts or now_ts > de_ts
+      assign display_lock = true
+    endif
+  elsif ds_raw != blank
+    if now_ts < ds_ts
+      assign display_lock = true
+    endif
+  elsif de_raw != blank
+    if now_ts > de_ts
+      assign display_lock = true
+    endif
+  endif
+-%}
+
+<script>
+  (function(){
+    try{
+      var exKey  = 'recentlyViewedEx';
+      var key    = 'recentlyViewed';
+
+      var exArr  = [];
+      var simple = [];
+
+      try{ exArr  = JSON.parse(localStorage.getItem(exKey)) || []; }catch(e){}
+      try{ simple = JSON.parse(localStorage.getItem(key))   || []; }catch(e){}
+
+      var handle = {{ product.handle | json }};
+      if (!handle) return;
+
+      exArr  = exArr.filter(function(x){ return !x || x.handle !== handle; });
+      simple = simple.filter(function(h){ return h !== handle; });
+
+      var locked      = {{ display_lock      | json }};
+      var firstTotal  = {{ first_bonus_total | json }};
+      var earlyBonus  = {{ early_bonus       | json }};
+      var closingSoon = {{ closing_soon      | json }};
+
+      var entry = {
+        handle: {{ product.handle | json }},
+        url: {{ product.url | json }},
+        title: {{ product.title | json }},
+        template_suffix: {{ product.template_suffix | json }},
+        tags: {{ product.tags | json }},
+        published_at: {{ product.published_at | date: "%Y-%m-%dT%H:%M:%S%z" | json }},
+        price_min: {{ product.price_min | json }},
+        compare_at_price_max: {{ product.compare_at_price_max | json }},
+        available: {{ product.available | json }},
+        metafields: {
+          custom: {
+            preorder:   {{ product.metafields.custom.preorder   | default: blank | json }},
+            comingsoon: {{ product.metafields.custom.comingsoon | default: blank | json }}
+          }
+        },
+        image: {% if product.featured_image %}{{ product.featured_image | image_url: width: 700 | json }}{% else %}null{% endif %},
+        display_locked:    locked,
+        first_bonus_total: firstTotal,
+        early_bonus:       earlyBonus,
+        closing_soon:      closingSoon
+      };
+
+      exArr.push(entry);
+      simple.push(handle);
+
+      if (exArr.length  > 40) exArr  = exArr.slice(-40);
+      if (simple.length > 40) simple = simple.slice(-40);
+
+      localStorage.setItem(exKey, JSON.stringify(exArr));
+      localStorage.setItem(key,  JSON.stringify(simple));
+
+      console.log('[rv] saved', entry.handle, 'locked=', entry.display_locked,
+        'first=', entry.first_bonus_total, 'early=', entry.early_bonus, 'closing=', entry.closing_soon);
+    }catch(e){
+      console.warn('[rv] save error', e);
+    }
+  })();
+</script>
+
+{%- comment -%} ここまで 最近見た：拡張保存 {%- endcomment -%}
+
+{% stylesheet %}
+/* ───────── ベース：product-information レイアウト ───────── */
+
+.product-information {
+  gap: var(--gap) 0;
+}
+
+.product-information__grid {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+}
+
+.product-details {
+  order: 1;
+}
+
+.product-information__media {
+  order: 0;
+  width: 0;
+  min-width: 100%;
+}
+
+@media screen and (max-width: 749px) {
+  .product-information__media {
+    grid-column: 1 / -1;
+  }
+
+  .product-details {
+    grid-column: 2 / 3;
+  }
+}
+
+@media screen and (min-width: 750px) {
+  .product-information__grid {
+    grid-column: 2;
+  }
+
+  .product-information__grid.product-information--media-none,
+  .product-information__grid:has(.product-information__media:empty) {
+    .product-details {
+      width: var(--narrow-content-width);
+      margin: 0 auto;
+    }
+  }
+
+  .product-information__grid:not(:has(.product-information__media:empty)) {
+    &.product-information--media-left {
+      grid-template-columns: 1fr min(50vw, var(--sidebar-width));
+
+      .product-information__media {
+        padding-right: calc(var(--gap, 0) / 2);
+      }
+
+      .product-details {
+        padding-left: calc(var(--gap, 0) / 2);
+      }
+
+      &:has(.media-gallery--extend) {
+        grid-column: 1 / 3;
+      }
+    }
+
+    &.product-information--media-right {
+      grid-template-columns: min(50vw, var(--sidebar-width)) 1fr;
+
+      .product-information__media {
+        padding-left: calc(var(--gap, 0) / 2);
+        order: 1;
+      }
+
+      .product-details {
+        padding-right: calc(var(--gap, 0) / 2);
+        order: 0;
+      }
+
+      &:has(.media-gallery--extend) {
+        grid-column: 2 / -1;
+      }
+    }
+
+    &.product-information__grid--half,
+    &.product-information__grid--half:has(.product-information__media:empty) {
+      grid-column: 1 / -1;
+      grid-template-columns:
+        var(--full-page-grid-margin)
+        calc(var(--full-page-grid-central-column-width) / 2)
+        calc(var(--full-page-grid-central-column-width) / 2)
+        var(--full-page-grid-margin);
+
+      &.product-information--media-left {
+        .product-information__media {
+          grid-column: 2 / 3;
+
+          &:has(.media-gallery--extend) {
+            grid-column: 1 / 3;
+          }
+        }
+
+        .product-details {
+          grid-column: 3 / 4;
+        }
+      }
+
+      &.product-information--media-right {
+        .product-information__media {
+          grid-column: 3 / 4;
+
+          &:has(.media-gallery--extend) {
+            grid-column: 3 / -1;
+          }
+        }
+
+        .product-details {
+          grid-column: 2 / 3;
+        }
+      }
+    }
+  }
+
+  .section--full-width {
+    .product-information__grid:not(:has(.product-information__media:empty)) {
+      &.product-information--media-left,
+      &.product-information--media-right {
+        grid-column: 1 / -1;
+      }
+
+      &.product-information--media-left .product-details {
+        padding-inline-end: var(--padding-lg);
+      }
+
+      &.product-information--media-right .product-details {
+        padding-inline-start: var(--padding-lg);
+      }
+
+      &.product-information__grid--half.product-information--media-left {
+        .product-information__media {
+          grid-column: 1 / 3;
+        }
+
+        .product-details {
+          grid-column: 3 / -1;
+        }
+      }
+
+      &.product-information__grid--half.product-information--media-right {
+        .product-information__media {
+          grid-column: 3 / -1;
+        }
+
+        .product-details {
+          grid-column: 1 / 3;
+        }
+      }
+    }
+  }
+}
+
+/* PC 1200px〜：画像：テキスト ≒ 45% : 55%（右を少し広め） */
+@media screen and (min-width: 1200px) {
+  .product-information__grid:not(
+      .product-information__grid--half,
+      :has(.product-information__media:empty)
+    ).product-information--media-left {
+    grid-template-columns: 2fr 1.5fr !important;
+  }
+
+  .product-information__grid:not(
+      .product-information__grid--half,
+      :has(.product-information__media:empty)
+    ).product-information--media-right {
+    grid-template-columns: 1.5fr 2fr !important;
+  }
+}
+
+.product-information__grid--limit-details .product-details > .group-block {
+  max-width: var(--sidebar-width);
+}
+
+body:has(#header-group #header-component[data-sticky-state='active'])
+  .product-details.sticky-content--desktop {
+  --sticky-header-offset: var(--header-height);
+}
+
+/* ───────── TOEI カスタム部分 ───────── */
+
+.toei-product-details {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 1.2rem;
+}
+
+/* バッジ */
+.toei-product-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.toei-badge {
+  font-size: 0.7rem;
+  padding: 4px 10px;
+  border-radius: 0;
+  border: none;
+  font-weight: 600;
+}
+
+.toei-badge--new {
+  background: #d93231;
+  color: #fff;
+}
+
+.toei-badge--pre {
+  background: #060816;
+  color: #fff;
+}
+
+.toei-badge--first,
+.toei-badge--closing {
+  background: #dde0e6;
+  color: #060816;
+}
+
+.toei-badge--early {
+  background: #060816;
+  color: #fff;
+}
+
+/* タイトル・価格 */
+.toei-product-title {
+  font-size: 1.6rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.toei-product-price-row {
+  margin-top: 2px;
+}
+
+.toei-product-price {
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  margin: 0;
+}
+
+.toei-product-price__tax {
+  font-size: 1.05rem;
+}
+
+/* 発売日・商品番号まわり（メタ） */
+.toei-product-meta {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 0.82rem;
+  line-height: 1.9;
+}
+
+.toei-product-meta__label,
+.easy-points__cart-points {
+  min-width: 70px;
+  font-size: 0.82rem;
+  color: #b0b0b0;
+  font-weight: 400;
+}
+
+.toei-product-meta__value {
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+/* 発売日だけ黒 */
+.toei-product-meta__value--release,
+.toei-product-meta--release .toei-product-meta__value {
+  font-size: 0.9rem;
+  color: #181600;
+  line-height: 1.6;
+}
+
+/* SKU 行 */
+.toei-product-meta[data-toei-sku-row] {
+  font-size: 0.85rem;
+  color: rgba(24, 6, 0, 0.4);
+}
+
+.toei-product-meta[data-toei-sku-row] .toei-product-meta__label {
+  min-width: auto;
+  color: inherit;
+}
+
+.toei-product-meta[data-toei-sku-row] .toei-product-meta__value,
+.toei-product-meta__label--sku,
+.toei-product-meta__value--sku {
+  font-size: 0.82rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+
+/* 配送予定時期のラベル／値は薄グレー */
+.toei-product-meta__label--delivery,
+.toei-product-meta__value--delivery {
+  color: #b0b0b0;
+}
+
+/* バリエーション選択 */
+.toei-variant-selector {
+  margin-top: 6px;
+}
+
+.toei-variant-radios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.toei-variant-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 10px;
+  border: 1px solid #d4d7e2;
+  background: #fff;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: #181600;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.toei-variant-radio input {
+  accent-color: #d4d7e2;
+}
+
+.toei-variant-radio input:checked {
+  accent-color: #d93231;
+}
+
+.toei-variant-radio:has(input:checked) {
+  border-color: #d93231;
+  box-shadow: 0 0 0 1px #d93231;
+}
+
+.toei-variant-radio__label {
+  font-size: 1.1rem;
+  white-space: nowrap;
+}
+
+.toei-variant-radio--sold-out {
+  opacity: 0.5;
+}
+
+.toei-variant-radio--sold-out .toei-variant-radio__label {
+  position: relative;
+}
+
+.toei-variant-radio--sold-out .toei-variant-radio__label::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: currentColor;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* 予約情報ボックス */
+.toei-product-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+  font-size: 1.1rem;
+}
+
+.toei-reservation-box {
+  border-radius: 10px;
+  border: 1px solid #dde0e6;
+  background: #ffffff;
+  padding: 24px 28px;
+  font-size: 1.1rem;
+}
+
+.toei-reservation-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 16px;
+}
+
+.toei-reservation-list {
+  margin: 0 0 16px;
+  padding: 0;
+}
+
+.toei-reservation-item {
+  margin-top: 4px;
+}
+
+.toei-reservation-item + .toei-reservation-item {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #dde0e6;
+}
+
+.toei-reservation-item dt {
+  display: none;
+}
+
+.toei-reservation-item dt,
+.toei-reservation-item dd {
+  font-size: 0.9rem;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.toei-reservation-item dd {
+  margin: 0;
+  color: rgba(24, 6, 0, 0.4);
+}
+
+.toei-reservation-item--important dd {
+  color: #d93231;
+  font-weight: 500;
+}
+
+.toei-reservation-summary {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e5e5;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+/* 数量＋カート：横並び */
+.toei-buy-box {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 18px;
+  align-items: center;
+}
+
+.toei-quantity {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 1.1rem;
+  white-space: nowrap;
+}
+
+.toei-quantity .toei-product-meta__label {
+  min-width: auto;
+  padding-right: 16px;
+  margin-right: 4px;
+  border-right: 1px solid #dde0e6;
+  font-size: 0.85rem;
+  color: #181600;
+}
+
+.toei-quantity-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+}
+
+.toei-qty-btn {
+  min-width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.toei-qty-input {
+  box-sizing: border-box;
+  width: 50px;
+  height: 34px;
+  text-align: center;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid #dde0e6;
+  font-size: 1rem;
+}
+
+.toei-add-to-cart {
+  flex: 7;
+  min-height: 48px;
+  border-radius: 10px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #d93231;
+  color: #ffffff;
+}
+
+.toei-add-to-cart--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* お気に入り */
+.toei-favorite-placeholder {
+  margin-top: 10px;
+  width: 100%;
+}
+
+.toei-favorite-placeholder > * {
+  width: 100%;
+}
+
+/* シェア */
+.toei-share {
+  margin-top: 28px;
+  margin-bottom: 28px;
+  padding: 28px 18px;
+  text-align: center;
+  background: #f7f7f7;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.toei-share__title {
+  font-size: 0.9rem;
+  margin: 0 0 18px;
+  font-weight: 600;
+}
+
+.toei-share__icons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.toei-share-icon {
+  border: none;
+  border-radius: 0;
+  width: auto;
+  height: auto;
+  padding: 0;
+}
+
+.toei-share__icon-img {
+  display: block;
+  width: 32px;
+  height: 32px;
+}
+
+/* タグ */
+.toei-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 20px;
+  padding-top: 34px;
+  border-top: 1px solid #dde0e6;
+}
+
+.toei-tag {
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 0;
+  border: 1px solid #e03635;
+  color: #e03635;
+  background: #ffffff;
+}
+
+/* 注意事項 */
+.toei-notes {
+  margin-top: 28px;
+  margin-bottom: 28px;
+  padding: 28px 18px;
+  font-size: 0.9rem;
+  background: #f7f7f7;
+  border-radius: 10px;
+  line-height: 1.7;
+}
+
+.toei-notes__title,
+.toei-notes h3 {
+  font-size: 1.1rem;
+  margin: 0 0 18px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.toei-notes__body {
+  margin: 0;
+  text-align: left;
+  font-weight: 400;
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+/* アコーディオン（特典情報タブなど） */
+.toei-accordion {
+  margin-top: 24px;
+  border-top: 1px solid #dde0e6;
+  padding-top: 14px;
+  font-size: 1.1rem;
+}
+
+.toei-accordion__summary {
+  list-style: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toei-accordion__summary::-webkit-details-marker {
+  display: none;
+}
+
+.toei-accordion__summary::after {
+  content: '⌃';
+  font-size: 1.1rem;
+  margin-left: 8px;
+  transform: rotate(0deg);
+  transition: transform 0.15s ease;
+}
+
+.toei-accordion[open] .toei-accordion__summary::after {
+  transform: rotate(180deg);
+}
+
+.toei-accordion__body {
+  margin-top: 8px;
+  font-size: 0.95rem;
+  font-weight: 400;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* SP 調整 */
+@media screen and (max-width: 749px) {
+  .toei-product-title {
+    font-size: 1.5rem;
+  }
+
+  .toei-tags {
+    margin: 0;
+  }
+
+  /* カートボタン：文字を少し小さくして折り返しを抑える（OKだった時の設定） */
+  .toei-add-to-cart {
+    font-size: 0.82rem;
+    padding-inline: 16px;
+  }
+}
+
+/* メディア周りの幅調整（PC 用） */
+@media screen and (min-width: 990px) {
+  .product__media-wrapper {
+    max-width: 740px !important;
+  }
+
+  .product__media-thumbnails {
+    width: 90px;
+    gap: 8px;
+  }
+
+  .product__info-wrapper {
+    max-width: 420px !important;
+  }
+}
+
+/* カートフォーム内のボタン文字サイズ（お気に入りと合わせる） */
+.product-details .product-form__buttons .product-form__submit,
+.product-details .product-form__buttons .product-form__submit span {
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+/* 数量：カートの比率 3:7 */
+.toei-qty-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 3;
+}
+
+/* セクション左右余白（PC） */
+@media screen and (min-width: 990px) {
+  .section-product-information.section.page-width {
+    padding-inline: 40px;
+  }
+}
+
+/* ───────── メイン画像：角丸（PC/SP共通） ───────── */
+.product-information__media media-gallery {
+  --media-radius: 10px !important;   /* テーマ側の 0px を上書き */
+}
+
+.product-information__media media-gallery .product-media,
+.product-information__media media-gallery .product-media__image {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* ---------- スマホ用：メイン画像＆サムネ ---------- */
+@media screen and (max-width: 749px) {
+  /* ここは今のままでOK（SP用レイアウト） */
+  .product-information__media media-gallery {
+    position: static !important;
+    top: auto !important;
+    --padding-inline-start: 16px !important;
+    --padding-inline-end: 16px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .product-information__media {
+    margin-bottom: 16px;
+    overflow: visible !important;
+  }
+
+  .toei-media-thumbs-sp {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin-top: 0;
+    margin-bottom: 12px;
+    padding-inline: 16px;
+    padding-top: 4px;
+    padding-bottom: 8px;
+    background: #ffffff;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+    z-index: 2;
+  }
+
+  .toei-media-thumb-sp {
+    flex: 0 0 72px;
+    max-width: 72px;
+    border: none;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    line-height: 0;
+  }
+
+  .toei-media-thumb-sp img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+  }
+
+  .toei-media-thumb-sp--active img {
+    outline: 2px solid #d93231;
+    outline-offset: 2px;
+  }
+}
+
+/* ★ PCでは SPサムネを完全に隠す */
+@media screen and (min-width: 750px) {
+  .toei-media-thumbs-sp {
+    display: none;
+  }
+}
+
+.toei-points-placeholder {
+  margin-top: 8px;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+{% endstylesheet %}
+
+{%- liquid
+  assign display_start_raw = product.metafields.product.display_start_at
+  assign display_end_raw = product.metafields.product.display_end_at
+  assign product_disabled = false
+
+  if display_start_raw != blank or display_end_raw != blank
+    assign now_ts_for_disabled = 'now' | date: '%s'
+
+    if display_start_raw != blank
+      assign start_ts = display_start_raw | date: '%s'
+    endif
+
+    if display_end_raw != blank
+      assign end_ts = display_end_raw | date: '%s'
+    endif
+
+    if display_start_raw != blank and display_end_raw == blank
+      if now_ts_for_disabled < start_ts
+        assign product_disabled = true
+      endif
+    elsif display_start_raw == blank and display_end_raw != blank
+      if now_ts_for_disabled > end_ts
+        assign product_disabled = true
+      endif
+    elsif display_start_raw != blank and display_end_raw != blank
+      if now_ts_for_disabled < start_ts or now_ts_for_disabled > end_ts
+        assign product_disabled = true
+      endif
+    endif
+  endif
+-%}
+
+<script>
+  (function () {
+    var productDisabled = {{ product_disabled | json }};
+    var pid = {{ product.id | json }};
+
+    try {
+      if (!productDisabled && pid) {
+        localStorage.setItem('wb_last_pid', String(pid));
+      }
+    } catch (e) {
+    }
+  })();
+</script>
+
+{%- liquid
+  assign now_ts_for_badges = 'now' | date: '%s' | plus: 0
+  assign ten_days_sec = 864000 | plus: 0
+-%}
+
+<script
+  type="application/json"
+  id="toei-product-json-{{ section.id }}"
+  data-product-json
+>
+  {
+    "title": {{ product.title | json }},
+    "variants": [
+      {% for variant in product.variants %}
+        {%- liquid
+          assign v_first_bonus = false
+          if variant.metafields.custom.is_first_bonus
+            assign v_first_bonus = true
+          endif
+
+          assign v_early_bonus = false
+          if variant.metafields.custom.is_early_bonus
+            assign v_early_bonus = true
+          endif
+
+          assign v_closing_soon = false
+          assign v_end_raw = variant.metafields.variant.sell_end_at
+          if v_end_raw != blank
+            assign v_end_ts = v_end_raw | date: '%s' | plus: 0
+            assign v_from_ts = v_end_ts | minus: ten_days_sec
+            if now_ts_for_badges >= v_from_ts and now_ts_for_badges <= v_end_ts
+              assign v_closing_soon = true
+            endif
+          endif
+        -%}
+        {
+          "id": {{ variant.id | json }},
+          "title": {{ variant.title | json }},
+          "featured_media_id": {% if variant.featured_media %}{{ variant.featured_media.id | json }}{% else %}null{% endif %},
+          "sku": {{ variant.sku | json }},
+          "available": {{ variant.available | json }},
+          "price": {{ variant.price | json }},
+          "price_formatted": {{ variant.price | money | json }},
+          "badges": {
+            "first_bonus": {{ v_first_bonus | json }},
+            "early_bonus": {{ v_early_bonus | json }},
+            "closing_soon": {{ v_closing_soon | json }}
+          },
+          "metafields": {
+            "variant": {
+              "venue_config": {{ variant.metafields.variant.venue_config.value | default: 'null' | replace: '=>', ':' }},
+              "is_venue_only": {{ variant.metafields.variant.is_venue_only.value | default: 'false' }},
+              "valid_passphrases": {{ variant.metafields.variant.valid_passphrases.value | json | default: 'null' }},
+              "release_date_label": {% if variant.metafields.variant.release_date != blank %}{{ variant.metafields.variant.release_date | date: "%Y年%-m月%-d日発売" | json }}{% else %}null{% endif %},
+              "information_release_note": {{ variant.metafields.variant.information_release_note | default: blank | json }},
+              "release_note": {{ variant.metafields.variant.release_note | default: blank | json }},
+              "initial_preorder_cutoff_note": {{
+                variant.metafields.variant.initial_preorder_cutoff_note
+                | default: blank
+                | strip_newlines
+                | replace: '<br>', ''
+                | replace: '<br />', ''
+                | json
+              }},
+              "notes_html": {{ variant.metafields.variant.notes | default: blank | newline_to_br | json }},
+              "bonus_info_html": {{ variant.metafields.variant.bonus_info | default: blank | newline_to_br | json }},
+              "description_html": {{ variant.metafields.variant.description | default: blank | newline_to_br | json }},
+              "sell_start_label": {% if variant.metafields.variant.sell_start_at != blank %}
+                {{ variant.metafields.variant.sell_start_at | date: "%Y年%-m月%-d日 %-H時%-M分" | json }}
+              {% else %}null{% endif %},
+              "sell_end_label": {% if variant.metafields.variant.sell_end_at != blank %}
+                {{ variant.metafields.variant.sell_end_at | date: "%Y年%-m月%-d日 %-H時%-M分" | json }}
+              {% else %}null{% endif %}
+            }
+          }
+        }{% unless forloop.last %},{% endunless %}
+      {% endfor %}
+    ]
+  }
+</script>
+
+<div data-venue-message></div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var root = document.getElementById('toei-product-{{ section.id }}');
+    var jsonEl = document.getElementById('toei-product-json-{{ section.id }}');
+    if (!root || !jsonEl) return;
+
+    var isPreorderTemplate = {{ is_preorder_template | json }};
+
+    var data;
+    try {
+      data = JSON.parse(jsonEl.textContent);
+    } catch (e) {
+      console.warn('[TOEI product] invalid JSON', e);
+      return;
+    }
+
+    var variants = data.variants || [];
+
+    function findVariant(id) {
+      id = String(id);
+      for (var i = 0; i < variants.length; i++) {
+        if (String(variants[i].id) === id) return variants[i];
+      }
+      return null;
+    }
+
+    // ★ メディアIDから media-gallery のスライドを切り替える（堅牢版）
+    function updateGalleryByMediaId(mediaId) {
+      if (!mediaId) return;
+
+      var gallery = document.querySelector('media-gallery');
+      if (!gallery) return;
+
+      // ① まず gallery 内で data-media-id が一致する要素を探す
+      var targetMediaEl = gallery.querySelector('[data-media-id="' + String(mediaId) + '"]');
+      if (!targetMediaEl) {
+        // console.warn('[TOEI product] media element not found for id', mediaId);
+        return;
+      }
+
+      // ② その要素が含まれている slideshow-slide を特定
+      var slide = targetMediaEl.closest('slideshow-slide');
+      if (!slide) return;
+
+      // ③ そのスライドが何番目かを調べる
+      var slides = Array.prototype.slice.call(gallery.querySelectorAll('slideshow-slide'));
+      var targetIndex = slides.indexOf(slide);
+      if (targetIndex < 0) return;
+
+      // ④ PC: サムネイルをクリックして切り替え
+      var thumbs = gallery.querySelectorAll('.slideshow-controls__thumbnail');
+      if (thumbs && thumbs[targetIndex]) {
+        thumbs[targetIndex].click();
+        return;
+      }
+
+      // ⑤ サムネイルが無い／見つからない場合はドットナビをクリック（SP フォールバック）
+      var dots = gallery.querySelectorAll(
+        '.slideshow-controls__dots .slideshow-control, .slideshow-controls__dots button'
+      );
+      if (dots && dots[targetIndex]) {
+        dots[targetIndex].click();
+      }
+    }
+
+        // ★ SP 用サムネからも画像を切り替え
+    var spThumbsWrap = document.querySelector('.toei-media-thumbs-sp');
+    var spThumbs = spThumbsWrap
+      ? spThumbsWrap.querySelectorAll('[data-media-id]')
+      : [];
+
+    // 枚数によってレイアウトを切り替え
+    if (spThumbsWrap) {
+      if (spThumbs.length >= 5) {
+        // 5枚以上なら横スクロール
+        spThumbsWrap.classList.add('toei-media-thumbs-sp--scroll');
+      } else {
+        // 4枚以下なら折り返し表示
+        spThumbsWrap.classList.add('toei-media-thumbs-sp--wrap');
+      }
+    }
+
+    function setActiveSpThumb(mediaId) {
+      if (!spThumbs.length) return;
+      spThumbs.forEach(function (el) {
+        if (String(el.getAttribute('data-media-id')) === String(mediaId)) {
+          el.classList.add('toei-media-thumb-sp--active');
+        } else {
+          el.classList.remove('toei-media-thumb-sp--active');
+        }
+      });
+    }
+
+    spThumbs.forEach(function (el) {
+      el.addEventListener('click', function () {
+        var mid = this.getAttribute('data-media-id');
+        if (!mid) return;
+        updateGalleryByMediaId(mid);
+        setActiveSpThumb(mid);
+      });
+    });
+
+    var form = root.querySelector('#product-form-{{ section.id }}');
+    if (!form) return;
+
+    // 会場限定販売機能（既存）
+    if (window.VenueCheck) {
+      window.VenueCheck.init({
+        apiEndpoint: '{{ shop.secure_url }}/apps/tos-shopify-functions/venue-token',
+        buttonSelector: '[name="add"]',
+      });
+    }
+
+    var hiddenId = form.querySelector('[data-toei-variant-id]');
+    var radios = root.querySelectorAll('input[name="toei-variant-{{ section.id }}"]');
+    var qtyInput = form.querySelector('.toei-qty-input');
+    var btn = form.querySelector('[data-toei-add-to-cart]');
+
+    var priceEl = root.querySelector('[data-toei-price]');
+    var reservationSummary = root.querySelector('[data-toei-reservation-summary]');
+    var releaseRow = root.querySelector('[data-toei-release-row]');
+    var releaseValueEl = root.querySelector('[data-toei-release-date]');
+    var skuRow = root.querySelector('[data-toei-sku-row]');
+    var skuValueEl = root.querySelector('[data-toei-sku]');
+    var reservationPeriod = root.querySelector('[data-toei-reservation-period]');
+    var shippingPeriod = root.querySelector('[data-toei-shipping-period]');
+    var cutoffNoteEl = root.querySelector('[data-toei-cutoff-note]');
+    var notesBody = root.querySelector('[data-toei-notes-body]');
+    var bonusBody = root.querySelector('[data-toei-bonus-body]');
+    var descBody = root.querySelector('[data-toei-description-body]');
+    var badgesRoot = root.querySelector('[data-toei-badges]');
+    var baseBadgesHTML = badgesRoot ? badgesRoot.innerHTML : '';
+
+    var baseBtnText = btn ? btn.textContent : '';
+
+    function renderVariant(id) {
+      var v = findVariant(id);
+      if (!v) return;
+
+      if (hiddenId) hiddenId.value = v.id;
+
+      if (priceEl) {
+        priceEl.textContent = v.price_formatted || '';
+      }
+
+      if (releaseValueEl) {
+        var label = v.metafields && v.metafields.variant && v.metafields.variant.release_date_label;
+        if (label) {
+          releaseValueEl.textContent = label;
+          if (releaseRow) releaseRow.style.display = '';
+        } else {
+          releaseValueEl.textContent = '';
+          if (releaseRow) releaseRow.style.display = 'none';
+        }
+      }
+
+      if (skuValueEl) {
+        if (v.sku) {
+          skuValueEl.textContent = v.sku;
+          if (skuRow) skuRow.style.display = '';
+        } else {
+          skuValueEl.textContent = '';
+          if (skuRow) skuRow.style.display = 'none';
+        }
+      }
+
+      if (reservationSummary) {
+        if (isPreorderTemplate) {
+          // 予約テンプレ：従来どおり
+          var r = v.metafields && v.metafields.variant && v.metafields.variant.information_release_note;
+          var s = v.metafields && v.metafields.variant && v.metafields.variant.release_note;
+
+          var htmlParts = [];
+          if (r) htmlParts.push('予約期間：' + r);
+          if (s) htmlParts.push('配送予定時期：' + s);
+
+          reservationSummary.innerHTML = htmlParts.join('<br>');
+        } else {
+          // 通常テンプレ：販売期間のみ表示
+          var st = v.metafields && v.metafields.variant && v.metafields.variant.sell_start_label;
+          var ed = v.metafields && v.metafields.variant && v.metafields.variant.sell_end_label;
+
+          var txt = '';
+          if (st || ed) {
+            txt = '販売期間：';
+            if (st) txt += st;
+            if (st && ed) txt += '〜';
+            if (ed) txt += ed;
+          }
+          reservationSummary.textContent = txt;
+        }
+      }
+      if (cutoffNoteEl) {
+        var t3 = v.metafields && v.metafields.variant && v.metafields.variant.initial_preorder_cutoff_note;
+        var suffix = 'までに予約頂いた場合は発売日にお届け予定です。';
+        if (t3) {
+          cutoffNoteEl.textContent = t3 + suffix;
+        } else {
+          cutoffNoteEl.textContent = '';
+        }
+      }
+
+      if (notesBody) {
+        var html = v.metafields && v.metafields.variant && v.metafields.variant.notes_html;
+        notesBody.innerHTML = html || '';
+      }
+
+      if (bonusBody) {
+        var html2 = v.metafields && v.metafields.variant && v.metafields.variant.bonus_info_html;
+        bonusBody.innerHTML = html2 || '';
+      }
+
+      if (descBody) {
+        var html3 = v.metafields && v.metafields.variant && v.metafields.variant.description_html;
+        descBody.innerHTML = html3 || '';
+      }
+
+      // ★ バッジの更新
+      if (badgesRoot) {
+        var badgeHtml = baseBadgesHTML || '';
+        var b = v.badges || {};
+
+        // NEW / 予約受付中 は baseBadgesHTML に入っている
+        // ここで追加する順番：
+        // 早期予約特典あり → 初回特典残りわずか → 締切間近
+        if (b.early_bonus) {
+          badgeHtml += '<span class="toei-badge toei-badge--early">早期予約特典あり</span>';
+        }
+        if (b.first_bonus) {
+          badgeHtml += '<span class="toei-badge toei-badge--first">初回特典残りわずか</span>';
+        }
+        if (b.closing_soon) {
+          badgeHtml += '<span class="toei-badge toei-badge--closing">締切間近</span>';
+        }
+
+        badgesRoot.innerHTML = badgeHtml;
+      }
+
+      // ★ ギャラリー画像切り替え
+      if (v.featured_media_id) {
+        updateGalleryByMediaId(v.featured_media_id);
+        setActiveSpThumb(v.featured_media_id);
+      }
+
+      // ボタン有効/無効
+      if (btn) {
+        if (v.available === false) {
+          // 在庫切れ：売り切れ表示＆ボタン無効
+          btn.disabled = true;
+          btn.classList.add('toei-add-to-cart--disabled');
+          btn.textContent = '売り切れ';
+        } else {
+          // 在庫あり：通常テキスト＆ボタン有効
+          btn.disabled = false;
+          btn.classList.remove('toei-add-to-cart--disabled');
+          btn.textContent = baseBtnText;
+        }
+      }
+    }
+
+    // 数量ボタン
+    if (qtyInput) {
+      var minus = root.querySelector('[data-toei-qty-minus]');
+      var plus = root.querySelector('[data-toei-qty-plus]');
+
+      function clampQty(val) {
+        val = parseInt(val, 10);
+        if (isNaN(val) || val < 1) val = 1;
+        return val;
+      }
+
+      if (minus)
+        minus.addEventListener('click', function () {
+          var current = parseInt(qtyInput.value || '1', 10);
+          qtyInput.value = clampQty(current - 1);
+        });
+
+      if (plus)
+        plus.addEventListener('click', function () {
+          var current = parseInt(qtyInput.value || '1', 10);
+          qtyInput.value = clampQty(current + 1);
+        });
+
+      qtyInput.addEventListener('change', function () {
+        qtyInput.value = clampQty(qtyInput.value || '1');
+      });
+    }
+
+    // 初期表示
+    var initialId = hiddenId && hiddenId.value;
+    if (!initialId && radios.length) {
+      initialId = radios[0].value;
+      radios[0].checked = true;
+    }
+    if (initialId) {
+      renderVariant(initialId);
+
+      var v0 = findVariant(initialId);
+      if (v0) {
+        document.dispatchEvent(
+          new CustomEvent('variant:changed', {
+            detail: {
+              variant: {
+                id: v0.id,
+                featured_media: v0.featured_media_id ? { id: v0.featured_media_id } : null,
+              },
+            },
+          })
+        );
+      }
+    }
+
+    // バリエーション切り替え
+    radios.forEach(function (radio) {
+      radio.addEventListener('change', function () {
+        if (!this.checked) return;
+        var id = this.value;
+
+        renderVariant(id);
+
+        var v = findVariant(id);
+        if (v) {
+          document.dispatchEvent(
+            new CustomEvent('variant:changed', {
+              detail: {
+                variant: {
+                  id: v.id,
+                  featured_media: v.featured_media_id ? { id: v.featured_media_id } : null,
+                },
+              },
+            })
+          );
+        }
+      });
+    });
+
+    // ★ カートに入れる → Ajax + ローディング表示
+    if (form && btn) {
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        var fd = new FormData(form);
+
+        var prevText = btn.textContent;
+        btn.dataset.prevText = prevText;
+        btn.disabled = true;
+        btn.textContent = '追加中…';
+
+        fetch('/cart/add.js', {
+          method: 'POST',
+          body: fd,
+          headers: {
+            Accept: 'application/json',
+          },
+        })
+          .then(function (res) {
+            if (!res.ok) {
+              throw new Error('Add to cart failed');
+            }
+            return res.json();
+          })
+          .then(function () {
+            // Horizon 3.x がリッスンしている cart:update イベントを飛ばすだけにする
+            document.dispatchEvent(
+              new CustomEvent('cart:update', {
+                bubbles: true,
+                detail: {
+                  data: {
+                    itemCount: 1,
+                    source: 'product-form-component',
+                  },
+                },
+              })
+            );
+          })
+          .catch(function (err) {
+            console.error(err);
+            form.submit();
+          })
+          .finally(function () {
+            btn.disabled = false;
+            if (btn.dataset.prevText) {
+              btn.textContent = btn.dataset.prevText;
+            }
+          });
+      });
+    }
+  });
+</script>
+<script>
+  // バリエーション変更に応じてメイン画像を切り替え
+  document.addEventListener('variant:changed', function (event) {
+    var detail = event.detail || {};
+    var variant = detail.variant;
+    if (!variant || !variant.featured_media || !variant.featured_media.id) return;
+
+    var mediaId = String(variant.featured_media.id);
+
+    // この商品ページの media-gallery を取得
+    var gallery = document.querySelector('media-gallery');
+    if (!gallery) return;
+
+    // 各スライドを走査して、data-media-id が一致するものを探す
+    var slides = Array.prototype.slice.call(gallery.querySelectorAll('slideshow-slide'));
+    if (!slides.length) return;
+
+    var targetIndex = -1;
+
+    slides.forEach(function (slide, idx) {
+      var mediaEl = slide.querySelector('.product-media');
+      if (!mediaEl) return;
+
+      var slideMediaId = mediaEl.getAttribute('data-media-id');
+      if (slideMediaId && String(slideMediaId) === mediaId) {
+        targetIndex = idx;
+      }
+    });
+
+    if (targetIndex < 0) {
+      // console.log('[TOEI product] media not found for id', mediaId);
+      return;
+    }
+
+    // 1) PC 用のサムネイルをクリックしてスライドを切り替える
+    var thumbs = gallery.querySelectorAll('.slideshow-controls__thumbnails .slideshow-controls__thumbnail');
+
+    if (thumbs && thumbs[targetIndex]) {
+      thumbs[targetIndex].click();
+      return;
+    }
+
+    // 2) サムネイルが無い／見つからない場合は、ドットナビ（スマホ）をクリック
+    var dots = gallery.querySelectorAll('.slideshow-controls__dots .slideshow-control');
+    if (dots && dots[targetIndex]) {
+      dots[targetIndex].click();
+    }
+  });
+</script>
+
+{% schema %}
+{
+  "name": "TOEI product（Custom）",
+  "blocks": [
+    {
+      "type": "@app"
+    }
+  ],
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:content.layout"
+    },
+    {
+      "type": "select",
+      "id": "content_width",
+      "label": "t:settings.width",
+      "options": [
+        {
+          "value": "content-center-aligned",
+          "label": "t:options.page"
+        },
+        {
+          "value": "content-full-width",
+          "label": "t:options.full"
+        }
+      ],
+      "default": "content-center-aligned"
+    },
+    {
+      "type": "select",
+      "id": "desktop_media_position",
+      "label": "t:settings.media_position",
+      "options": [
+        {
+          "value": "left",
+          "label": "t:options.left"
+        },
+        {
+          "value": "right",
+          "label": "t:options.right"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "checkbox",
+      "id": "equal_columns",
+      "label": "t:settings.equal_columns",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "limit_details_width",
+      "label": "t:settings.limit_product_details_width",
+      "default": false,
+      "visible_if": "{{ section.settings.equal_columns }}"
+    },
+    {
+      "type": "range",
+      "id": "gap",
+      "label": "t:settings.gap",
+      "min": 0,
+      "max": 48,
+      "step": 4,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:settings.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:content.padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "t:settings.top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "t:settings.bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "TOEI product（Custom）"
+    }
+  ]
+}
+{% endschema %}

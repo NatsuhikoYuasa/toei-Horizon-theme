@@ -1,0 +1,12 @@
+{%- comment -%}
+  blocks/Custom-product-title.liquid
+  商品タイトル（H1）
+{%- endcomment -%}
+
+{%- assign product_resource = closest.product | default: product -%}
+
+{% if product_resource %}
+  <h1 class="wb-pd-title">
+    {{ product_resource.title }}
+  </h1>
+{% endif %}
