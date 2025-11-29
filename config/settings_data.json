@@ -42,7 +42,7 @@
     "type_font_h6": "subheading",
     "type_size_h6": "12",
     "type_line_height_h6": "display-normal",
-    "page_width": "narrow",
+    "page_width": "normal",
     "page_transition_enabled": false,
     "transition_to_main_product": false,
     "card_hover_effect": "none",
@@ -79,28 +79,6 @@
     "variant_button_width": "equal-width-buttons",
     "content_for_index": [],
     "blocks": {
-      "4599818392069375057": {
-        "type": "shopify://apps/easypoints/blocks/widget2/f0862409-7105-4920-b523-5bd76a964d4a",
-        "disabled": false,
-        "settings": {
-          "primary_color": "#5936e3",
-          "position": "right",
-          "bottom_offset": 16,
-          "horizontal_offset": 16,
-          "z_index": "999",
-          "icon_only": false,
-          "highlighted_bonus_collection": "",
-          "barcode_displayed": false
-        }
-      },
-      "18421699284197576312": {
-        "type": "shopify://apps/easypoints/blocks/sdk/f0862409-7105-4920-b523-5bd76a964d4a",
-        "disabled": true,
-        "settings": {
-          "primary_color": "#5936e3",
-          "enable_my_account": false
-        }
-      },
       "384495262013941155": {
         "type": "shopify://apps/advanced-wishlist/blocks/collection-btn/330d9272-08ea-4193-b3e0-475a69fa65fa",
         "disabled": true,
@@ -127,6 +105,28 @@
         "type": "shopify://apps/advanced-wishlist/blocks/app/330d9272-08ea-4193-b3e0-475a69fa65fa",
         "disabled": false,
         "settings": {}
+      },
+      "4599818392069375057": {
+        "type": "shopify://apps/easypoints/blocks/widget2/f0862409-7105-4920-b523-5bd76a964d4a",
+        "disabled": false,
+        "settings": {
+          "primary_color": "#000000",
+          "position": "right",
+          "bottom_offset": 16,
+          "horizontal_offset": 16,
+          "z_index": "999",
+          "icon_only": false,
+          "highlighted_bonus_collection": "",
+          "barcode_displayed": false
+        }
+      },
+      "18421699284197576312": {
+        "type": "shopify://apps/easypoints/blocks/sdk/f0862409-7105-4920-b523-5bd76a964d4a",
+        "disabled": true,
+        "settings": {
+          "primary_color": "#5936e3",
+          "enable_my_account": true
+        }
       }
     },
     "color_schemes": {

@@ -10,8 +10,12 @@
 {
   "sections": {
     "main": {
-      "type": "points-history",
-      "settings": {}
+      "type": "information-list",
+      "settings": {
+        "heading": "お知らせ",
+        "blog": "information",
+        "open_first": false
+      }
     }
   },
   "order": [

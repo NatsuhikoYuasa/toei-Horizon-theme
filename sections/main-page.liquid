@@ -1,21 +1,49 @@
 
 
 <div class="section-background color-{{ section.settings.color_scheme }}"></div>
-<div class="section page-width-content color-{{ section.settings.color_scheme }}">
-  <div
-    class="
-      spacing-style
-      layout-panel-flex
-      layout-panel-flex--column
-      section-content-wrapper
-      mobile-column
-    "
-    style="
-      {% render 'layout-panel-style', settings: section.settings %}
-      {% render 'spacing-style', settings: section.settings %}
-    "
-  >
-    {% content_for 'blocks' %}
+<div class="l-page">
+  <div class="l-container">
+    <div class="section page-width-content color-{{ section.settings.color_scheme }}">
+      <div
+        class="
+          spacing-style
+          layout-panel-flex
+          layout-panel-flex--column
+          section-content-wrapper
+          mobile-column
+        "
+        style="
+          {% render 'layout-panel-style', settings: section.settings %}
+          {% render 'spacing-style', settings: section.settings %}
+        "
+      >
+        {% liquid
+          assign breadcrumb_level_1_title = nil
+          assign breadcrumb_level_1_url = nil
+
+          if page.handle == 'member-rank' or page.handle == 'mail-magazine' or page.handle == 'withdrawal'
+            assign breadcrumb_level_1_title = 'マイページ'
+            assign breadcrumb_level_1_url = '/pages/mypage'
+          endif
+        %}
+
+        {%- if breadcrumb_level_1_title != nil -%}
+          {%- render 'page-breadcrumbs',
+            level_1_title: breadcrumb_level_1_title,
+            level_1_url: breadcrumb_level_1_url,
+            current_title: page.title
+          -%}
+        {%- else -%}
+          {%- render 'page-breadcrumbs', current_title: page.title -%}
+        {%- endif -%}
+
+        <h1 class="heading-page">
+          {{ page.title }}
+        </h1>
+
+        {% content_for 'blocks' %}
+      </div>
+    </div>
   </div>
 </div>
 
