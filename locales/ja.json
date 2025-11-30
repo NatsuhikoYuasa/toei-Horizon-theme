@@ -79,7 +79,7 @@
     "view_in_your_space": "スペースに表示",
     "show_filters": "絞り込み",
     "clear": "透明",
-    "continue_shopping": "買い物を続ける",
+    "continue_shopping": "お買い物を続ける",
     "log_in_html": "アカウントをお持ちですか？<a href=\"{{ link }}\">ログイン</a>することで、チェックアウトがスピーディーに行えます。",
     "see_items": {
       "one": "{{ count }}個のアイテムを表示する",
@@ -301,6 +301,27 @@
       "post": "コメントを投稿する",
       "success_moderated": "コメントを投稿しました。承認待ちです",
       "success": "コメントを投稿しました"
+    }
+  },
+  "shopify": {
+    "checkout": {
+      "thank_you": {
+        "return_to_store_link_label": "お買い物を続ける"
+      },
+      "throttle": {
+        "inventory": {
+          "sold_out": {
+            "storefront_body": "ストアに戻りお買い物を続ける"
+          }
+        }
+      }
+    }
+  },
+  "customer_accounts": {
+    "payment_methods": {
+      "update_success": {
+        "done_button": "お買い物を続ける"
+      }
     }
   }
 }
