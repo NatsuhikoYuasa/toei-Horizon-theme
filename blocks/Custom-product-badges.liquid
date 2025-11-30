@@ -1,0 +1,11 @@
+{%- comment -%}
+  blocks/Custom-product-badges.liquid
+  商品ページ用：バッジブロック（NEW / 予約受付中 / 初回特典…）
+  ロジック本体は snippets/Custom-product-badges.liquid を利用
+{%- endcomment -%}
+
+{%- assign product_resource = closest.product | default: product -%}
+
+{% if product_resource %}
+  {% render 'Custom-product-badges', product: product_resource %}
+{% endif %}
