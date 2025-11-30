@@ -87,6 +87,7 @@
   </div>
 </div>
 
+{% comment %} wb03 blocked&add ドロワーチェックアウトではなくカートページへ start
 <div class="cart__ctas">
   <button
     type="submit"
@@ -111,7 +112,28 @@
       {{ content_for_additional_checkout_buttons }}
     </div>
   {% endif %}
+</div> {% endcomment %}
+<div class="cart__ctas">
+  <a
+    href="{{ routes.cart_url }}"
+    class="cart__checkout-button button"
+    data-testid="cart-primary-action"
+  >
+    カートへ進む
+  </a>
+
+  {% if additional_checkout_buttons and settings.show_accelerated_checkout_buttons %}
+    <div
+      class="
+        additional-checkout-buttons
+        {% if accelerated_checkout_buttons_layout == 'vertical' %}additional-checkout-buttons--vertical{% endif %}
+      "
+    >
+      {{ content_for_additional_checkout_buttons }}
+    </div>
+  {% endif %}
 </div>
+{% comment %} wb03 blocked&add ドロワーチェックアウトではなくカートページへ end {% endcomment %}
 
 {% stylesheet %}
   .cart-actions {

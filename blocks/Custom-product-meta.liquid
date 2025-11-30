@@ -1,0 +1,30 @@
+{%- comment -%}
+  blocks/Custom-product-meta.liquid
+  ・発売日：variant.release_date
+  ・商品番号：現在のバリアント SKU
+{%- endcomment -%}
+
+{%- assign product_resource = closest.product | default: product -%}
+{%- if product_resource -%}
+  {%- assign current_variant = product_resource.selected_or_first_available_variant -%}
+  <div class="wb-pd-meta-list">
+    {%- assign v_release_date = current_variant.metafields.variant.release_date -%}
+    {%- if v_release_date != blank -%}
+      <p class="wb-pd-meta">
+        <span class="wb-pd-meta__label">発売日：</span>
+        <span class="wb-pd-meta__value">
+          {{ v_release_date | date: '%Y年%-m月%-d日' }}
+        </span>
+      </p>
+    {%- endif -%}
+
+    {%- if current_variant.sku != blank -%}
+      <p class="wb-pd-meta">
+        <span class="wb-pd-meta__label">商品番号：</span>
+        <span class="wb-pd-meta__value">
+          {{ current_variant.sku }}
+        </span>
+      </p>
+    {%- endif -%}
+  </div>
+{%- endif -%}
