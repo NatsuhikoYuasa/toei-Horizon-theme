@@ -152,6 +152,7 @@
   background: #f0f8f0;
   border: 1px solid #b6e3b6;
   color: #1a7a1a;
+  display: none;
 }
 
 .toei-contact__alert--error {
