@@ -21,11 +21,53 @@
       <!-- 右カラム ＋ 合計 -->
       {%- if blocks.size > 1 -%}
         <div class="cart-app-two-columns__column cart-app-two-columns__column--right">
-          {%- for block in blocks offset: 1 -%}
-            {% render block %}
-          {%- endfor -%}
+          {%- if customer -%}
+            {%- comment -%}
+              ログイン済み：
+              → アプリ由来の「ポイントを利用する」等をそのまま表示
+            {%- endcomment -%}
+            {%- for block in blocks offset: 1 -%}
+              {% render block %}
+            {%- endfor -%}
+
+          {%- else -%}
+            {%- comment -%}
+              未ログイン：
+              → 見出し＋「ログインが必要です」メッセージだけ表示
+            {%- endcomment -%}
+            <p class="cart-points-title">ポイントを利用する</p>
+
+            <p class="cart-points-login-message">
+              ポイントを利用するには
+              <a href="{{ routes.account_login_url }}?return_url={{ request.path | url_encode }}"> ログイン </a>
+              が必要です。
+            </p>
+          {%- endif -%}
 
           <div class="cart-app-two-columns__total-box">
+            {% comment %}
+              wb03 小計出したいならコメント解除
+              <div class="cart-app-two-columns__subtotal-line">
+                <span class="cart-app-two-columns__subtotal-label">小計</span>
+                <span class="cart-app-two-columns__subtotal-price">
+                  {{ cart.items_subtotal_price | money }}
+                </span>
+              </div>
+            {% endcomment %}
+
+            {%- if cart.cart_level_discount_applications.size > 0 -%}
+              {%- for discount_application in cart.cart_level_discount_applications -%}
+                <div class="cart-app-two-columns__discount-line">
+                  <span class="cart-app-two-columns__discount-label">
+                    {{ discount_application.title }}
+                  </span>
+                  <span class="cart-app-two-columns__discount-price">
+                    -{{ discount_application.total_allocated_amount | money }}
+                  </span>
+                </div>
+              {%- endfor -%}
+            {%- endif -%}
+
             <div class="cart-app-two-columns__total-line">
               <span class="cart-app-two-columns__total-label">合計</span>
               <span class="cart-app-two-columns__total-price">
@@ -34,9 +76,7 @@
               </span>
             </div>
 
-            <p class="cart-app-two-columns__tax-note">
-              税込で、配送料は購入手続き時に計算されます
-            </p>
+            <p class="cart-app-two-columns__tax-note">税込で、配送料は購入手続き時に計算されます</p>
           </div>
         </div>
       {%- endif -%}
@@ -76,7 +116,7 @@
     // 2) 5,000 ポイント → 5,000 ポイントが利用可能です
     var balanceElm = document.querySelector('.easy-points-account__balance [data-loyal-target="balance"]');
     if (balanceElm) {
-      var txt = balanceElm.textContent.trim();  // 例: "5,000 ポイント"
+      var txt = balanceElm.textContent.trim(); // 例: "5,000 ポイント"
       txt = txt.replace(/ポイント.*/, 'ポイントが利用可能です');
       balanceElm.textContent = txt;
     }
@@ -131,6 +171,19 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); /* 左右1:1 */
     column-gap: 80px;
     row-gap: 32px;
+    position: relative;
+  }
+
+  .cart-app-two-columns__inner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    background-color: #e5e5e5;
+    top: 40px;
+    bottom: 140px;
   }
 
   /* 左カラム（日時指定） */
@@ -144,13 +197,11 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-    border-left: 1px solid #e5e5e5;  /* 真ん中の縦線 */
-    padding-left: 80px;
   }
 
   .easy-points-form__container {
-    align-items: flex-start!important;
-    margin-bottom: 0!important;
+    align-items: flex-start !important;
+    margin-bottom: 0 !important;
   }
 
   /* ───── 配送日時 amp の調整 ───── */
@@ -180,7 +231,7 @@
 
   /* 「お届け希望日」「お届け希望時間」と入力ブロックのセットの間の余白 */
   .delivery-container .delivery-title {
-    margin-top: 0!important;
+    margin-top: 0 !important;
   }
 
   p.delivery-mindate-caution {
@@ -233,13 +284,11 @@
     flex-wrap: wrap;
     align-items: flex-end !important;
     gap: 16px;
-    max-width: 520px;
-    width: 100%;
   }
 
   .easy-points-form__inner > button {
-    margin-left: 0!important;
-    margin-top: 0 !important; 
+    margin-left: 0 !important;
+    margin-top: 0 !important;
   }
 
   /* 上にくる「利用ポイント」ラベルを1行占有させる */
@@ -276,8 +325,8 @@
   /* 「適用」ボタンの色 */
   .easy-points-button__redeem.button,
   #checkout {
-    background-color: #D93231;
-    border-color: #D93231;
+    background-color: #d93231;
+    border-color: #d93231;
     color: #fff;
   }
 
@@ -301,14 +350,75 @@
     background-color: #e5e5e5;
   }
 
-  /* 合計獲得ポイント文の位置 */
+  /* こちらのご購入で 440 ポイント 獲得予定です。 */
   .easy-points__cart-points {
     margin-top: 16px;
+    padding-bottom: 16px; /* 下に少し余白 */
+    border-bottom: 1px solid #e5e5e5; /* このボーダーが区切り線 */
     font-size: 14px;
     color: rgb(0 0 0 / 0.81);
+    max-width: 400px;
   }
 
-  /* ───── レスポンシブ（スマホ） ───── */
+  /* ── 右カラム内で、ポイントフォームと合計ブロックを同じ幅＆右揃え ── */
+  .cart-app-two-columns__column--right .easy-points-form__inner,
+  .cart-app-two-columns__column--right .cart-app-two-columns__total-box {
+    width: 100%;
+    max-width: 400px; /* ★ ここも同じ幅に */
+  }
+
+  /* ───── ポイントの下の 合計ブロック ───── */
+
+  .cart-app-two-columns__total-box {
+    margin-top: 40px;
+    text-align: right;
+    margin-right: 0;
+  }
+
+  .cart-app-two-columns__total-line {
+    display: flex;
+    justify-content: flex-end;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .cart-app-two-columns__total-label {
+    font-size: 14px;
+  }
+
+  .cart-app-two-columns__total-price {
+    font-size: 24px;
+    font-weight: 600;
+  }
+
+  .cart-app-two-columns__total-tax {
+    font-size: 14px;
+    margin-left: 4px;
+  }
+
+  .cart-app-two-columns__tax-note {
+    font-size: 12px;
+    color: #555;
+    margin-top: 4px;
+    text-align: right;
+  }
+
+  /* ───── ページ下部のボタン2つを中央揃え ───── */
+
+  .cart-page .cart__ctas {
+    margin-top: 32px;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .cart-page .cart__ctas .button {
+    min-width: 180px;
+    padding-inline: 24px;
+    height: 48px;
+    border-radius: 4px;
+  }
+
   @media screen and (max-width: 749px) {
     .cart-app-two-columns__inner {
       grid-template-columns: 1fr;
@@ -340,67 +450,12 @@
       margin-left: 0 !important;
       margin-top: 4px;
     }
-  }
 
-  /* ───── ポイントの下の 合計ブロック ───── */
-
-  .cart-app-two-columns__total-box {
-    margin-top: 40px;
-    text-align: right;
-    /* ポイントフォームと同じ幅にそろえる */
-    max-width: 520px;
-    width: 100%;
-    margin-left: auto;   /* 右側に寄せる（適用ボタンとツラ合わせ） */
-    margin-right: 0;
-  }
-
-  .cart-app-two-columns__total-line {
-    display: flex;
-    justify-content: flex-end;
-    align-items: baseline;
-    gap: 8px;
-    margin-bottom: 4px;
-  }
-
-  .cart-app-two-columns__total-label {
-    font-size: 14px;
-  }
-
-  .cart-app-two-columns__total-price {
-    font-size: 24px;
-    font-weight: 600;
-  }
-
-  .cart-app-two-columns__total-tax {
-    font-size: 14px;
-    margin-left: 4px;
-  }
-
-  .cart-app-two-columns__tax-note {
-    font-size: 12px;
-    color: #555;
-  }
-
-  /* ───── ページ下部のボタン2つを中央揃え ───── */
-
-  .cart-page .cart__ctas {
-    margin-top: 32px;
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-  }
-
-  .cart-page .cart__ctas .button {
-    min-width: 180px;
-    padding-inline: 24px;
-    height: 48px;
-    border-radius: 4px;
-  }
-
-  @media screen and (max-width: 749px) {
     .cart-app-two-columns__total-box {
       margin-top: 24px;
       max-width: 100%;
+      margin-left: 0;
+      text-align: left;
     }
 
     .cart-page .cart__ctas {
@@ -415,109 +470,105 @@
     }
   }
 
-  .cart-app-two-columns__total-box {
-  margin-top: 40px;
-  text-align: right;
+  /* 2カラムの下に全幅で配置 */
+  .cart-app-two-columns__buttons-row {
+    grid-column: 1 / -1;
+    margin-bottom: 30px;
+  }
 
-  max-width: 520px;   /* ポイント入力と同じくらい */
-  width: 100%;
-  margin-left: auto;  /* 右寄せ（適用ボタンとツラ合わせ） */
-  margin-right: 0;
-}
-
-.cart-app-two-columns__total-line {
-  display: flex;
-  justify-content: flex-end;
-  align-items: baseline;
-  gap: 16px;
-  margin-bottom: 8px;
-}
-
-.cart-app-two-columns__total-label {
-  font-size: 14px;
-}
-
-.cart-app-two-columns__total-price {
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.cart-app-two-columns__total-tax {
-  font-size: 14px;
-  margin-left: 4px;
-}
-
-.cart-app-two-columns__tax-note {
-  font-size: 12px;
-  color: #555;
-  margin-top: 4px;
-  text-align: right;
-}
-
-/* 2カラムの下に全幅で配置 */
-.cart-app-two-columns__buttons-row {
-  grid-column: 1 / -1;
-  margin-bottom: 30px;
-}
-
-/* ボタン2つを中央寄せ */
-.cart-app-two-columns__buttons {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-}
-
-.cart-app-two-columns__button {
-  min-width: 180px;
-  padding: 10px 24px;
-  font-size: 14px;
-  border-radius: 4px;
-  border: 1px solid #D93231;
-  text-align: center;
-  line-height: 1.4;
-}
-
-/* 左：白背景＋赤枠 */
-.cart-app-two-columns__button--outline {
-  background-color: #fff;
-  color: #D93231;
-}
-
-/* 右：赤背景＋白文字 */
-.cart-app-two-columns__button--primary {
-  background-color: #D93231;
-  color: #fff;
-}
-
-.cart-app-two-columns__button--primary:hover {
-  opacity: 0.9;
-}
-
-/* SP では縦並び＆幅100% */
-@media screen and (max-width: 749px) {
-  .cart-app-two-columns__total-box {
-    max-width: 100%;
-    margin-left: 0;
-    text-align: left;
-  } 
-
+  /* ボタン2つを中央寄せ */
   .cart-app-two-columns__buttons {
-    flex-direction: column;
-    margin: 0 16px;
-    margin-inline: auto;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
   }
 
   .cart-app-two-columns__button {
-    width: 100%;
+    min-width: 180px;
+    padding: 10px 24px;
+    font-size: 14px;
+    border-radius: 4px;
+    border: 1px solid #d93231;
+    text-align: center;
+    line-height: 1.4;
   }
-}
 
-.cart__ctas {
-  display: none;
-}
+  /* 左：白背景＋赤枠 */
+  .cart-app-two-columns__button--outline {
+    background-color: #fff;
+    color: #d93231;
+  }
 
+  /* 右：赤背景＋白文字 */
+  .cart-app-two-columns__button--primary {
+    background-color: #d93231;
+    color: #fff;
+  }
+
+  .cart-app-two-columns__button--primary:hover {
+    opacity: 0.9;
+  }
+
+  /* SP ではボタン縦並び＆幅100% */
+  @media screen and (max-width: 749px) {
+    .cart-app-two-columns__buttons {
+      flex-direction: column;
+      margin: 0 16px;
+      margin-inline: auto;
+    }
+
+    .cart-app-two-columns__button {
+      width: 100%;
+    }
+
+    .cart-app-two-columns__inner::before {
+      display: none;
+    }
+  }
+
+  /* もともとの cart__ctas は非表示にしておく */
+  .cart__ctas {
+    display: none;
+  }
+
+  /* 小計＆割引行 */
+  .cart-app-two-columns__subtotal-line,
+  .cart-app-two-columns__discount-line {
+    display: flex;
+    justify-content: flex-end;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .cart-app-two-columns__subtotal-label,
+  .cart-app-two-columns__discount-label {
+    font-size: 14px;
+  }
+
+  .cart-app-two-columns__subtotal-price,
+  .cart-app-two-columns__discount-price {
+    font-size: 16px;
+  }
+
+  .cart-points-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .cart-points-login-message {
+    margin-top: 0;
+    margin-bottom: 24px;
+    font-size: 14px;
+    color: #555;
+  }
+
+  .cart-points-login-message a {
+    color: #1f65e7;
+    text-decoration: underline;
+  }
 {% endstylesheet %}
-
 
 {% schema %}
 {
@@ -572,6 +623,11 @@
       "step": 4,
       "unit": "px",
       "default": 40
+    }
+  ],
+  "presets": [
+    {
+      "name": "カート: アプリ2カラム (Custom)"
     }
   ]
 }

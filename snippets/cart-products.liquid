@@ -44,6 +44,16 @@
         class="cart-items spacing-style{% if block_settings.dividers %} cart-items--dividers{% endif %}"
         style="{%  render 'spacing-style', settings: block_settings %} --cart-items-gap:{{ block_settings.gap | append: "px" }};"
       >
+        {%- comment -%}
+          ▽▽ 商品 / 数量 / 金額 のヘッダー行 ▽▽
+        {%- endcomment -%}
+        <div class="cart-items__header-row">
+          <span class="cart-items__header-label cart-items__header-label--spacer"></span>
+          <span class="cart-items__header-label cart-items__header-label--product">商品</span>
+          <span class="cart-items__header-label cart-items__header-label--qty">数量</span>
+          <span class="cart-items__header-label cart-items__header-label--price">金額</span>
+        </div>
+
         <table
           class="cart-items__table"
           role="table"
@@ -135,22 +145,20 @@
                     </a>
                   {%- endif %}
                 </td>
+
                 <td
                   class="cart-items__details cart-primary-typography"
                   role="cell"
                   headers="productInformation"
                 >
-                  <p>
-                    <a
-                      href="{{ item.url }}"
-                      class="cart-items__title"
-                      {% if item.parent_relationship.parent != null %}
-                        aria-label="{{ 'accessibility.nested_product' | t: product_title: item.product.title, parent_title: item.parent_relationship.parent.title | escape }}"
-                      {% endif %}
-                    >
-                      {{- item.product.title -}}
-                    </a>
-                  </p>
+                  {%- comment -%}
+                    ▽▽ バッジはここ（タイトルの上）に表示 ▽▽
+                    商品ページやコレクションと同じバッジを使う場合は、
+                    この中に該当スニペットの render を入れてください。
+                    例）
+                    {% render 'toei-product-badges', product: item.product, current_variant: item.variant, context: 'cart' %}
+                  {%- endcomment -%}
+
                   {% if item.product.vendor and block_settings.vendor %}
                     <p>
                       {{ item.product.vendor }}
@@ -248,12 +256,12 @@
                     {% endif %}
                   </div>
                 </td>
+
                 <td
                   class="cart-items__quantity"
                   role="cell"
                   headers="quantity"
                 >
-                  {% # Here I want to pass some arguments to the quantity block so it knows which value should the input be set to. Though quantity block could be a snippet instead %}
                   {% assign can_update_quantity = item.instructions.can_update_quantity
                     | default: true, allow_false: true
                   %}
@@ -262,7 +270,7 @@
                     in_cart_quantity: item.quantity,
                     line_index: item.index,
                     min: 0,
-                    class: 'cart-primary-typography',
+                    class: 'cart-primary-typography quantity-selector--cart',
                     can_update_quantity: can_update_quantity
                   %}
 
@@ -276,10 +284,11 @@
                       hidden
                     {% endif %}
                   >
-                    {{- 'icon-delete.svg' | inline_asset_content -}}
+                    <span class="cart-items__remove-text">削除</span>
                     <span class="visually-hidden">Remove</span>
                   </button>
                 </td>
+
                 <td
                   class="cart-items__error hidden"
                   role="cell"
@@ -299,6 +308,7 @@
                     ></small>
                   </div>
                 </td>
+
                 <td
                   class="cart-items__price cart-secondary-typography"
                   role="cell"
@@ -349,6 +359,31 @@
 
   .cart-items__table * {
     margin: 0;
+  }
+
+  /* 商品 / 数量 / 金額 ヘッダー */
+  .cart-items__header-row {
+    display: grid;
+    grid-template-columns: clamp(2.5rem, 15cqi, 7.5rem) minmax(0, 1fr) auto auto;
+    column-gap: var(--gap-md);
+    align-items: flex-end;
+    padding-bottom: var(--padding-xs);
+    margin-bottom: var(--margin-xs);
+    border-bottom: 1px solid var(--color-border);
+    font-size: var(--cart-font-size--xs);
+    color: rgb(var(--color-foreground-rgb) / var(--opacity-70));
+  }
+
+  .cart-items__header-label {
+    text-align: center;
+  }
+
+  .cart-items__header-label--product {
+    text-align: left;
+  }
+
+  .cart-items__header-label--price {
+    text-align: right;
   }
 
   .cart-items__table-row {
@@ -440,6 +475,14 @@
     text-transform: var(--product-title-case);
   }
 
+  /* バッジ（タイトル上） */
+  .cart-item__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: var(--margin-2xs);
+  }
+
   .cart-items__variant {
     display: inline-block;
   }
@@ -459,16 +502,28 @@
     flex: 0 1 var(--quantity-selector-width);
     font-size: var(--cart-font-size--sm);
     height: auto;
+    /* 数量カウンターを PDP と近い見た目に寄せる土台 */
+    border-radius: 999px;
+    overflow: hidden;
   }
 
   .cart-items__remove {
     background-color: transparent;
-    color: var(--color-foreground);
-    width: var(--minimum-touch-target);
+    color: #e53935; /* 赤文字で「削除」 */
+    width: auto;
     height: var(--minimum-touch-target);
     justify-content: center;
     box-shadow: none;
-    padding: 0;
+    padding: 0 var(--padding-2xs);
+    text-decoration: underline;
+  }
+
+  .cart-items__remove-text {
+    font-size: var(--cart-font-size--sm);
+  }
+
+  .cart-items__remove:hover {
+    opacity: 0.8;
   }
 
   .cart-items__media {
@@ -547,6 +602,10 @@
   }
 
   @container cart-items (min-width: 720px) {
+    .cart-items__header-row {
+      grid-template-columns: 7.5rem 1fr 1fr minmax(var(--cart-item-price-width), auto);
+    }
+
     .cart-items__table-row {
       --cart-item-price-width: 6rem;
 
@@ -719,38 +778,6 @@
   .cart-note .icon-plus {
     height: var(--icon-size-xs);
     width: var(--icon-size-xs);
-  }
-
-  /* Remove animation */
-  .remove-icon-bottom,
-  .remove-icon-top {
-    transition: transform var(--animation-speed) var(--animation-easing);
-  }
-
-  .cart-items__remove:hover .remove-icon-top {
-    transform: translate(calc(-1 * var(--icon-stroke-width)), var(--icon-stroke-width)) rotate(-15deg);
-  }
-
-  .cart-items__remove:is(:hover, :active) .remove-icon-bottom {
-    transform: translateY(var(--icon-stroke-width));
-  }
-
-  .cart-items__table-row.removing .remove-icon-bottom {
-    transform: translateY(0);
-  }
-
-  .cart-items__table-row.removing .remove-icon-top {
-    animation: removeButtonClickedIconTop var(--animation-speed) var(--animation-easing) forwards;
-  }
-
-  @keyframes removeButtonClickedIconTop {
-    50% {
-      transform: translate(0, calc(-1 * var(--icon-stroke-width)));
-    }
-
-    100% {
-      transform: translate(0, 0);
-    }
   }
 
   .cart-items__properties {

@@ -4611,3 +4611,47 @@ facet-status-component.facets__status {
   font-size: 13px;
   line-height: 1.4;
 }
+
+
+/* === TOEI バッジ共通 === */
+
+/* コンテナは複数箇所で使えるようにまとめておく */
+.toei-product-badges,
+.toei-cart-badges,
+.toei-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+/* 基本バッジ */
+.toei-badge {
+  font-size: 0.7rem!important;
+  padding: 4px 10px;
+  border-radius: 0;
+  border: none;
+  font-weight: 600;
+}
+
+/* 種別ごとの色 */
+.toei-badge--new {
+  background: #d93231;
+  color: #fff;
+}
+
+.toei-badge--pre {
+  background: #060816;
+  color: #fff;
+}
+
+.toei-badge--first,
+.toei-badge--closing {
+  background: #dde0e6;
+  color: #060816;
+}
+
+.toei-badge--early {
+  background: #060816;
+  color: #fff;
+}

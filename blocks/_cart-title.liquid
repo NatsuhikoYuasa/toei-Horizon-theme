@@ -1,5 +1,3 @@
-
-
 {% assign block_settings = block.settings %}
 
 <div
@@ -7,14 +5,25 @@
   style="{% render 'spacing-style', settings: block_settings %}"
   {{ block.shopify_attributes }}
 >
-  <h1 class="{{ block_settings.type_preset | default: 'h2' }}">
-    {%- if cart.empty? -%}
-      {{ 'content.your_cart_is_empty' | t }}
-    {%- else -%}
-      {{ block_settings.title }}
-      {%- if block_settings.show_count -%}{% render 'cart-bubble' %}{%- endif -%}
-    {%- endif -%}
-  </h1>
+  <div class="cart-title__inner">
+    <h1 class="{{ block_settings.type_preset | default: 'h2' }}">
+      {%- if cart.empty? -%}
+        {{ 'content.your_cart_is_empty' | t }}
+      {%- else -%}
+        {{ block_settings.title }}
+        {%- if block_settings.show_count -%}{% render 'cart-bubble' %}{%- endif -%}
+      {%- endif -%}
+    </h1>
+
+    {%- unless cart.empty? -%}
+      <a
+        href="{{ settings.empty_cart_button_link | default: routes.all_products_collection_url }}"
+        class="cart-title__continue button button--secondary"
+      >
+        {{ 'actions.continue_shopping' | t }}
+      </a>
+    {%- endunless -%}
+  </div>
 </div>
 
 {% stylesheet %}
@@ -49,6 +58,49 @@
     font-family: var(--font-paragraph--family);
     font-size: clamp(var(--cart-font-size--2xs), 0.7lh, var(--cart-font-size--xs));
   }
+
+  /* 見出し＋ボタンの横並び */
+  .cart-title__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--gap-md);
+    justify-content: space-between;
+  }
+
+  .cart-title__continue {
+    min-width: 220px;
+  }
+
+  /* アライメントに合わせて調整 */
+  .cart-title.text-center .cart-title__inner {
+    justify-content: center;
+  }
+
+  .cart-title.text-right .cart-title__inner {
+    justify-content: flex-end;
+  }
+
+  @media screen and (max-width: 749px) {
+    .cart-title__inner {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--gap-sm);
+    }
+
+    .cart-title.text-center .cart-title__inner {
+      align-items: center;
+    }
+
+    .cart-title.text-right .cart-title__inner {
+      align-items: flex-end;
+    }
+
+    .cart-title__continue {
+      width: 100%;
+      text-align: center;
+    }
+  }
 {% endstylesheet %}
 
 {% schema %}
@@ -77,38 +129,14 @@
       "id": "type_preset",
       "label": "t:settings.preset",
       "options": [
-        {
-          "value": "",
-          "label": "t:options.default"
-        },
-        {
-          "value": "paragraph",
-          "label": "t:options.paragraph"
-        },
-        {
-          "value": "h1",
-          "label": "t:options.h1"
-        },
-        {
-          "value": "h2",
-          "label": "t:options.h2"
-        },
-        {
-          "value": "h3",
-          "label": "t:options.h3"
-        },
-        {
-          "value": "h4",
-          "label": "t:options.h4"
-        },
-        {
-          "value": "h5",
-          "label": "t:options.h5"
-        },
-        {
-          "value": "h6",
-          "label": "t:options.h6"
-        }
+        { "value": "", "label": "t:options.default" },
+        { "value": "paragraph", "label": "t:options.paragraph" },
+        { "value": "h1", "label": "t:options.h1" },
+        { "value": "h2", "label": "t:options.h2" },
+        { "value": "h3", "label": "t:options.h3" },
+        { "value": "h4", "label": "t:options.h4" },
+        { "value": "h5", "label": "t:options.h5" },
+        { "value": "h6", "label": "t:options.h6" }
       ],
       "default": "",
       "info": "t:info.edit_presets_in_theme_settings"

@@ -1,5 +1,3 @@
-
-
 <cart-items-component
   class="cart-items-component"
   data-section-id="{{ section.id }}"
@@ -76,15 +74,20 @@
 
   @media screen and (min-width: 750px) {
     .cart-page {
-      grid-template-columns: 1fr min(50vw, var(--sidebar-width));
-      grid-template-rows: min-content min-content 1fr;
+      /* grid-template-columns: 1fr min(50vw, var(--sidebar-width));
+      grid-template-rows: min-content min-content 1fr; */
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto;
     }
 
     .cart-page__summary {
       display: grid;
       height: 100%;
-      grid-column: 2;
-      grid-row: 1 / -1;
+      /* grid-column: 2;
+      grid-row: 1 / -1; */
+      grid-column: 1;
+      grid-row: auto;
+      margin-top: var(--margin-xl);
       align-self: stretch;
       grid-template-rows: subgrid;
       padding-top: 0;
@@ -117,33 +120,32 @@
 
 {% javascript %}
   (function () {
-  function updateCartEarnedPoints() {
-    // ★ ここを easyPoints の実際のセレクタに置き換えてください
-    var sourceEl = document.querySelector('.easypoints-cart-earn-message');
-    var targetEl = document.getElementById('cart-earned-points');
+    function updateCartEarnedPoints() {
+      // ★ ここを easyPoints の実際のセレクタに置き換えてください
+      var sourceEl = document.querySelector('.easypoints-cart-earn-message');
+      var targetEl = document.getElementById('cart-earned-points');
 
-    if (!sourceEl || !targetEl) return;
+      if (!sourceEl || !targetEl) return;
 
-    // 「160 ポイント」を抜き出す
-    var text = sourceEl.textContent || '';
-    var match = text.match(/([\d,]+)\s*ポイント/);
+      // 「160 ポイント」を抜き出す
+      var text = sourceEl.textContent || '';
+      var match = text.match(/([\d,]+)\s*ポイント/);
 
-    if (match) {
-      var pointNumber = match[1]; // 例: "160"
-      targetEl.textContent = pointNumber + 'ポイント獲得';
-    } else {
-      // 取れなかった場合は空にしておく
-      targetEl.textContent = '';
+      if (match) {
+        var pointNumber = match[1]; // 例: "160"
+        targetEl.textContent = pointNumber + 'ポイント獲得';
+      } else {
+        // 取れなかった場合は空にしておく
+        targetEl.textContent = '';
+      }
     }
-  }
 
-  document.addEventListener('DOMContentLoaded', updateCartEarnedPoints);
+    document.addEventListener('DOMContentLoaded', updateCartEarnedPoints);
 
-  // カート更新時のイベントがあれば、そこでも呼ぶとベスト
-  document.addEventListener('cart:updated', updateCartEarnedPoints);
-})();
+    // カート更新時のイベントがあれば、そこでも呼ぶとベスト
+    document.addEventListener('cart:updated', updateCartEarnedPoints);
+  })();
 {% endjavascript %}
-
 
 {% schema %}
 {
