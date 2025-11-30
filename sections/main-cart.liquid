@@ -113,6 +113,38 @@
   }
 {% endstylesheet %}
 
+{% comment %} wb03 add {% endcomment %}
+
+{% javascript %}
+  (function () {
+  function updateCartEarnedPoints() {
+    // ★ ここを easyPoints の実際のセレクタに置き換えてください
+    var sourceEl = document.querySelector('.easypoints-cart-earn-message');
+    var targetEl = document.getElementById('cart-earned-points');
+
+    if (!sourceEl || !targetEl) return;
+
+    // 「160 ポイント」を抜き出す
+    var text = sourceEl.textContent || '';
+    var match = text.match(/([\d,]+)\s*ポイント/);
+
+    if (match) {
+      var pointNumber = match[1]; // 例: "160"
+      targetEl.textContent = pointNumber + 'ポイント獲得';
+    } else {
+      // 取れなかった場合は空にしておく
+      targetEl.textContent = '';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', updateCartEarnedPoints);
+
+  // カート更新時のイベントがあれば、そこでも呼ぶとベスト
+  document.addEventListener('cart:updated', updateCartEarnedPoints);
+})();
+{% endjavascript %}
+
+
 {% schema %}
 {
   "name": "t:names.cart",

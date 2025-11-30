@@ -58,7 +58,8 @@
     endif
   -%}
 
-  <div class="cart__total-container">
+  {% comment %} wb03 blocked&add start
+    <div class="cart__total-container">
     <span
       class="cart__summary-item cart__total"
       role="status"
@@ -84,9 +85,48 @@
     <div class="cart__summary-item tax-note cart-primary-typography">
       {% render 'tax-info', has_discounts_enabled: settings.show_add_discount_code %}
     </div>
+  </div> {% endcomment %}
+  <div class="cart__total-container">
+    <span
+      class="cart__summary-item cart__total"
+      role="status"
+    >
+      <span class="cart__total-label cart-primary-typography">{{ 'content.cart_estimated_total' | t }}</span>
+      <text-component
+        ref="cartTotal"
+        value="{{ total_price | strip_html }}"
+        class="cart__total-value cart-secondary-typography"
+        data-cart-subtotal
+      >
+        {{ total_price }}
+      </text-component>
+    </span>
+
+    {%- comment -%}
+      ★ 獲得ポイント用の入れ物（中身は JS で入れる）
+    {%- endcomment -%}
+    <p
+      class="cart__summary-item cart__earned-points cart-secondary-typography"
+      id="cart-earned-points"
+    ></p>
+
+    {% if settings.show_installments %}
+      <span class="cart__summary-item cart__installments">
+        {% form 'cart', cart %}
+          {{ form | payment_terms }}
+        {% endform %}
+      </span>
+    {% endif %}
+
+    <div class="cart__summary-item tax-note cart-primary-typography">
+      {% render 'tax-info', has_discounts_enabled: settings.show_add_discount_code %}
+    </div>
   </div>
+{% comment %} wb03 blocked&add end {% endcomment %}
+
 </div>
 
+{% comment %} wb03 blocked&add カートページとそれ以外でボタン動作を分ける start
 <div class="cart__ctas">
   <button
     type="submit"
@@ -111,7 +151,48 @@
       {{ content_for_additional_checkout_buttons }}
     </div>
   {% endif %}
+</div> {% endcomment %}
+
+<div class="cart__ctas">
+  {%- if template.name == 'cart' -%}
+    {% comment %} カートページ：そのままチェックアウト {% endcomment %}
+    <button
+      type="submit"
+      id="checkout"
+      class="cart__checkout-button button"
+      name="checkout"
+      {% if cart == empty %}
+        disabled
+      {% endif %}
+      form="cart-form"
+    >
+      {{ 'content.checkout' | t }}
+    </button>
+
+    {% if additional_checkout_buttons and settings.show_accelerated_checkout_buttons %}
+      <div
+        class="
+          additional-checkout-buttons
+          {% if accelerated_checkout_buttons_layout == 'vertical' %}
+            additional-checkout-buttons--vertical
+          {% endif %}
+        "
+      >
+        {{ content_for_additional_checkout_buttons }}
+      </div>
+    {% endif %}
+  {%- else -%}
+    {% comment %} ドロワーなど：一旦カートページへ {% endcomment %}
+    <a
+      href="{{ routes.cart_url }}"
+      class="cart__checkout-button button"
+      data-testid="cart-primary-action"
+    >
+      カートへ進む
+    </a>
+  {%- endif -%}
 </div>
+{% comment %} wb03 blocked&add カートページとそれ以外でボタン動作を分ける end {% endcomment %}
 
 {% stylesheet %}
   .cart-actions {
@@ -136,4 +217,18 @@
   .cart__installments {
     color: var(--color-foreground);
   }
+
+  /* wb03 add */
+  .cart__earned-points {
+    margin-top: var(--margin-2xs);
+    font-size: var(--cart-font-size--xs);
+    text-align: right;
+  }
+
+  @media screen and (max-width: 749px) {
+    .cart__earned-points {
+      text-align: left;
+    }
+  }
+
 {% endstylesheet %}

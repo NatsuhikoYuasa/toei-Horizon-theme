@@ -1,0 +1,578 @@
+<div class="section-background color-{{ section.settings.color_scheme }}"></div>
+
+<section
+  id="cart-app-two-columns-{{ section.id }}"
+  class="section section--{{ section.settings.section_width }} cart-app-two-columns"
+>
+  <div
+    class="cart-app-two-columns__inner spacing-style"
+    style="{% render 'spacing-style', settings: section.settings %}"
+  >
+    {%- assign blocks = section.blocks -%}
+
+    {%- if blocks.size > 0 -%}
+      {%- assign first_block = blocks.first -%}
+
+      <!-- 左カラム -->
+      <div class="cart-app-two-columns__column cart-app-two-columns__column--left">
+        {% render first_block %}
+      </div>
+
+      <!-- 右カラム ＋ 合計 -->
+      {%- if blocks.size > 1 -%}
+        <div class="cart-app-two-columns__column cart-app-two-columns__column--right">
+          {%- for block in blocks offset: 1 -%}
+            {% render block %}
+          {%- endfor -%}
+
+          <div class="cart-app-two-columns__total-box">
+            <div class="cart-app-two-columns__total-line">
+              <span class="cart-app-two-columns__total-label">合計</span>
+              <span class="cart-app-two-columns__total-price">
+                {{ cart.total_price | money }}
+                <span class="cart-app-two-columns__total-tax">（税込）</span>
+              </span>
+            </div>
+
+            <p class="cart-app-two-columns__tax-note">
+              税込で、配送料は購入手続き時に計算されます
+            </p>
+          </div>
+        </div>
+      {%- endif -%}
+    {%- endif -%}
+
+    <!-- ▼ 2カラムの下：ボタンだけを全幅で中央配置 -->
+    <div class="cart-app-two-columns__buttons-row">
+      <div class="cart-app-two-columns__buttons">
+        <a
+          href="{{ routes.root_url }}"
+          class="cart-app-two-columns__button cart-app-two-columns__button--outline"
+        >
+          お買い物を続ける
+        </a>
+
+        <button
+          type="submit"
+          class="cart-app-two-columns__button cart-app-two-columns__button--primary"
+          name="checkout"
+          form="cart-form"
+        >
+          購入手続きへ
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // 1) 見出し「ご利用可能ポイント」→「ポイントを利用する」
+    var header = document.querySelector('.easy-points-account__header');
+    if (header) {
+      header.textContent = 'ポイントを利用する';
+    }
+
+    // 2) 5,000 ポイント → 5,000 ポイントが利用可能です
+    var balanceElm = document.querySelector('.easy-points-account__balance [data-loyal-target="balance"]');
+    if (balanceElm) {
+      var txt = balanceElm.textContent.trim();  // 例: "5,000 ポイント"
+      txt = txt.replace(/ポイント.*/, 'ポイントが利用可能です');
+      balanceElm.textContent = txt;
+    }
+
+    // 3) ポイント入力欄の設定
+    var input = document.getElementById('ep-block-redemption-input');
+    if (input) {
+      input.removeAttribute('disabled');
+
+      // 数値入力＋カウンター
+      input.type = 'number';
+      input.setAttribute('inputmode', 'numeric');
+      input.setAttribute('pattern', '\\d*');
+      input.setAttribute('min', '0');
+      input.setAttribute('step', '1');
+
+      input.placeholder = 'ポイントを入力';
+      input.value = '';
+    }
+
+    // 4) 既存ラベルは「利用ポイント」にして非表示
+    var existingLabel = document.querySelector('label[for="ep-block-redemption-input"]');
+    if (existingLabel) {
+      existingLabel.textContent = '利用ポイント';
+      existingLabel.style.display = 'none';
+    }
+
+    // 5) 入力欄の「上」に表示するラベルを .easy-points-form__input の中に追加
+    var formInput = document.querySelector('.easy-points-form__input');
+    if (formInput && !formInput.querySelector('.cart-points-input-label')) {
+      var topLabel = document.createElement('p');
+      topLabel.className = 'cart-points-input-label';
+      topLabel.textContent = '利用ポイント';
+      formInput.insertBefore(topLabel, formInput.firstElementChild);
+    }
+
+    // 6) 「適用」ボタンの文言
+    var redeemBtn = document.querySelector('.easy-points-button__redeem.button');
+    if (redeemBtn) {
+      redeemBtn.textContent = '適用';
+    }
+  });
+</script>
+
+{% stylesheet %}
+  .cart-app-two-columns {
+    width: 100%;
+  }
+
+  .cart-app-two-columns__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); /* 左右1:1 */
+    column-gap: 80px;
+    row-gap: 32px;
+  }
+
+  /* 左カラム（日時指定） */
+  .cart-app-two-columns__column--left {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 右カラム（ポイント） */
+  .cart-app-two-columns__column--right {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border-left: 1px solid #e5e5e5;  /* 真ん中の縦線 */
+    padding-left: 80px;
+  }
+
+  .easy-points-form__container {
+    align-items: flex-start!important;
+    margin-bottom: 0!important;
+  }
+
+  /* ───── 配送日時 amp の調整 ───── */
+
+  p.delivery-title {
+    font-weight: 600;
+  }
+
+  /* 「お届け希望日時」のタイトルと下線を消す */
+  #cart-delivery-datetime_section_os2 .title-border {
+    display: none !important;
+    border: none !important;
+    margin-bottom: 0;
+  }
+
+  /* 左カラム全体のゆとり */
+  .cart-app-two-columns__column--left .delivery-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* ラベルと入力欄の間に余白 */
+  #cart-delivery-datetime_section_os2 .delivery-title {
+    margin-bottom: 8px;
+  }
+
+  /* 「お届け希望日」「お届け希望時間」と入力ブロックのセットの間の余白 */
+  .delivery-container .delivery-title {
+    margin-top: 0!important;
+  }
+
+  p.delivery-mindate-caution {
+    margin-bottom: 2rem !important;
+  }
+
+  /* 「最短ご指定可能日：〜」を黒・左寄せ＋少し余白 */
+  #cart-delivery-datetime_section_os2 .delivery-mindate-caution {
+    margin-top: 8px;
+    color: #000 !important;
+    text-align: left;
+    font-size: 14px;
+  }
+
+  /* 注意書きの前にも余白 */
+  #cart-delivery-datetime_section_os2 .delivery-caution__statement {
+    margin-top: 12px;
+  }
+
+  /* カレンダーアイコンをセレクトの縦中央寄せに */
+  .delivery-container .delivery-select-container--calendar {
+    top: 50% !important;
+    transform: translateY(-50%);
+  }
+
+  /* ───── ポイント側の調整 ───── */
+
+  /* 見出し「ご利用可能ポイント」行 */
+  .easy-points-account__header {
+    font-size: 14px;
+    margin: 0 0 20px;
+  }
+
+  /* 「5,000 ポイントが利用可能です ＋ 有効期限〜」の行 */
+  .easy-points-account__balance {
+    display: flex;
+    align-items: baseline;
+    margin: 0 0 16px;
+    font-size: 14px;
+  }
+
+  /* フォーム内の「利用可能ポイント: 5,000」は非表示 */
+  .easy-points-form__balance {
+    display: none !important;
+  }
+
+  /* 入力ブロック全体：ラベル / 入力 / ボタン / 区切り線 をまとめてレイアウト */
+  .easy-points-form__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end !important;
+    gap: 16px;
+    max-width: 520px;
+    width: 100%;
+  }
+
+  .easy-points-form__inner > button {
+    margin-left: 0!important;
+    margin-top: 0 !important; 
+  }
+
+  /* 上にくる「利用ポイント」ラベルを1行占有させる */
+  .cart-points-input-label {
+    font-size: 14px;
+    color: #000;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    flex-basis: 100%;
+  }
+
+  /* 入力欄のラッパー → 余った横幅を全部使う */
+  .easy-points-form__input {
+    flex: 1 1 auto;
+  }
+
+  /* 入力欄の見た目（下線だけ） */
+  .easy-points-form__input .field {
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .easy-points-form__input .field__input {
+    width: 100%;
+    border: none;
+    border-radius: 5px;
+  }
+
+  /* プレースホルダー（「ポイントを入力」）をグレーに */
+  #ep-block-redemption-input::placeholder {
+    color: #999;
+  }
+
+  /* 「適用」ボタンの色 */
+  .easy-points-button__redeem.button,
+  #checkout {
+    background-color: #D93231;
+    border-color: #D93231;
+    color: #fff;
+  }
+
+  .easy-points-button__redeem.button,
+  .easy-points-button__reset.button {
+    height: 50px;
+  }
+
+  .easy-points-form__discount.hidden-unless-discount-applied {
+    padding: var(--input-padding);
+    box-shadow: var(--input-box-shadow);
+    border-radius: 5px;
+  }
+
+  /* 区切り線を入力＋ボタンの下にフル幅で表示 */
+  .cart-points-divider {
+    flex-basis: 100%;
+    margin-top: 8px;
+    width: 100%;
+    height: 1px;
+    background-color: #e5e5e5;
+  }
+
+  /* 合計獲得ポイント文の位置 */
+  .easy-points__cart-points {
+    margin-top: 16px;
+    font-size: 14px;
+    color: rgb(0 0 0 / 0.81);
+  }
+
+  /* ───── レスポンシブ（スマホ） ───── */
+  @media screen and (max-width: 749px) {
+    .cart-app-two-columns__inner {
+      grid-template-columns: 1fr;
+      column-gap: 0;
+      row-gap: 32px;
+    }
+
+    .cart-app-two-columns__column--right {
+      border-left: none;
+      padding-left: 0;
+      border-top: 1px solid #e5e5e5;
+      padding-top: 24px;
+    }
+
+    .cart-app-two-columns__column--left .delivery-container {
+      padding-inline: 0;
+    }
+
+    /* バランス行を2行にする（ポイント残高 → 改行 → 有効期限） */
+    .easy-points-account__balance {
+      display: block !important;
+    }
+
+    .easy-points-account__balance span {
+      display: block;
+    }
+
+    .easy-points-account__balance .easy-points__expiration-date {
+      margin-left: 0 !important;
+      margin-top: 4px;
+    }
+  }
+
+  /* ───── ポイントの下の 合計ブロック ───── */
+
+  .cart-app-two-columns__total-box {
+    margin-top: 40px;
+    text-align: right;
+    /* ポイントフォームと同じ幅にそろえる */
+    max-width: 520px;
+    width: 100%;
+    margin-left: auto;   /* 右側に寄せる（適用ボタンとツラ合わせ） */
+    margin-right: 0;
+  }
+
+  .cart-app-two-columns__total-line {
+    display: flex;
+    justify-content: flex-end;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .cart-app-two-columns__total-label {
+    font-size: 14px;
+  }
+
+  .cart-app-two-columns__total-price {
+    font-size: 24px;
+    font-weight: 600;
+  }
+
+  .cart-app-two-columns__total-tax {
+    font-size: 14px;
+    margin-left: 4px;
+  }
+
+  .cart-app-two-columns__tax-note {
+    font-size: 12px;
+    color: #555;
+  }
+
+  /* ───── ページ下部のボタン2つを中央揃え ───── */
+
+  .cart-page .cart__ctas {
+    margin-top: 32px;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .cart-page .cart__ctas .button {
+    min-width: 180px;
+    padding-inline: 24px;
+    height: 48px;
+    border-radius: 4px;
+  }
+
+  @media screen and (max-width: 749px) {
+    .cart-app-two-columns__total-box {
+      margin-top: 24px;
+      max-width: 100%;
+    }
+
+    .cart-page .cart__ctas {
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .cart-page .cart__ctas .button {
+      width: 100%;
+      max-width: 320px;
+      margin-inline: auto;
+    }
+  }
+
+  .cart-app-two-columns__total-box {
+  margin-top: 40px;
+  text-align: right;
+
+  max-width: 520px;   /* ポイント入力と同じくらい */
+  width: 100%;
+  margin-left: auto;  /* 右寄せ（適用ボタンとツラ合わせ） */
+  margin-right: 0;
+}
+
+.cart-app-two-columns__total-line {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.cart-app-two-columns__total-label {
+  font-size: 14px;
+}
+
+.cart-app-two-columns__total-price {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.cart-app-two-columns__total-tax {
+  font-size: 14px;
+  margin-left: 4px;
+}
+
+.cart-app-two-columns__tax-note {
+  font-size: 12px;
+  color: #555;
+  margin-top: 4px;
+  text-align: right;
+}
+
+/* 2カラムの下に全幅で配置 */
+.cart-app-two-columns__buttons-row {
+  grid-column: 1 / -1;
+  margin-bottom: 30px;
+}
+
+/* ボタン2つを中央寄せ */
+.cart-app-two-columns__buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.cart-app-two-columns__button {
+  min-width: 180px;
+  padding: 10px 24px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #D93231;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* 左：白背景＋赤枠 */
+.cart-app-two-columns__button--outline {
+  background-color: #fff;
+  color: #D93231;
+}
+
+/* 右：赤背景＋白文字 */
+.cart-app-two-columns__button--primary {
+  background-color: #D93231;
+  color: #fff;
+}
+
+.cart-app-two-columns__button--primary:hover {
+  opacity: 0.9;
+}
+
+/* SP では縦並び＆幅100% */
+@media screen and (max-width: 749px) {
+  .cart-app-two-columns__total-box {
+    max-width: 100%;
+    margin-left: 0;
+    text-align: left;
+  } 
+
+  .cart-app-two-columns__buttons {
+    flex-direction: column;
+    margin: 0 16px;
+    margin-inline: auto;
+  }
+
+  .cart-app-two-columns__button {
+    width: 100%;
+  }
+}
+
+.cart__ctas {
+  display: none;
+}
+
+{% endstylesheet %}
+
+
+{% schema %}
+{
+  "name": "カート: アプリ2カラム (Custom)",
+  "tag": "section",
+  "class": "cart-app-two-columns-section",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "blocks": [
+    {
+      "type": "@app"
+    }
+  ],
+  "settings": [
+    {
+      "type": "select",
+      "id": "section_width",
+      "label": "幅",
+      "options": [
+        { "value": "page-width", "label": "ページ幅" },
+        { "value": "full-width", "label": "全幅" }
+      ],
+      "default": "page-width"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "カラー",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "余白"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "上",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "下",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 40
+    }
+  ]
+}
+{% endschema %}
