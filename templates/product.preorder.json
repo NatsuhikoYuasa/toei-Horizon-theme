@@ -215,6 +215,7 @@
       "block_order": [
         "text_cbcgyb"
       ],
+      "disabled": true,
       "name": "t:names.product_recommendations",
       "settings": {
         "product": "{{ closest.product }}",
@@ -234,10 +235,30 @@
         "padding-block-start": 48,
         "padding-block-end": 48
       }
+    },
+    "custom_collection_shelf_nyWWDD": {
+      "type": "Custom-collection-shelf",
+      "name": "汎用コレクション（Custom）",
+      "settings": {
+        "collection": "関連グッズ",
+        "limit": 12,
+        "show_price": true,
+        "show_badges": true,
+        "new_days": 14,
+        "columns_desktop": 6,
+        "gap_pc": 16,
+        "gap_sp": 12,
+        "padding-block-start": 36,
+        "padding-block-end": 36,
+        "bg_color": "#F5F6F9",
+        "color_scheme": "",
+        "accent_color": "#E63946"
+      }
     }
   },
   "order": [
     "main",
-    "product_recommendations_qggXJq"
+    "product_recommendations_qggXJq",
+    "custom_collection_shelf_nyWWDD"
   ]
 }
