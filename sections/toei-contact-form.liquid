@@ -4,6 +4,29 @@
 
 {{ 'section-toei-contact-form.css' | asset_url | stylesheet_tag }}
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const redirectUrl = "{{ section.settings.success_redirect | default: '/pages/contact-success' }}";
+
+  // 1️⃣ form.posted_successfully? の成功アラートが描画されたら即リダイレクト
+  const observer = new MutationObserver(() => {
+    const successEl = document.querySelector('.toei-contact__alert--success');
+    if (successEl) {
+      window.location.href = redirectUrl;
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // 2️⃣ <form> 自体への成功データ属性にも対応（念のため）
+  const form = document.getElementById('ContactForm');
+  if (form && form.dataset.successUrl && "{{ form.posted_successfully? }}") {
+    window.location.href = redirectUrl;
+  }
+});
+</script>
+
+
 <div class="l-page">
   <div class="l-container">
     <section class="toei-contact" id="ContactFormWrapper">
@@ -135,6 +158,11 @@
       "id": "submit_label",
       "label": "確認ボタンの文言",
       "default": "確認する"
+    },
+    {
+      "type": "url",
+      "id": "success_redirect",
+      "label": "送信後のリダイレクト先 URL"
     }
   ],
   "presets": [
