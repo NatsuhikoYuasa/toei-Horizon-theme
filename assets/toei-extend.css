@@ -562,8 +562,14 @@
    ======================================== */
 
 .section-newsletter-settings {
-  padding-top: 48px;
+  padding-top: 0;
   padding-bottom: 80px;
+}
+
+@media (max-width: 749px) {
+  .section-newsletter-settings {
+    padding-top: 0;
+  }
 }
 
 .newsletter-settings__card {
