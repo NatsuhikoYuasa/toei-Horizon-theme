@@ -1,13 +1,11 @@
-{% comment %}
-  メールニュース登録ページ用セクション
-  - ログイン有無に関わらずメールアドレスで登録可能
-  - ログイン時:
-      customer.email を表示しつつ、そのアドレスで送信（hidden input）
-  - 未ログイン時:
-      入力欄から contact[email] を送信
-  - フォーム送信で contact[email] と contact[tags]=newsletter を送信し、
-    newsletter タグ付きで accepts_marketing を ON にする
-{% endcomment %}
+{%- comment -%}
+  newsletter 用フォーム仕様:
+  - contact[email]:
+      ログイン時: hidden input（customer.email）
+      未ログイン時: visible input（ユーザー入力）
+  これにより accepts_marketing が ON の customer が作成/更新される。
+{%- endcomment -%}
+
 
 <section class="section section-newsletter-settings toei-section toei-section--newsletter">
   <div class="toei-container">
@@ -88,8 +86,6 @@
           </div>
         </div>
       </div>
-
-      <input type="hidden" name="contact[tags]" value="newsletter">
 
       <div class="newsletter-settings__actions">
         <a href="/pages/mypage" class="button button--secondary">マイページに戻る</a>
