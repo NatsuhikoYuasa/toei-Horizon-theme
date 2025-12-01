@@ -555,3 +555,105 @@
     padding: 20px 16px 24px;
   }
 }
+
+/* ========================================
+   メールニュース登録ページ
+   section-newsletter-settings
+   ======================================== */
+
+.section-newsletter-settings {
+  padding-top: 48px;
+  padding-bottom: 80px;
+}
+
+.newsletter-settings__card {
+  max-width: 960px;
+  margin: 32px auto 24px;
+}
+
+.newsletter-settings__row {
+  display: flex;
+  align-items: flex-start;
+  padding: 24px 32px;
+  border-top: 1px solid #e5e5e5;
+}
+
+.newsletter-settings__row:first-child {
+  border-top: none;
+}
+
+.newsletter-settings__label {
+  width: 200px;
+  font-weight: 500;
+}
+
+.newsletter-settings__value {
+  flex: 1;
+}
+
+.newsletter-settings__email {
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+
+.newsletter-settings__email-edit {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  text-decoration: underline;
+}
+
+.newsletter-settings__option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 32px;
+  font-size: 14px;
+}
+
+.newsletter-settings__option input[type="radio"] {
+  width: 18px;
+  height: 18px;
+}
+
+.newsletter-settings__option--disabled {
+  opacity: 0.5;
+}
+
+.newsletter-settings__actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+@media screen and (max-width: 749px) {
+  .newsletter-settings__card {
+    margin: 24px 0 16px;
+  }
+
+  .newsletter-settings__row {
+    display: block;
+    padding: 20px 16px;
+  }
+
+  .newsletter-settings__label {
+    width: auto;
+    margin-bottom: 12px;
+  }
+
+  .newsletter-settings__option {
+    display: flex;
+    margin-right: 0;
+    margin-bottom: 8px;
+  }
+
+  .newsletter-settings__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .newsletter-settings__actions .button {
+    width: 100%;
+  }
+}
