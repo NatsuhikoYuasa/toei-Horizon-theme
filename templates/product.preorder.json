@@ -19,7 +19,7 @@
             "font_weight": "normal",
             "font_size": 16,
             "label": "",
-            "display_percentage": false
+            "display_percentage": true
           }
         },
         "advanced_wishlist_wishlist_btn_nWkqtF": {
@@ -250,9 +250,9 @@
         "gap_sp": 12,
         "padding-block-start": 36,
         "padding-block-end": 36,
-        "bg_color": "#F5F6F9",
+        "bg_color": "#f5f6f9",
         "color_scheme": "",
-        "accent_color": "#E63946"
+        "accent_color": "#e63946"
       }
     }
   },
