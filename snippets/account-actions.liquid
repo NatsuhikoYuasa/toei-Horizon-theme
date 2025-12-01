@@ -11,7 +11,7 @@
           {{ 'content.account_title' | t }}
         {% endif %}
       </h2>
-      {% if customer %}
+      {% comment %} {% if customer %}
         <span class="account-actions__email">
           {% if customer.email %}
             {{ customer.email }}
@@ -19,7 +19,7 @@
             {{ customer.phone }}
           {% endif %}
         </span>
-      {% endif %}
+      {% endif %} {% endcomment %}
     </header>
 
     {% unless customer %}

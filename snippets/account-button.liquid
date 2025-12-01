@@ -29,12 +29,14 @@
         assign initial = customer.first_name | first
       endif
     -%}
+    <a href="../pages/mypage">
     <span
       class="account-button__avatar"
       aria-hidden="true"
     >
       {{- initial -}}
     </span>
+    </a>
   {%- else -%}
     <span
       class="account-button__icon"
