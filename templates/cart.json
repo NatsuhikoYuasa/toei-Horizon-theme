@@ -99,7 +99,7 @@
         "easypoints_cart_total_points_7McUTF": {
           "type": "shopify://apps/easypoints/blocks/cart_total_points/f0862409-7105-4920-b523-5bd76a964d4a",
           "settings": {
-            "use_sentence": false,
+            "use_sentence": true,
             "label": "",
             "text_align": "left"
           }
