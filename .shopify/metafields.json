@@ -271,6 +271,66 @@
         "name": "single_line_text_field",
         "category": "TEXT"
       }
+    },
+    {
+      "key": "sales_period_status_object",
+      "namespace": "product",
+      "name": "商品販売ステータスオブジェクト",
+      "description": null,
+      "type": {
+        "name": "metaobject_reference",
+        "category": "REFERENCE"
+      }
+    },
+    {
+      "key": "product_sales_type_object",
+      "namespace": "product",
+      "name": "商品販売タイプオブジェクト",
+      "description": null,
+      "type": {
+        "name": "metaobject_reference",
+        "category": "REFERENCE"
+      }
+    },
+    {
+      "key": "product_category_object",
+      "namespace": "product",
+      "name": "商品カテゴリオブジェクト",
+      "description": null,
+      "type": {
+        "name": "metaobject_reference",
+        "category": "REFERENCE"
+      }
+    },
+    {
+      "key": "product_genre_object",
+      "namespace": "product",
+      "name": "商品ジャンルオブジェクト",
+      "description": null,
+      "type": {
+        "name": "metaobject_reference",
+        "category": "REFERENCE"
+      }
+    },
+    {
+      "key": "product_series_object",
+      "namespace": "product",
+      "name": "作品オブジェクト",
+      "description": null,
+      "type": {
+        "name": "metaobject_reference",
+        "category": "REFERENCE"
+      }
+    },
+    {
+      "key": "kana_index_object",
+      "namespace": "product",
+      "name": "索引オブジェクト",
+      "description": null,
+      "type": {
+        "name": "metaobject_reference",
+        "category": "REFERENCE"
+      }
     }
   ],
   "variant": [

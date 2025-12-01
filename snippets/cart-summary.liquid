@@ -58,47 +58,58 @@
     endif
   -%}
 
-  {% comment %} wb03 blocked&add start
-    <div class="cart__total-container">
-    <span
-      class="cart__summary-item cart__total"
-      role="status"
-    >
-      <span class="cart__total-label cart-primary-typography">{{ 'content.cart_estimated_total' | t }}</span>
-      <text-component
-        ref="cartTotal"
-        value="{{ total_price | strip_html }}"
-        class="cart__total-value cart-secondary-typography"
-        {% comment %} Used by payment_terms web component {% endcomment %}
-        data-cart-subtotal
+  {% comment %}
+    wb03 blocked&add start
+      <div class="cart__total-container">
+      <span
+        class="cart__summary-item cart__total"
+        role="status"
       >
-        {{ total_price }}
-      </text-component>
-    </span>
-    {% if settings.show_installments %}
-      <span class="cart__summary-item cart__installments">
-        {% form 'cart', cart %}
-          {{ form | payment_terms }}
-        {% endform %}
+        <span class="cart__total-label cart-primary-typography">{{ 'content.cart_estimated_total' | t }}</span>
+        <text-component
+          ref="cartTotal"
+          value="{{ total_price | strip_html }}"
+          class="cart__total-value cart-secondary-typography"
+          {% comment %} Used by payment_terms web component {% endcomment %}
+          data-cart-subtotal
+        >
+          {{ total_price }}
+        </text-component>
       </span>
-    {% endif %}
-    <div class="cart__summary-item tax-note cart-primary-typography">
-      {% render 'tax-info', has_discounts_enabled: settings.show_add_discount_code %}
+      {% if settings.show_installments %}
+        <span class="cart__summary-item cart__installments">
+          {% form 'cart', cart %}
+            {{ form | payment_terms }}
+          {% endform %}
+        </span>
+      {% endif %}
+      <div class="cart__summary-item tax-note cart-primary-typography">
+        {% render 'tax-info', has_discounts_enabled: settings.show_add_discount_code %}
+      </div>
     </div>
-  </div> {% endcomment %}
+  {% endcomment %}
   <div class="cart__total-container">
     <span
       class="cart__summary-item cart__total"
       role="status"
     >
-      <span class="cart__total-label cart-primary-typography">{{ 'content.cart_estimated_total' | t }}</span>
+      <span class="cart__total-label cart-primary-typography">
+        {{ 'content.cart_estimated_total' | t }}
+      </span>
+
+      {% liquid
+        # ドロワー用の合計金額（JPY なし）
+        assign drawer_total_price = cart.total_price | money
+      %}
+
       <text-component
         ref="cartTotal"
-        value="{{ total_price | strip_html }}"
+        value="{{ drawer_total_price | strip_html }}"
         class="cart__total-value cart-secondary-typography"
         data-cart-subtotal
       >
-        {{ total_price }}
+        {{ drawer_total_price }}
+        <span class="cart-drawer__tax-label">(税込)</span>
       </text-component>
     </span>
 
@@ -122,56 +133,59 @@
       {% render 'tax-info', has_discounts_enabled: settings.show_add_discount_code %}
     </div>
   </div>
-{% comment %} wb03 blocked&add end {% endcomment %}
-
+  {% comment %} wb03 blocked&add end {% endcomment %}
 </div>
 
-{% comment %} wb03 blocked&add カートページとそれ以外でボタン動作を分ける start
-<div class="cart__ctas">
-  <button
-    type="submit"
-    id="checkout"
-    class="cart__checkout-button button"
-    name="checkout"
-    {% if cart == empty %}
-      disabled
+{% comment %}
+  wb03 blocked&add カートページとそれ以外でボタン動作を分ける start
+  <div class="cart__ctas">
+    <button
+      type="submit"
+      id="checkout"
+      class="cart__checkout-button button"
+      name="checkout"
+      {% if cart == empty %}
+        disabled
+      {% endif %}
+      form="cart-form"
+    >
+      {{ 'content.checkout' | t }}
+    </button>
+
+    {% if additional_checkout_buttons and settings.show_accelerated_checkout_buttons %}
+      <div
+        class="
+          additional-checkout-buttons
+          {% if accelerated_checkout_buttons_layout == 'vertical' %}additional-checkout-buttons--vertical{% endif %}
+        "
+      >
+        {{ content_for_additional_checkout_buttons }}
+      </div>
     {% endif %}
-    form="cart-form"
-  >
-    {{ 'content.checkout' | t }}
-  </button>
-
-  {% if additional_checkout_buttons and settings.show_accelerated_checkout_buttons %}
-    <div
-      class="
-        additional-checkout-buttons
-        {% if accelerated_checkout_buttons_layout == 'vertical' %}additional-checkout-buttons--vertical{% endif %}
-      "
+  </div>
+{% endcomment %}
+{% comment %}
+  <div class="cart__ctas">
+    <a
+      href="{{ routes.cart_url }}"
+      class="cart__checkout-button button"
+      data-testid="cart-primary-action"
     >
-      {{ content_for_additional_checkout_buttons }}
-    </div>
-  {% endif %}
-</div> {% endcomment %}
-<div class="cart__ctas">
-  <a
-    href="{{ routes.cart_url }}"
-    class="cart__checkout-button button"
-    data-testid="cart-primary-action"
-  >
-    カートへ進む
-  </a>
+      カートへ進む
+    </a>
 
-  {% if additional_checkout_buttons and settings.show_accelerated_checkout_buttons %}
-    <div
-      class="
-        additional-checkout-buttons
-        {% if accelerated_checkout_buttons_layout == 'vertical' %}additional-checkout-buttons--vertical{% endif %}
-      "
-    >
-      {{ content_for_additional_checkout_buttons }}
-    </div>
-  {% endif %}
-</div> {% endcomment %}
+    {% if additional_checkout_buttons and settings.show_accelerated_checkout_buttons %}
+      <div
+        class="
+          additional-checkout-buttons
+          {% if accelerated_checkout_buttons_layout == 'vertical' %}additional-checkout-buttons--vertical{% endif %}
+        "
+      >
+        {{ content_for_additional_checkout_buttons }}
+      </div>
+    {% endif %}
+  </div>
+{% endcomment %}
 
 <div class="cart__ctas">
   {%- if template.name == 'cart' -%}
@@ -251,4 +265,8 @@
     }
   }
 
+  .cart-drawer__tax-label {
+    margin-left: 4px;
+    font-size: 0.8em;
+  }
 {% endstylesheet %}

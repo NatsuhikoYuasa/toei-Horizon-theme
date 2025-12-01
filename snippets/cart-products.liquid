@@ -47,12 +47,14 @@
         {%- comment -%}
           ▽▽ 商品 / 数量 / 金額 のヘッダー行 ▽▽
         {%- endcomment -%}
-        <div class="cart-items__header-row">
-          <span class="cart-items__header-label cart-items__header-label--spacer"></span>
-          <span class="cart-items__header-label cart-items__header-label--product">商品</span>
-          <span class="cart-items__header-label cart-items__header-label--qty">数量</span>
-          <span class="cart-items__header-label cart-items__header-label--price">金額</span>
-        </div>
+        {% if request.page_type == 'cart' %}
+          <div class="cart-items__header-row">
+            <span class="cart-items__header-label cart-items__header-label--spacer"></span>
+            <span class="cart-items__header-label cart-items__header-label--product">商品</span>
+            <span class="cart-items__header-label cart-items__header-label--qty">数量</span>
+            <span class="cart-items__header-label cart-items__header-label--price">金額</span>
+          </div>
+        {% endif %}
 
         <table
           class="cart-items__table"
@@ -63,7 +65,8 @@
             role="caption"
           >
             {{ 'content.cart_total' | t }}
-            <span>{{ cart.total_price | money_with_currency }}</span>
+            {{ cart.total_price | money }}
+            <span class="cart-drawer__tax-label">(税込)</span>
           </caption>
 
           <thead
@@ -153,10 +156,6 @@
                 >
                   {%- comment -%}
                     ▽▽ バッジはここ（タイトルの上）に表示 ▽▽
-                    商品ページやコレクションと同じバッジを使う場合は、
-                    この中に該当スニペットの render を入れてください。
-                    例）
-                    {% render 'toei-product-badges', product: item.product, current_variant: item.variant, context: 'cart' %}
                   {%- endcomment -%}
 
                   {%- liquid
@@ -239,6 +238,29 @@
                     </p>
                   {% endif %}
 
+                  {%- comment -%} ★ 商品タイトル {%- endcomment -%}
+                  <p class="cart-items__title">
+                    <a href="{{ item.url }}">
+                      {{ item.title }}
+                    </a>
+                  </p>
+
+                  {%- liquid
+                    # バリアントの発売日メタフィールドを取得
+                    # メタフィールド定義：namespace「variant」 key「release_date」想定
+                    assign release_raw = selected_variant.metafields.variant.release_date
+                  -%}
+                  {%- if release_raw != blank -%}
+                    <p class="cart-items__release-date">
+                      {{ release_raw | date: '%Y年%-m月%-d日' }}
+                      {%- if is_preorder_template -%}
+                        発売予定
+                      {%- else -%}
+                        発売
+                      {%- endif -%}
+                    </p>
+                  {%- endif -%}
+
                   {%- if item.item_components.size != 0 -%}
                     <ul class="cart-items__bundle list-unstyled">
                       {%- for component in item.item_components -%}
@@ -302,7 +324,7 @@
                     </ul>
                   {% endif %}
 
-                  <div>
+                  <div class="cart-items__unit-price">
                     {% if item.original_price != item.final_price %}
                       <span class="visually-hidden">{{ 'content.price_sale' | t }}</span>
                       <span>{{ item.final_price | money }}</span>
@@ -397,7 +419,15 @@
                       assign unit_price = item.unit_price | money
                     endif
                   -%}
-                  <text-component value="{{ price | strip_html }}">{{ price }}</text-component>
+                  <div class="cart-items__price-inner">
+                    <text-component
+                      value="{{ price | strip_html }}"
+                      class="cart-items__price-value"
+                    >
+                      {{ price }}
+                    </text-component>
+                    <span class="cart-items__price-tax">(税込)</span>
+                  </div>
                   {%- if item.unit_price_measurement -%}
                     <div class="cart-items__price-unit cart-secondary-typography">
                       {% render 'unit-price', price: unit_price, measurement: item.unit_price_measurement %}
@@ -412,8 +442,10 @@
     </form>
   {%- endif -%}
 </div>
-
 {% stylesheet %}
+  /* ──────────────────────────────
+   基本レイアウト
+────────────────────────────── */
   .cart-items {
     --cart-item-media-width-min: 2.5rem;
     --cart-item-media-width-max: 7.5rem;
@@ -435,74 +467,53 @@
     margin: 0;
   }
 
-  /* 商品 / 数量 / 金額 ヘッダー */
+  /* ──────────────────────────────
+   「商品 / 数量 / 金額」ヘッダー行
+────────────────────────────── */
+
   .cart-items__header-row {
-    display: grid;
-    grid-template-columns: clamp(2.5rem, 15cqi, 7.5rem) minmax(0, 1fr) auto auto;
-    column-gap: var(--gap-md);
-    align-items: flex-end;
-    padding-bottom: var(--padding-xs);
-    margin-bottom: var(--margin-xs);
-    border-bottom: 1px solid var(--color-border);
+    display: none; /* モバイルとドロワーでは非表示。PC だけ Container Query で表示 */
+  }
+
+  .cart-items__header-label {
     font-size: var(--cart-font-size--xs);
     color: rgb(var(--color-foreground-rgb) / var(--opacity-70));
   }
 
-  .cart-items__header-label {
-    text-align: center;
-  }
-
   .cart-items__header-label--product {
+    flex: 1 1 auto;
     text-align: left;
   }
 
+  .cart-items__header-label--qty {
+    flex: 0 0 392.5px;
+    text-align: center;
+  }
+
   .cart-items__header-label--price {
+    flex: 0 0 6rem;
     text-align: right;
   }
+
+  /* ──────────────────────────────
+   行本体：モバイル基準レイアウト
+   （価格 → 数量の順で縦に並べる）
+────────────────────────────── */
 
   .cart-items__table-row {
     --cart-item-price-width: 6rem;
 
     display: grid;
-    grid-template-columns: clamp(2.5rem, 15cqi, 7.5rem) minmax(0, 1fr) minmax(var(--cart-item-price-width), auto);
+    grid-template-columns: clamp(2.5rem, 15cqi, 7.5rem) minmax(0, 1fr);
     grid-template-areas:
-      'media details price'
-      'media quantity price'
-      'media error error';
+      'media details'
+      'media price'
+      'media quantity'
+      'media error';
     column-gap: var(--gap-md);
     align-items: start;
     padding-bottom: var(--cart-items-gap);
     margin-bottom: var(--margin-lg);
-  }
-
-  .cart-items__table-row.cart-items__nested-line td:first-child {
-    width: 60%;
-    justify-self: right;
-  }
-
-  html:active-view-transition-type(page-navigation) .cart-items__table-row {
-    /* stylelint-disable-next-line declaration-no-important */
-    view-transition-name: none !important;
-  }
-
-  .cart-items__table-row.removing {
-    overflow: hidden;
-    animation: removeRow calc(var(--animation-speed) * 2) var(--animation-easing) forwards;
-    animation-delay: var(--animation-speed);
-  }
-
-  @keyframes removeRow {
-    0% {
-      height: var(--row-height);
-    }
-
-    100% {
-      opacity: 0;
-      height: 0;
-      padding-bottom: 0;
-      margin-bottom: 0;
-      border-color: transparent;
-    }
   }
 
   .cart-items__table-row:last-child {
@@ -514,21 +525,149 @@
     margin-bottom: var(--cart-items-gap);
   }
 
-  .cart-items--dividers .cart-items__table-row:has(+ .cart-items__nested-line) {
-    border-bottom: none;
-    margin-bottom: 0;
-  }
-
   .cart-items--dividers .cart-items__table-row:last-child {
     border-block-end: none;
     padding-block-end: 0;
     margin-bottom: 0;
   }
 
+  .cart-items__media {
+    grid-area: media;
+    padding: 0;
+  }
+
   .cart-items__details {
     grid-area: details;
     color: rgb(var(--color-foreground-rgb) / var(--opacity-70));
   }
+
+  .cart-items__error {
+    grid-area: error;
+  }
+
+  .cart-items__price {
+    grid-area: price;
+    min-height: unset;
+    min-width: var(--cart-item-price-width);
+    text-align: right;
+    display: block;
+    font-size: var(--cart-font-size--md);
+  }
+
+  .cart-items__quantity {
+    grid-area: quantity;
+    margin-block-start: var(--margin-xs);
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--gap-xs);
+    width: fit-content;
+  }
+
+  /* ──────────────────────────────
+   PC レイアウト（Cart ページのみ）
+   Container 幅 720px 以上で適用
+────────────────────────────── */
+
+  @container cart-items (min-width: 720px) {
+    /* 商品 / 数量 / 金額 ヘッダーを表示 */
+    .cart-items__header-row {
+      max-width: 880px;
+      margin-inline: auto;
+      margin-block-end: var(--margin-xs);
+      padding-block-end: var(--padding-xs);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: flex-end;
+      font-size: var(--cart-font-size--xs);
+      color: rgb(var(--color-foreground-rgb) / var(--opacity-70));
+      margin-bottom: var(--cart-items-gap);
+    }
+
+    /* ヘッダーと行を同じ最大幅＆位置に */
+    .cart-items__header-row,
+    .cart-items__table-row {
+      max-width: 880px;
+      margin-inline: auto;
+    }
+
+    /* 行本体もヘッダーと同じ 4 列グリッドに */
+    .cart-items__table-row {
+      --cart-item-price-width: 6rem;
+
+      grid-template-columns: 7.5rem minmax(0, 1fr) auto minmax(var(--cart-item-price-width), auto);
+      grid-template-rows: min-content 1fr;
+      grid-template-areas:
+        'media details quantity price'
+        'media details error    error';
+      align-items: center;
+    }
+
+    .cart-items__media {
+      grid-area: media;
+    }
+
+    /* PC では details を自動配置にしてバッジと画像のツラを合わせる */
+    .cart-items__details {
+      grid-area: auto;
+    }
+
+    .cart-items__error {
+      grid-area: error;
+    }
+
+    .cart-items__quantity {
+      grid-area: quantity;
+      margin-top: 0;
+      justify-content: center;
+    }
+
+    .cart-items__price {
+      grid-area: price;
+      min-height: var(--minimum-touch-target);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: center;
+    }
+  }
+
+  /* 1080px 以上で若干広げる（削除ボタンのかぶり防止） */
+  @media screen and (min-width: 1080px) {
+    .cart-page {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .cart-items__header-row,
+    .cart-items__table-row {
+      max-width: 880px;
+      margin-inline: auto;
+    }
+  }
+
+  /* ──────────────────────────────
+   モバイル専用（〜749px）
+   ・ヘッダー非表示
+   ・価格は左寄せ（行頭寄せ）
+────────────────────────────── */
+
+  @media screen and (max-width: 749px) {
+    .cart-items__header-row {
+      display: none;
+    }
+
+    .cart-items__price {
+      text-align: left;
+    }
+
+    .cart-items__price-inner {
+      justify-content: flex-start;
+    }
+  }
+
+  /* ──────────────────────────────
+   商品詳細・バッジ・リリース日
+────────────────────────────── */
 
   .cart-items__details > * + *,
   .cart-items__bundle li {
@@ -547,113 +686,134 @@
     font-size: var(--cart-font-size--md);
     color: var(--color-foreground);
     text-transform: var(--product-title-case);
+    font-weight: 600; /* タイトル少し太く */
   }
 
-  /* バッジ（タイトル上） */
+  .cart-items__title a {
+    color: inherit;
+  }
+
+  /* バッジ（NEW / 予約受付中 など） */
   .cart-item__badges {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
+    margin-top: 0;
     margin-bottom: var(--margin-2xs);
-  }
-
-  /* TOEI バッジの色味を PDP と合わせる */
-  .toei-product-badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-bottom: var(--margin-2xs);
-  }
-
-  .toei-badge {
-    font-size: 0.7rem;
-    padding: 4px 10px;
-    border-radius: 0;
-    border: none;
-    font-weight: 600;
-  }
-
-  .toei-badge--new {
-    background: #d93231;
-    color: #fff;
-  }
-
-  .toei-badge--pre {
-    background: #060816;
-    color: #fff;
-  }
-
-  .toei-badge--first,
-  .toei-badge--closing {
-    background: #dde0e6;
-    color: #060816;
-  }
-
-  .toei-badge--early {
-    background: #060816;
-    color: #fff;
   }
 
   .cart-items__variant {
     display: inline-block;
   }
 
-  .cart-items__quantity {
-    grid-area: quantity;
-    margin-block-start: var(--margin-xs);
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: var(--gap-xs);
-    width: fit-content;
+  /* バリアント情報はタイトル下には出さない */
+  .cart-items__variants {
+    display: none;
   }
+
+  /* variant.release_date 表示 */
+  .cart-items__release-date {
+    margin-top: 2px;
+    font-size: 11px;
+    color: #18060066;
+  }
+
+  /* 単体価格（タイトル下の ¥○○○○）は PC/SP 共通で非表示 */
+  .cart-items__unit-price {
+    display: none;
+  }
+
+  /* ──────────────────────────────
+   数量カウンター＋削除ボタン
+────────────────────────────── */
 
   .cart-items__quantity .quantity-selector {
     display: inline-flex;
-    flex: 0 1 var(--quantity-selector-width);
-    font-size: var(--cart-font-size--sm);
-    height: auto;
-    /* 数量カウンターを PDP と近い見た目に寄せる土台 */
-    border-radius: 999px;
-    overflow: hidden;
+    align-items: center;
+    gap: 12px;
+    border: none;
+    border-radius: 0;
+    overflow: visible;
+  }
+
+  .cart-items__quantity .quantity-selector button {
+    min-width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  .cart-items__quantity .quantity-selector input[type='number'] {
+    box-sizing: border-box;
+    width: 50px;
+    height: 34px;
+    text-align: center;
+    padding: 0;
+    border-radius: 8px;
+    border: 1px solid #dde0e6;
+    font-size: 1rem;
   }
 
   .cart-items__remove {
     background-color: transparent;
-    color: #e53935; /* 赤文字で「削除」 */
+    color: #e53935;
     width: auto;
     height: var(--minimum-touch-target);
     justify-content: center;
     box-shadow: none;
     padding: 0 var(--padding-2xs);
-    text-decoration: underline;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    margin-left: 4px;
   }
 
   .cart-items__remove-text {
     font-size: var(--cart-font-size--sm);
+    writing-mode: horizontal-tb;
   }
 
   .cart-items__remove:hover {
     opacity: 0.8;
   }
 
-  .cart-items__media {
-    grid-area: media;
-    padding: 0;
+  /* ──────────────────────────────
+   価格表示（小計）
+────────────────────────────── */
+
+  .cart-items__price-inner {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    font-weight: 500; /* 少し太め */
+    justify-content: flex-end; /* PC 基準：右寄せ */
   }
 
-  .cart-items__price {
-    grid-area: price;
-    min-height: unset;
-    min-width: var(--cart-item-price-width);
-    text-align: end;
-    display: block;
-    font-size: var(--cart-font-size--md);
+  /* 金額本体を固定幅＋タブラー数字で揃える */
+  .cart-items__price-value {
+    display: inline-block;
+    min-width: 7rem; /* 桁数が違っても幅を揃える */
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    -moz-font-feature-settings: 'tnum';
+    -webkit-font-feature-settings: 'tnum';
+    font-feature-settings: 'tnum';
+  }
+
+  .cart-items__price-tax {
+    font-size: var(--cart-font-size--xs);
   }
 
   .cart-items__price-unit {
     font-size: var(--cart-font-size--xs);
   }
+
+  /* ──────────────────────────────
+   画像
+────────────────────────────── */
 
   .cart-items__media-container {
     display: flex;
@@ -677,23 +837,20 @@
     padding-block: var(--padding-lg);
   }
 
-  /* Error message */
+  /* ──────────────────────────────
+   エラー表示
+────────────────────────────── */
+
   .cart-items__error {
     display: flex;
     align-items: flex-start;
     width: 100%;
-    grid-area: error;
     margin-block-start: var(--margin-xs);
     opacity: 1;
     overflow: hidden;
     transform: translateY(0);
     transition: opacity var(--drawer-animation-speed) var(--animation-easing),
       transform var(--drawer-animation-speed) var(--animation-easing);
-
-    @starting-style {
-      opacity: 0;
-      transform: translateY(-0.5rem);
-    }
   }
 
   .cart-item__error {
@@ -712,38 +869,9 @@
     margin-block-start: var(--margin-3xs);
   }
 
-  @container cart-items (min-width: 720px) {
-    .cart-items__header-row {
-      grid-template-columns: 7.5rem 1fr 1fr minmax(var(--cart-item-price-width), auto);
-    }
-
-    .cart-items__table-row {
-      --cart-item-price-width: 6rem;
-
-      grid-template-columns: 7.5rem 1fr 1fr minmax(var(--cart-item-price-width), auto);
-      grid-template-rows: min-content 1fr;
-      grid-template-areas:
-        'media details quantity price'
-        'media details error error';
-    }
-
-    .cart-items__quantity,
-    .cart-items__price {
-      grid-area: initial;
-    }
-
-    .cart-items__quantity {
-      margin-top: 0;
-    }
-
-    .cart-items__price {
-      min-height: var(--minimum-touch-target);
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      justify-content: center;
-    }
-  }
+  /* ──────────────────────────────
+   カートサマリー・ボタン周り（既存ほぼ踏襲）
+────────────────────────────── */
 
   .cart__original-total-container,
   .cart__total-container {
@@ -753,10 +881,10 @@
 
   .cart__total-container {
     row-gap: var(--gap-2xs);
+  }
 
-    &:has(.cart__installments) {
-      row-gap: var(--gap-xs);
-    }
+  .cart__total-container:has(.cart__installments) {
+    row-gap: var(--gap-xs);
   }
 
   .cart__original-total-container:empty {
@@ -769,13 +897,15 @@
     gap: var(--gap-xl);
     width: 100%;
     border-block-start: none;
+  }
 
-    &:has(> :first-child:not(.cart__original-total-container, .cart__total-container)) {
-      padding-block-start: 0;
-      border-block-start: none;
-    }
+  .cart__summary-totals:has(> :first-child:not(.cart__original-total-container, .cart__total-container)) {
+    padding-block-start: 0;
+    border-block-start: none;
+  }
 
-    @media screen and (min-width: 750px) {
+  @media screen and (min-width: 750px) {
+    .cart__summary-totals {
       padding-block-start: 0;
     }
   }
@@ -837,14 +967,6 @@
     width: 100%;
   }
 
-  @starting-style {
-    .cart-note[open-by-default-on-desktop][open-by-default-on-mobile] .details-content {
-      block-size: auto;
-      opacity: 1;
-      overflow-y: visible;
-    }
-  }
-
   .cart-note__inner {
     padding-block: var(--padding-2xs) var(--padding-sm);
   }
@@ -899,5 +1021,69 @@
   .cart-items__properties dt,
   .cart-items__properties dd {
     display: inline;
+  }
+
+  /* ショッピングカート見出しと「買い物を続ける」ボタン */
+  .cart-title__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin: 2rem;
+  }
+
+  .cart-title__inner .button {
+    background-color: #ffffff;
+    color: #e53935;
+    border: 1px solid #e53935;
+    border-radius: 8px;
+    padding-inline: 40px;
+    padding-block: 10px;
+  }
+
+  .cart__checkout-button.button {
+    background-color: #e53935;
+    color: #ffffff;
+    border-radius: 8px;
+    padding-inline: 40px;
+    padding-block: 10px;
+  }
+
+  .cart-title__inner .cart-bubble {
+    display: none !important;
+  }
+
+  /* ──────────────────────────────
+   ドロワーカート専用の調整
+────────────────────────────── */
+
+  /* ドロワーでは「商品 / 数量 / 金額」ヘッダー不要 */
+  .cart-drawer .cart-items__header-row {
+    display: none !important;
+  }
+
+  /* ドロワー内の価格は常に左寄せ */
+  .cart-drawer .cart-items__price {
+    text-align: left;
+    align-items: flex-start;
+  }
+
+  .cart-drawer .cart-items__price-inner {
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .cart-drawer__tax-label {
+    margin-left: 4px;
+    font-size: 0.75em;
+  }
+
+  @media screen and (max-width: 800px) {
+    .cart-items__price-value {
+      min-width: auto;
+    }
+    .cart-drawer .cart-items__price {
+      text-align: right;
+    }
   }
 {% endstylesheet %}

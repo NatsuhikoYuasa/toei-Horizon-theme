@@ -4300,7 +4300,7 @@ text-component {
   align-items: center;
   justify-content: center;
   padding: 0.4rem 0.8rem;
-  border-radius: 9999px;
+  border-radius: 8px;
   border: 1px solid #e63946;
   background: #fff;
   color: #e63946;
@@ -4613,45 +4613,84 @@ facet-status-component.facets__status {
 }
 
 
-/* === TOEI バッジ共通 === */
+/* === TOEI / CSH / RV / CFC バッジ共通 === */
 
-/* コンテナは複数箇所で使えるようにまとめておく */
+/* コンテナ（クラスがあればまとめておく） */
 .toei-product-badges,
 .toei-cart-badges,
-.toei-badges {
+.toei-badges,
+.csh-product-badges,
+.csh-cart-badges,
+.csh-badges,
+.rv-badges,
+.cfc-badges {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
   margin-bottom: 16px;
 }
 
-/* 基本バッジ */
-.toei-badge {
-  font-size: 0.7rem!important;
-  padding: 4px 10px;
-  border-radius: 0;
-  border: none;
-  font-weight: 600;
+/* 基本バッジ（共通） */
+.toei-badge,
+.csh-badge,
+.rv-badge,
+.cfc-badge {
+  font-size: 0.6rem !important;
+  padding: 4px 10px !important;
+  border-radius: 0 !important;
+  border: none !important;
+  font-weight: 600 !important;
 }
 
-/* 種別ごとの色 */
-.toei-badge--new {
-  background: #d93231;
-  color: #fff;
+/* NEW */
+.toei-badge--new,
+.csh-badge--new,
+.rv-badge--new,
+.cfc-badge--new {
+  background: #d93231 !important;
+  color: #fff !important;
 }
 
-.toei-badge--pre {
-  background: #060816;
-  color: #fff;
+/* 予約受付中 */
+.toei-badge--pre,
+.csh-badge--pre,
+.rv-badge--pre,
+.cfc-badge--pre {
+  background: #060816 !important;
+  color: #fff !important;
 }
 
+/* 初回特典残りわずか / 締切間近（グレー） */
 .toei-badge--first,
-.toei-badge--closing {
-  background: #dde0e6;
-  color: #060816;
+.toei-badge--closing,
+.csh-badge--first-bonus,
+.csh-badge--closing,
+.rv-badge--first,
+.rv-badge--closing,
+.cfc-badge--first-bonus,
+.cfc-badge--closing {
+  background: #dde0e6 !important;
+  color: #060816 !important;
 }
 
-.toei-badge--early {
-  background: #060816;
-  color: #fff;
+/* 早期予約特典あり */
+.toei-badge--early,
+.csh-badge--early,
+.rv-badge--early,
+.cfc-badge--early {
+  background: #060816 !important;
+  color: #fff !important;
+}
+
+
+/* カートページ：商品エリアを広く、サマリーは固定幅にする */
+@media screen and (min-width: 1080px) {
+  .cart-page {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  tr.cart-items__table-row {
+    max-width: 880px !important;
+    margin: auto;
+  }
 }
