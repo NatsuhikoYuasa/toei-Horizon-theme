@@ -211,7 +211,9 @@
           {% if block.type == '@app' %}
             {% if app_index == 0 %}
               <div class="toei-points-placeholder">
+                <span class="toei-points-prefix">ログインで</span>
                 {% render block %}
+                {% comment %} <span class="toei-points-suffix">獲得</span> {% endcomment %}
               </div>
             {% endif %}
             {% assign app_index = app_index | plus: 1 %}
@@ -1397,6 +1399,18 @@ body:has(#header-group #header-component[data-sticky-state='active'])
   margin-top: 8px;
   margin-bottom: 8px;
   font-size: 0.9rem;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 0.82rem;      /* ポイント表示と同じくらいに */
+  color: #b0b0b0;
+}
+
+.toei-points-prefix {
+  white-space: nowrap;
+  font-size: inherit;
+  color: inherit;
+  font-weight: 400;
 }
 
 {% endstylesheet %}
