@@ -8,101 +8,105 @@
 
 
 <section class="section section-newsletter-settings toei-section toei-section--newsletter">
-  <div class="toei-container">
+  <div class="l-page">
+    <div class="l-page__inner">
+      <div class="toei-container">
 
-    {%- render 'page-breadcrumbs',
-      top_label: 'トップ',
-      top_url: routes.root_url,
-      level_1_title: 'マイページ',
-      level_1_url: '/pages/mypage',
-      current_title: 'メールニュース登録'
-    -%}
+        {%- render 'page-breadcrumbs',
+          top_label: 'トップ',
+          top_url: routes.root_url,
+          level_1_title: 'マイページ',
+          level_1_url: '/pages/mypage',
+          current_title: 'メールニュース登録'
+        -%}
 
-    <h1 class="heading-page">メールニュース登録</h1>
+        <h1 class="heading-page">メールニュース登録</h1>
 
-    {% form 'customer', id: 'NewsletterForm', class: 'newsletter-settings__form' %}
+        {% form 'customer', id: 'NewsletterForm', class: 'newsletter-settings__form' %}
 
-      {% if form.posted_successfully? %}
-        <p class="form-status form-status--success">
-          ご登録ありがとうございます。キャンペーン情報をメールでお届けします。
-        </p>
-      {% elsif form.errors %}
-        <div class="form-status form-status--error">
-          {{ form.errors | default_errors }}
-        </div>
-      {% endif %}
-
-      <div class="mypage-setting-card newsletter-settings__card">
-        <div class="newsletter-settings__row newsletter-settings__row--email">
-          <div class="newsletter-settings__label">ご登録メールアドレス</div>
-          <div class="newsletter-settings__value">
-            {% if customer %}
-              <p class="newsletter-settings__email">{{ customer.email }}</p>
-              <a href="{{ routes.account_addresses_url }}" class="newsletter-settings__email-edit">
-                メールアドレスの変更はこちら
-              </a>
-              <input
-                type="hidden"
-                name="contact[email]"
-                value="{{ customer.email }}"
-              >
-            {% else %}
-              <input
-                type="email"
-                name="contact[email]"
-                class="newsletter-settings__email-input"
-                placeholder="メールアドレスを入力してください"
-                required
-              >
-              <p class="newsletter-settings__note">
-                キャンペーン情報を受け取りたいメールアドレスを入力してください。
-              </p>
-            {% endif %}
-          </div>
-        </div>
-
-        <div class="newsletter-settings__row newsletter-settings__row--preference">
-          <div class="newsletter-settings__label">配信設定</div>
-          <div class="newsletter-settings__value">
-            <label class="newsletter-settings__option">
-              <input
-                type="radio"
-                name="newsletter_preference"
-                value="on"
-                checked
-              >
-              <span>配信を希望する</span>
-            </label>
-
-            {% comment %} <label class="newsletter-settings__option newsletter-settings__option--disabled">
-              <input
-                type="radio"
-                name="newsletter_preference"
-                value="off"
-                disabled
-              >
-              <span>配信を希望しない（メール内の解除リンクから変更できます）</span>
-            </label> {% endcomment %}
-
-            <p class="newsletter-settings__note">
-              メールニュースの配信停止をご希望の場合は、配信メール最下部にある「配信停止」または「Unsubscribe」のリンクからお手続きください。
-              リンクが見つからない場合や、メールが届かない場合は、お問い合わせフォームより配信停止希望の旨をご連絡ください。
+          {% if form.posted_successfully? %}
+            <p class="form-status form-status--success">
+              ご登録ありがとうございます。キャンペーン情報をメールでお届けします。
             </p>
-            <p class="newsletter-settings__note">
-              後ほど上記メールアドレス宛に「メールマガジンへのご登録をご確認ください」というメールが届きます。必ずご確認ください。
-            </p>
-              
+          {% elsif form.errors %}
+            <div class="form-status form-status--error">
+              {{ form.errors | default_errors }}
+            </div>
+          {% endif %}
+
+          <div class="mypage-setting-card newsletter-settings__card">
+            <div class="newsletter-settings__row newsletter-settings__row--email">
+              <div class="newsletter-settings__label">ご登録メールアドレス</div>
+              <div class="newsletter-settings__value">
+                {% if customer %}
+                  <p class="newsletter-settings__email">{{ customer.email }}</p>
+                  <a href="{{ routes.account_addresses_url }}" class="newsletter-settings__email-edit">
+                    メールアドレスの変更はこちら
+                  </a>
+                  <input
+                    type="hidden"
+                    name="contact[email]"
+                    value="{{ customer.email }}"
+                  >
+                {% else %}
+                  <input
+                    type="email"
+                    name="contact[email]"
+                    class="newsletter-settings__email-input"
+                    placeholder="メールアドレスを入力してください"
+                    required
+                  >
+                  <p class="newsletter-settings__note">
+                    キャンペーン情報を受け取りたいメールアドレスを入力してください。
+                  </p>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="newsletter-settings__row newsletter-settings__row--preference">
+              <div class="newsletter-settings__label">配信設定</div>
+              <div class="newsletter-settings__value">
+                <label class="newsletter-settings__option">
+                  <input
+                    type="radio"
+                    name="newsletter_preference"
+                    value="on"
+                    checked
+                  >
+                  <span>配信を希望する</span>
+                </label>
+
+                {% comment %} <label class="newsletter-settings__option newsletter-settings__option--disabled">
+                  <input
+                    type="radio"
+                    name="newsletter_preference"
+                    value="off"
+                    disabled
+                  >
+                  <span>配信を希望しない（メール内の解除リンクから変更できます）</span>
+                </label> {% endcomment %}
+
+                <p class="newsletter-settings__note">
+                  メールニュースの配信停止をご希望の場合は、配信メール最下部にある「配信停止」または「Unsubscribe」のリンクからお手続きください。
+                  リンクが見つからない場合や、メールが届かない場合は、お問い合わせフォームより配信停止希望の旨をご連絡ください。
+                </p>
+                <p class="newsletter-settings__note">
+                  後ほど上記メールアドレス宛に「メールマガジンへのご登録をご確認ください」というメールが届きます。ずご確認ください。
+                </p>
+
+              </div>
+            </div>
           </div>
-        </div>
+
+          <div class="newsletter-settings__actions">
+            <a href="/pages/mypage" class="button button--secondary">マイページに戻る</a>
+            <button type="submit" class="button button--primary">変更登録</button>
+          </div>
+
+        {% endform %}
+
       </div>
-
-      <div class="newsletter-settings__actions">
-        <a href="/pages/mypage" class="button button--secondary">マイページに戻る</a>
-        <button type="submit" class="button button--primary">変更登録</button>
-      </div>
-
-    {% endform %}
-
+    </div>
   </div>
 </section>
 
