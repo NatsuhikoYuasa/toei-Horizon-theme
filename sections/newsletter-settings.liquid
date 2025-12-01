@@ -40,7 +40,7 @@
           <div class="newsletter-settings__value">
             {% if customer %}
               <p class="newsletter-settings__email">{{ customer.email }}</p>
-              <a href="{{ routes.account_url }}" class="newsletter-settings__email-edit">
+              <a href="{{ routes.account_addresses_url }}" class="newsletter-settings__email-edit">
                 メールアドレスの変更はこちら
               </a>
               <input
@@ -76,7 +76,7 @@
               <span>配信を希望する</span>
             </label>
 
-            <label class="newsletter-settings__option newsletter-settings__option--disabled">
+            {% comment %} <label class="newsletter-settings__option newsletter-settings__option--disabled">
               <input
                 type="radio"
                 name="newsletter_preference"
@@ -84,7 +84,16 @@
                 disabled
               >
               <span>配信を希望しない（メール内の解除リンクから変更できます）</span>
-            </label>
+            </label> {% endcomment %}
+
+            <p class="newsletter-settings__note">
+              メールニュースの配信停止をご希望の場合は、配信メール最下部にある「配信停止」または「Unsubscribe」のリンクからお手続きください。
+              リンクが見つからない場合や、メールが届かない場合は、お問い合わせフォームより配信停止希望の旨をご連絡ください。
+            </p>
+            <p class="newsletter-settings__note">
+              後ほど上記メールアドレス宛に「メールマガジンへのご登録をご確認ください」というメールが届きます。必ずご確認ください。
+            </p>
+              
           </div>
         </div>
       </div>
@@ -93,7 +102,7 @@
 
       <div class="newsletter-settings__actions">
         <a href="/pages/mypage" class="button button--secondary">マイページに戻る</a>
-        <button type="submit" class="button button--primary">変更する</button>
+        <button type="submit" class="button button--primary">変更登録</button>
       </div>
 
     {% endform %}
