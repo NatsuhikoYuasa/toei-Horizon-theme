@@ -10,14 +10,16 @@
   class="account-popover mobile:hidden"
 >
   {% render 'account-button' with 'account-popover' as popover_id %}
-  {% comment %} <div
+  {% unless customer %}
+  <div
     class="account-popover__panel details-content color-{{ settings.popover_color_scheme }}"
     id="account-popover"
     popover="auto"
     ref="popover"
   >
     {% render 'account-actions' %}
-  </div> {% endcomment %}
+  </div>
+  {% endunless %}
 </anchored-popover-component>
 
 {% stylesheet %}
