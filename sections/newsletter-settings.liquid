@@ -1,0 +1,113 @@
+{% comment %}
+  メールニュース登録ページ用セクション
+  - ログイン有無に関わらずメールアドレスで登録可能
+  - ログイン時:
+      customer.email を表示しつつ、そのアドレスで送信（hidden input）
+  - 未ログイン時:
+      入力欄から contact[email] を送信
+  - フォーム送信で contact[email] と contact[tags]=newsletter を送信し、
+    newsletter タグ付きで accepts_marketing を ON にする
+{% endcomment %}
+
+<section class="section section-newsletter-settings toei-section toei-section--newsletter">
+  <div class="toei-container">
+
+    {%- render 'page-breadcrumbs',
+      top_label: 'トップ',
+      top_url: routes.root_url,
+      level_1_title: 'マイページ',
+      level_1_url: '/pages/mypage',
+      current_title: 'メールニュース登録'
+    -%}
+
+    <h1 class="heading-page">メールニュース登録</h1>
+
+    {% form 'customer', id: 'NewsletterForm', class: 'newsletter-settings__form' %}
+
+      {% if form.posted_successfully? %}
+        <p class="form-status form-status--success">
+          ご登録ありがとうございます。キャンペーン情報をメールでお届けします。
+        </p>
+      {% elsif form.errors %}
+        <div class="form-status form-status--error">
+          {{ form.errors | default_errors }}
+        </div>
+      {% endif %}
+
+      <div class="mypage-setting-card newsletter-settings__card">
+        <div class="newsletter-settings__row newsletter-settings__row--email">
+          <div class="newsletter-settings__label">ご登録メールアドレス</div>
+          <div class="newsletter-settings__value">
+            {% if customer %}
+              <p class="newsletter-settings__email">{{ customer.email }}</p>
+              <a href="{{ routes.account_url }}" class="newsletter-settings__email-edit">
+                メールアドレスの変更はこちら
+              </a>
+              <input
+                type="hidden"
+                name="contact[email]"
+                value="{{ customer.email }}"
+              >
+            {% else %}
+              <input
+                type="email"
+                name="contact[email]"
+                class="newsletter-settings__email-input"
+                placeholder="メールアドレスを入力してください"
+                required
+              >
+              <p class="newsletter-settings__note">
+                キャンペーン情報を受け取りたいメールアドレスを入力してください。
+              </p>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="newsletter-settings__row newsletter-settings__row--preference">
+          <div class="newsletter-settings__label">配信設定</div>
+          <div class="newsletter-settings__value">
+            <label class="newsletter-settings__option">
+              <input
+                type="radio"
+                name="newsletter_preference"
+                value="on"
+                checked
+              >
+              <span>配信を希望する</span>
+            </label>
+
+            <label class="newsletter-settings__option newsletter-settings__option--disabled">
+              <input
+                type="radio"
+                name="newsletter_preference"
+                value="off"
+                disabled
+              >
+              <span>配信を希望しない（メール内の解除リンクから変更できます）</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <input type="hidden" name="contact[tags]" value="newsletter">
+
+      <div class="newsletter-settings__actions">
+        <a href="/pages/mypage" class="button button--secondary">マイページに戻る</a>
+        <button type="submit" class="button button--primary">変更する</button>
+      </div>
+
+    {% endform %}
+
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "メールニュース登録",
+  "tag": "section",
+  "class": "section section-newsletter-settings",
+  "settings": [],
+  "blocks": [],
+  "presets": [{ "name": "メールニュース登録" }]
+}
+{% endschema %}
