@@ -63,10 +63,10 @@
   endif
 
   # ===== 予約受付中（preorderテンプレだけ） =====
-  assign badge_preorder = false
-  if is_preorder_template
-    assign badge_preorder = true
-  endif
+  # assign badge_preorder = false
+  # if is_preorder_template
+    # assign badge_preorder = true
+  # endif
 %}
 
 <script type="application/ld+json">
@@ -139,11 +139,8 @@
           {% if badge_new %}
             <span class="toei-badge toei-badge--new">NEW</span>
           {% endif %}
-          {% if badge_preorder %}
-            <span class="toei-badge toei-badge--pre">予約受付中</span>
-          {% endif %}
           {%- comment -%}
-            初回特典/早期/締切はバリエーションごとに JS で追加
+            予約受付中 / 初回特典 / 早期 / 締切 はバリエーションごとに JS で追加
           {%- endcomment -%}
         </div>
 
@@ -211,9 +208,7 @@
           {% if block.type == '@app' %}
             {% if app_index == 0 %}
               <div class="toei-points-placeholder">
-                <span class="toei-points-prefix">ログインで</span>
                 {% render block %}
-                {% comment %} <span class="toei-points-suffix">獲得</span> {% endcomment %}
               </div>
             {% endif %}
             {% assign app_index = app_index | plus: 1 %}
@@ -809,7 +804,7 @@ body:has(#header-group #header-component[data-sticky-state='active'])
 }
 
 .toei-badge {
-  font-size: 0.7rem;
+  font-size: 10px;
   padding: 4px 10px;
   border-radius: 0;
   border: none;
@@ -1399,18 +1394,6 @@ body:has(#header-group #header-component[data-sticky-state='active'])
   margin-top: 8px;
   margin-bottom: 8px;
   font-size: 0.9rem;
-  display: inline-flex;
-  align-items: baseline;
-  gap: 4px;
-  font-size: 0.82rem;      /* ポイント表示と同じくらいに */
-  color: #b0b0b0;
-}
-
-.toei-points-prefix {
-  white-space: nowrap;
-  font-size: inherit;
-  color: inherit;
-  font-weight: 400;
 }
 
 {% endstylesheet %}
@@ -1495,6 +1478,12 @@ body:has(#header-group #header-component[data-sticky-state='active'])
               assign v_closing_soon = true
             endif
           endif
+
+          # 予約フラグ：variant.is_preorder が true の場合のみ
+          assign v_preorder = false
+          if variant.metafields.variant.is_preorder
+            assign v_preorder = true
+          endif
         -%}
         {
           "id": {{ variant.id | json }},
@@ -1505,6 +1494,7 @@ body:has(#header-group #header-component[data-sticky-state='active'])
           "price": {{ variant.price | json }},
           "price_formatted": {{ variant.price | money | json }},
           "badges": {
+            "preorder": {{ v_preorder | json }},
             "first_bonus": {{ v_first_bonus | json }},
             "early_bonus": {{ v_early_bonus | json }},
             "closing_soon": {{ v_closing_soon | json }}
@@ -1763,11 +1753,15 @@ body:has(#header-group #header-component[data-sticky-state='active'])
 
       // ★ バッジの更新
       if (badgesRoot) {
+        // baseBadgesHTML には「NEW」だけが入っている（あれば）
         var badgeHtml = baseBadgesHTML || '';
         var b = v.badges || {};
 
-        // NEW / 予約受付中 は baseBadgesHTML に入っている
-        // ここで追加する順番：
+        // 予約受付中 … variant.is_preorder が true のとき
+        if (b.preorder) {
+          badgeHtml += '<span class="toei-badge toei-badge--pre">予約受付中</span>';
+        }
+
         // 早期予約特典あり → 初回特典残りわずか → 締切間近
         if (b.early_bonus) {
           badgeHtml += '<span class="toei-badge toei-badge--early">早期予約特典あり</span>';
@@ -1781,6 +1775,7 @@ body:has(#header-group #header-component[data-sticky-state='active'])
 
         badgesRoot.innerHTML = badgeHtml;
       }
+
 
       // ★ ギャラリー画像切り替え
       if (v.featured_media_id) {

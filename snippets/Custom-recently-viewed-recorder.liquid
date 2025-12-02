@@ -1,57 +1,87 @@
 {% comment %}
   Custom-recently-viewed-recorder.liquid
   - 商品ページで最近見た商品を localStorage に保存
-  - display_start_at / display_end_at を Liquid で判定して
-    display_locked フラグとして一緒に保存
-  - さらにバリアント情報から
-    * first_bonus_total … 初回特典バリアント在庫合計
-    * early_bonus       … 早期予約特典ありが1つでもあれば true
-    * closing_soon      … sell_end_at が10日以内のものがあれば true
-    を計算して保存
+  - バッジ判定は商品バッジ（Custom-product-badges）と完全に同じロジック
+    * NEW … 公開日から60日以内
+    * 予約受付中 … いずれかのバリアントの metafields.variant.is_preorder = true
+    * 初回特典残りわずか … いずれかのバリアントの metafields.custom.is_first_bonus = true
+    * 早期予約特典あり … いずれかのバリアントの metafields.custom.is_early_bonus = true
+    * 締切間近 … 各バリアントの metafields.variant.sell_end_at の最短が 10 日以内
 {% endcomment %}
 
 {%- liquid
-  assign now_ts = 'now' | date: '%s' | plus: 0
+  assign p = product
 
-  # ▼ 初回特典 / 早期予約特典 / 締切間近 用の集計
-  assign first_bonus_total = 0
-  assign early_bonus = false
-  assign min_end_ts = 0
-  assign ten_days_sec      = 864000 | plus: 0   # 10日分（秒）
+  assign is_new          = false
+  assign pre_ok          = false
+  assign first_bonus_low = false
+  assign early_bonus     = false
+  assign closing_soon    = false
 
-  for v in product.variants
-    # 全ロケーション合算の在庫（Shopify が合算してくれる）
-    assign v_inv = v.inventory_quantity | default: 0 | plus: 0
+  if p != blank and p.id != blank
+    assign now_ts = 'now' | date: '%s' | plus: 0
 
-    # 初回特典残りわずか用：カスタムメタフィールド custom.is_first_bonus = true のものだけ集計
-    if v.metafields.custom.is_first_bonus and v_inv > 0
-      assign first_bonus_total = first_bonus_total | plus: v_inv
-    endif
+    ##### --- NEW（公開日から60日以内） ---
+    assign new_days  = 60 | plus: 0
+    assign days_sec  = new_days | times: 86400
+    assign cutoff_ts = now_ts | minus: days_sec
 
-    # 早期予約特典あり：どれか1つでも true なら OK
-    if v.metafields.custom.is_early_bonus
-      assign early_bonus = true
-    endif
-
-    # 締切間近用：variant.sell_end_at の一番近い日時を取る
-    assign v_end_raw = v.metafields.variant.sell_end_at
-    if v_end_raw != blank
-      assign v_end_ts = v_end_raw | date: '%s' | plus: 0
-      if min_end_ts == 0 or v_end_ts < min_end_ts
-        assign min_end_ts = v_end_ts
+    if p.published_at != blank
+      assign pub_ts = p.published_at | date: '%s' | plus: 0
+      if pub_ts >= cutoff_ts and pub_ts <= now_ts
+        assign is_new = true
       endif
     endif
-  endfor
 
-  assign closing_soon = false
-  if min_end_ts != 0
-    assign closing_from_ts = min_end_ts | minus: ten_days_sec
-    if now_ts >= closing_from_ts and now_ts <= min_end_ts
-      assign closing_soon = true
+    ##### --- 予約受付中 ---
+    assign pre_ok = false
+
+    ##### --- 初回特典残りわずか ---
+    assign first_bonus_low = false
+
+    ##### --- 早期予約特典あり ---
+    assign early_bonus = false
+
+    ##### --- 締切間近 ---
+    assign closing_soon = false
+    assign min_end_ts   = 0
+
+    for v in p.variants
+      # 予約商品か
+      if v.metafields.variant.is_preorder.value
+        assign pre_ok = true
+      endif
+
+      # 初回特典あり
+      if v.metafields.custom.is_first_bonus.value
+        assign first_bonus_low = true
+      endif
+
+      # 早期予約特典あり
+      if v.metafields.custom.is_early_bonus.value
+        assign early_bonus = true
+      endif
+
+      # 締切間近用：sell_end_at の最短
+      assign end_raw = v.metafields.variant.sell_end_at
+      if end_raw != blank
+        assign end_ts = end_raw | date: '%s' | plus: 0
+        if min_end_ts == 0 or end_ts < min_end_ts
+          assign min_end_ts = end_ts
+        endif
+      endif
+    endfor
+
+    if min_end_ts != 0
+      assign ten_days_sec     = 10 | times: 86400
+      assign closing_from_ts  = min_end_ts | minus: ten_days_sec
+      if now_ts >= closing_from_ts and now_ts <= min_end_ts
+        assign closing_soon = true
+      endif
     endif
   endif
 
-  # ▼ display_start_at / display_end_at によるロック判定
+  # ▼ display_start_at / display_end_at によるロック判定（ここは既存のまま）
   assign ds_raw = product.metafields.product.display_start_at
   assign de_raw = product.metafields.product.display_end_at
 
@@ -103,38 +133,34 @@
       simple = simple.filter(function(h){ return h !== handle; });
 
       // Liquid で計算した各フラグ
-      var locked       = {{ display_lock      | json }};
-      var firstTotal   = {{ first_bonus_total | json }};
-      var earlyBonus   = {{ early_bonus       | json }};
-      var closingSoon  = {{ closing_soon      | json }};
+      var locked      = {{ display_lock      | json }};
+      var isNew       = {{ is_new           | json }};
+      var preOk       = {{ pre_ok           | json }};
+      var firstBonus  = {{ first_bonus_low  | json }};
+      var earlyBonus  = {{ early_bonus      | json }};
+      var closingSoon = {{ closing_soon     | json }};
 
-      console.log('[rv-recorder] handle=%s locked=%s first_total=%s early=%s closing=%s',
-        handle, locked, firstTotal, earlyBonus, closingSoon);
+      console.log('[rv-recorder] handle=%s locked=%s new=%s pre=%s first=%s early=%s closing=%s',
+        handle, locked, isNew, preOk, firstBonus, earlyBonus, closingSoon);
 
-      // ★ セクション側で使う情報をまとめて保存
+      // セクション側で使う情報を保存
       exArr.push({
         handle: {{ product.handle | json }},
         url: {{ product.url | json }},
         title: {{ product.title | json }},
-        template_suffix: {{ product.template_suffix | json }},
-        tags: {{ product.tags | json }},
         published_at: {{ product.published_at | date: "%Y-%m-%dT%H:%M:%S%z" | json }},
         price_min: {{ product.price_min | json }},
         compare_at_price_max: {{ product.compare_at_price_max | json }},
         available: {{ product.available | json }},
-        metafields: {
-          custom: {
-            preorder:   {{ product.metafields.custom.preorder   | json }},
-            comingsoon: {{ product.metafields.custom.comingsoon | json }}
-          }
-        },
         image: {{ product.featured_image | image_url: width: 700 | json }},
         display_locked: locked,
 
-        // 追加：初回特典 / 早期予約特典 / 締切間近
-        first_bonus_total: firstTotal,
-        early_bonus:       earlyBonus,
-        closing_soon:      closingSoon
+        // バッジ用フラグ（Liquid と同じ名前）
+        is_new:          isNew,
+        pre_ok:          preOk,
+        first_bonus_low: firstBonus,
+        early_bonus:     earlyBonus,
+        closing_soon:    closingSoon
       });
 
       simple.push(handle);

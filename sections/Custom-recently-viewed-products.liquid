@@ -27,7 +27,9 @@
 
     <div class="rv-band" aria-hidden="true"></div>
 
-    <div class="rv-list" data-limit="{{ section.settings.limit | default: 6 }}">{# JSでカードを挿入 #}</div>
+    <div class="rv-list" data-limit="{{ section.settings.limit | default: 6 }}">
+     {% comment %} JSでカードを挿入 {% endcomment %}
+    </div>
   </div>
 
   <style>
@@ -70,14 +72,9 @@
       display:flex; gap:6px; margin-top:8px;
     }
     #custom-rv-{{ section.id }} .rv-badge{
-      font-size:10px; font-weight:700; line-height:1; padding:6px 8px; color:#fff;
+      font-size:10px; font-weight:700; line-height:1; padding:6px 8px;
       box-shadow:0 1px 2px rgba(0,0,0,.15);
     }
-    #custom-rv-{{ section.id }} .rv-badge--new{          background:#e63946; } /* NEW：赤 */
-    #custom-rv-{{ section.id }} .rv-badge--pre{          background:#3B82F6; } /* 予約受付中：青 */
-    #custom-rv-{{ section.id }} .rv-badge--first{        background:#ef4444; } /* 初回特典残りわずか：赤系 */
-    #custom-rv-{{ section.id }} .rv-badge--early{        background:#22c55e; } /* 早期予約特典あり：緑 */
-    #custom-rv-{{ section.id }} .rv-badge--closing{      background:#f97316; } /* 締切間近：オレンジ */
 
     #custom-rv-{{ section.id }} .rv-meta{
       padding:10px 12px 10px 0; display:grid; gap:6px;
@@ -256,39 +253,59 @@
         return !!(p && p.closing_soon);
       }
 
-      // 2) カード描画
+            // 2) カード描画
       picked.forEach(function(p){
         if (!p || !p.title) return;
 
-            var bNew    = isNew(p);
-        var bSale   = isSale(p);                 // ← 将来使うかもしれないので残してOK
-        var bSold   = !isAvailable(p);
-        var bPre    = isPreorder(p);
-        var bComing = isComingSoon(p);
+        // ---- バッジ用フラグを統一して計算 ----
+        // NEW は毎回 JS 側で計算（公開から60日以内）
+        var bNew = false;
+        try {
+          var pub = p.published_at;
+          if (pub) {
+            var pub_ts    = Date.parse(pub);
+            var now_ts    = Date.now();
+            var cutoff_ts = now_ts - 60 * 86400000; // 60日
+            if (!isNaN(pub_ts) && pub_ts >= cutoff_ts && pub_ts <= now_ts) {
+              bNew = true;
+            }
+          }
+        } catch(e) {}
 
-        var firstTotal = getFirstBonusTotal(p);
-        var bFirst  = firstTotal > 0 && firstTotal <= 10; // 初回特典残りわずか
-        var bEarly  = hasEarlyBonus(p);                   // 早期予約特典あり
-        var bClosing = isClosingSoon(p);                  // 締切間近
-
-        // ★ NEW は予約・COMING SOON が付いている時は出さない
-        var showNew = bNew && !bPre && !bComing;
-
-        var badges = '';
-        if (SHOW_BADGES && (showNew || bSold || bPre || bComing || bFirst || bEarly || bClosing)){
-          badges =
-            '<div class="rv-badges">'
-            + (showNew ? '<span class="rv-badge rv-badge--new">NEW</span>' : '')
-            // SALE は使わないので完全に削除
-            {% comment %} + (bSold   ? '<span class="rv-badge rv-badge--sold">SOLD OUT</span>' : '') {% endcomment %}
-            + (bPre    ? '<span class="rv-badge rv-badge--pre">予約受付中</span>' : '')
-            {% comment %} + (bComing ? '<span class="rv-badge rv-badge--coming">COMING SOON</span>' : '') {% endcomment %}
-            + (bFirst  ? '<span class="rv-badge rv-badge--first">初回特典残りわずか</span>' : '')
-            + (bEarly  ? '<span class="rv-badge rv-badge--early">早期予約特典あり</span>' : '')
-            + (bClosing? '<span class="rv-badge rv-badge--closing">締切間近</span>' : '')
-            + '</div>';
+        // 初回特典：新形式(first_bonus_low) があればそれを優先、なければ first_bonus_total>0 を見る
+        var bFirst;
+        if (typeof p.first_bonus_low !== 'undefined') {
+          bFirst = !!p.first_bonus_low;
+        } else {
+          bFirst = !!(p.first_bonus_total && Number(p.first_bonus_total) > 0);
         }
 
+        // 早期予約特典 / 締切間近 はそのまま
+        var bEarly   = !!p.early_bonus;
+        var bClosing = !!p.closing_soon;
+
+        // 予約受付中：
+        // 1) 新形式の pre_ok があればそれを使う
+        // 2) なければ「初回特典・早期特典・締切間近」のいずれかが立っていれば予約とみなす
+        var bPre;
+        if (typeof p.pre_ok !== 'undefined') {
+          bPre = !!p.pre_ok;
+        } else {
+          bPre = !!(bFirst || bEarly || bClosing);
+        }
+
+        // ---- HTML生成 ----
+        var badges = '';
+        if (SHOW_BADGES && (bNew || bPre || bFirst || bEarly || bClosing)) {
+          badges =
+            '<div class="rv-badges">'
+            + (bNew     ? '<span class="rv-badge rv-badge--new">NEW</span>' : '')
+            + (bPre     ? '<span class="rv-badge rv-badge--pre">予約受付中</span>' : '')
+            + (bEarly   ? '<span class="rv-badge rv-badge--early">早期予約特典あり</span>' : '')
+            + (bFirst   ? '<span class="rv-badge rv-badge--first">初回特典残りわずか</span>' : '')
+            + (bClosing ? '<span class="rv-badge rv-badge--closing">締切間近</span>' : '')
+            + '</div>';
+        }
 
         var el = document.createElement('a');
         el.className = 'rv-card';
@@ -402,16 +419,6 @@
       "label": "商品ラベル（NEW / 予約受付中 / 初回特典残りわずか / 早期予約特典あり / 締切間近）を表示",
       "default": true
     },
-    {
-      "type": "range",
-      "id": "new_days",
-      "label": "NEW 判定（日数以内の公開）",
-      "min": 1,
-      "max": 60,
-      "step": 1,
-      "default": 14
-    },
-
     { "type": "color_scheme", "id": "color_scheme", "label": "配色（Horizonのスキーム）", "default": "scheme-1" }
   ],
   "presets": [{ "name": "最近見た商品（Custom）" }]

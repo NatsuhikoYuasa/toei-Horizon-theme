@@ -1,6 +1,6 @@
 {% comment %}
   あなたへのおすすめ（Custom）
-  - 初回：fallback_collection を「汎用コレクション（Custom）」と同じロジックで表示
+  - 初回：fallback_collection を表示
   - 回遊後：localStorage("wb_last_pid") がある場合のみ Product Recommendations API で差し替え
 {% endcomment %}
 
@@ -34,12 +34,12 @@
           おすすめ商品
         {%- endif -%}
       </h2>
-      {%- comment -%} このセクションでは「もっと見る」は出さない {%- endcomment -%}
     </div>
 
     {% if coll.products_count > 0 %}
       <div class="csh-grid js-home-recos-grid">
         {% for product in coll.products %}
+
           {%- comment -%}
             display_start_at / display_end_at による表示ロック判定
           {%- endcomment -%}
@@ -81,91 +81,67 @@
           %}
 
           {%- comment -%}
-            ▼ バッジ判定（汎用コレクションと同じ）
+            ▼ バッジ判定（商品ページ・最近見た商品と同じシンプル版）
           {%- endcomment -%}
+          {%- liquid
+            assign is_new          = false
+            assign pre_ok          = false
+            assign first_bonus_low = false
+            assign early_bonus     = false
+            assign closing_soon    = false
 
-          {%- assign now_ts = 'now' | date: '%s' | plus: 0 -%}
-          {%- assign new_days = section.settings.new_days | default: 14 | plus: 0 -%}
-          {%- assign days_sec = new_days | times: 86400 -%}
-          {%- assign cutoff_ts = now_ts | minus: days_sec -%}
+            if product != blank and product.id != blank
+              assign now_ts = 'now' | date: '%s' | plus: 0
 
-          {%- assign pub_ts = 0 -%}
-          {%- if product.published_at != blank -%}
-            {%- assign pub_ts = product.published_at | date: '%s' | plus: 0 -%}
-          {%- endif -%}
-          {%- assign is_new_published = false -%}
-          {%- if pub_ts != 0 and pub_ts > cutoff_ts -%}{%- assign is_new_published = true -%}{%- endif -%}
+              ##### --- NEW（公開日から60日以内） ---
+              assign sixty_days = 60 | times: 86400
+              assign cutoff_ts = now_ts | minus: sixty_days
 
-          {%- assign tags_lc = product.tags | join: ',' | downcase -%}
-          {%- assign tags_wrap = ',' | append: tags_lc | append: ',' -%}
-          {%- assign is_new_tag = false -%}
-          {%- if tags_wrap contains ',new,' -%}{%- assign is_new_tag = true -%}{%- endif -%}
+              if product.published_at != blank
+                assign pub_ts = product.published_at | date: '%s' | plus: 0
+                if pub_ts >= cutoff_ts and pub_ts <= now_ts
+                  assign is_new = true
+                endif
+              endif
 
-          {%- assign is_new_mf = false -%}
-          {%- if product.metafields.custom.new_until != blank -%}
-            {%- assign new_until_ts = product.metafields.custom.new_until | date: '%s' | plus: 0 -%}
-            {%- if new_until_ts > now_ts -%}{%- assign is_new_mf = true -%}{%- endif -%}
-          {%- endif -%}
+              ##### --- 予約 / 初回特典 / 早期特典 / 締切間近 ---
+              assign min_end_ts = 0
 
-          {%- assign is_new = false -%}
-          {%- if is_new_published or is_new_tag or is_new_mf -%}{%- assign is_new = true -%}{%- endif -%}
+              for v in product.variants
+                # 予約商品か
+                if v.metafields.variant.is_preorder.value
+                  assign pre_ok = true
+                endif
 
-          {%- assign t_suffix = product.template_suffix | downcase | default: '' -%}
+                # 初回特典あり（在庫は見ない）
+                if v.metafields.custom.is_first_bonus.value
+                  assign first_bonus_low = true
+                endif
 
-          {%- assign pre_ok = false -%}
-          {%- if t_suffix contains 'preorder'
-            or tags_wrap contains ',preorder,'
-            or tags_wrap contains ',pre-order,'
-            or tags_wrap contains ',pre order,'
-            or tags_lc contains '予約'
-            or tags_lc contains '先行'
-            or tags_lc contains '先行予約'
-            or product.metafields.custom.preorder
+                # 早期予約特典あり
+                if v.metafields.custom.is_early_bonus.value
+                  assign early_bonus = true
+                endif
+
+                # 締切間近用：sell_end_at の最短
+                assign v_end_raw = v.metafields.variant.sell_end_at
+                if v_end_raw != blank
+                  assign v_end_ts = v_end_raw | date: '%s' | plus: 0
+                  if min_end_ts == 0 or v_end_ts < min_end_ts
+                    assign min_end_ts = v_end_ts
+                  endif
+                endif
+              endfor
+
+              if min_end_ts != 0
+                assign ten_days_sec    = 10 | times: 86400
+                assign closing_from_ts = min_end_ts | minus: ten_days_sec
+                if now_ts >= closing_from_ts and now_ts <= min_end_ts
+                  assign closing_soon = true
+                endif
+              endif
+            endif
           -%}
-            {%- assign pre_ok = true -%}
-          {%- endif -%}
-
-          {%- assign first_bonus_total = 0 -%}
-          {%- assign first_bonus_low = false -%}
-          {%- assign early_bonus = false -%}
-          {%- assign closing_soon = false -%}
-
-          {%- assign first_bonus_threshold = 10 | plus: 0 -%}
-          {%- assign ten_days_sec = 864000 | plus: 0 -%}
-          {%- assign min_end_ts = 0 -%}
-
-          {%- for v in product.variants -%}
-            {%- assign v_inventory = v.inventory_quantity | default: 0 | plus: 0 -%}
-            {%- assign v_is_first_bonus = v.metafields.custom.is_first_bonus.value -%}
-            {%- assign v_is_early_bonus = v.metafields.custom.is_early_bonus.value -%}
-
-            {%- if v_is_first_bonus and v_inventory > 0 -%}
-              {%- assign first_bonus_total = first_bonus_total | plus: v_inventory -%}
-            {%- endif -%}
-
-            {%- if pre_ok and v_is_early_bonus -%}
-              {%- assign early_bonus = true -%}
-            {%- endif -%}
-
-            {%- assign v_end_raw = v.metafields.variant.sell_end_at -%}
-            {%- if v_end_raw != blank -%}
-              {%- assign v_end_ts = v_end_raw | date: '%s' | plus: 0 -%}
-              {%- if min_end_ts == 0 or v_end_ts < min_end_ts -%}
-                {%- assign min_end_ts = v_end_ts -%}
-              {%- endif -%}
-            {%- endif -%}
-          {%- endfor -%}
-
-          {%- if first_bonus_total > 0 and first_bonus_total <= first_bonus_threshold -%}
-            {%- assign first_bonus_low = true -%}
-          {%- endif -%}
-
-          {%- if min_end_ts != 0 -%}
-            {%- assign closing_from_ts = min_end_ts | minus: ten_days_sec -%}
-            {%- if now_ts >= closing_from_ts and now_ts <= min_end_ts -%}
-              {%- assign closing_soon = true -%}
-            {%- endif -%}
-          {%- endif -%}
 
           {%- comment -%}
             ▼ JS 用の初期データ（handle ごとのマップに入れる）
@@ -175,10 +151,9 @@
               "display_locked": {{ display_locked | json }},
               "is_new": {{ is_new | json }},
               "pre_ok": {{ pre_ok | json }},
-              "first_bonus_total": {{ first_bonus_total | json }},
+              "first_bonus_low": {{ first_bonus_low | json }},
               "early_bonus": {{ early_bonus | json }},
-              "closing_soon": {{ closing_soon | json }},
-              "template_suffix": {{ product.template_suffix | default: '' | json }}
+              "closing_soon": {{ closing_soon | json }}
             }
           {% endcapture %}
           {% if forloop.first %}
@@ -205,25 +180,7 @@
 
               {% if section.settings.show_badges %}
                 <div class="csh-badges csh-badges--below">
-                  {%- if is_new and pre_ok == false -%}
-                    <span class="csh-badge csh-badge--new">NEW</span>
-                  {%- endif -%}
-
-                  {%- if pre_ok -%}
-                    <span class="csh-badge csh-badge--pre">予約受付中</span>
-                  {%- endif -%}
-
-                  {%- if first_bonus_low -%}
-                    <span class="csh-badge csh-badge--first-bonus">初回特典残りわずか</span>
-                  {%- endif -%}
-
-                  {%- if early_bonus -%}
-                    <span class="csh-badge csh-badge--early">早期予約特典あり</span>
-                  {%- endif -%}
-
-                  {%- if closing_soon -%}
-                    <span class="csh-badge csh-badge--closing">締切間近</span>
-                  {%- endif -%}
+                  {% render 'Custom-product-badges', badge_product: product, badge_class: 'csh-badge' %}
                 </div>
               {% endif %}
 
@@ -296,14 +253,9 @@
     }
     #csh-{{ section.id }} .csh-badge{
       font-size:10px; font-weight:700; line-height:1;
-      padding:6px 8px; color:#fff;
+      padding:6px 8px;
       box-shadow:0 1px 2px rgba(0,0,0,.15);
     }
-    #csh-{{ section.id }} .csh-badge--new{  background:#e63946; }
-    #csh-{{ section.id }} .csh-badge--pre{  background:#3B82F6; color:#fff; border-radius:0; }
-    #csh-{{ section.id }} .csh-badge--first-bonus{ background:#ef4444; }
-    #csh-{{ section.id }} .csh-badge--early{        background:#22c55e; }
-    #csh-{{ section.id }} .csh-badge--closing{      background:#f97316; }
 
     #csh-{{ section.id }} .csh-body{
       padding:10px 12px 10px 0; display:grid; gap:6px;
@@ -445,32 +397,49 @@
         console.warn('[home recos] exMap error', e);
       }
 
-      function normalize(p){
-        var handle = p.handle || null;
-        var init   = handle && initialEx[handle] ? initialEx[handle] : {};
-        var ex     = handle && exMap[handle] ? exMap[handle] : init;
+            function normalize(p){
+            var handle = p.handle || null;
 
-        return {
-          id: p.id,
-          title: p.title,
-          handle: handle,
-          url: p.url || p.online_store_url || null,
-          online_store_url: p.online_store_url || null,
-          featured_image: primaryImage(p),
-          price: p.price,
-          price_min: p.price_min,
-          price_max: p.price_max,
-          price_varies: p.price_varies,
-          variants: p.variants || null,
-          display_locked: !!(p.display_locked || ex.display_locked),
-          template_suffix: (p.template_suffix || ex.template_suffix || ''),
-          is_new: !!ex.is_new,
-          pre_ok: !!ex.pre_ok,
-          first_bonus_total: ex.first_bonus_total || 0,
-          early_bonus: !!ex.early_bonus,
-          closing_soon: !!ex.closing_soon
-        };
-      }
+            // Liquid で埋め込んだ初期値（fallback コレクションのフラグ）
+            var init = handle && initialEx[handle] ? initialEx[handle] : {};
+
+            // recentlyViewedEx 側（あれば）
+            var exFromStorage = handle && exMap[handle] ? exMap[handle] : {};
+
+            // init をベースに、storage 側を上書きマージ
+            // → storage に無いキー（is_new / pre_ok など）は init の値が残る
+            var ex = Object.assign({}, init, exFromStorage);
+
+            return {
+              id: p.id,
+              title: p.title,
+              handle: handle,
+              url: p.url || p.online_store_url || null,
+              online_store_url: p.online_store_url || null,
+              featured_image: primaryImage(p),
+              price: p.price,
+              price_min: p.price_min,
+              price_max: p.price_max,
+              price_varies: p.price_varies,
+              variants: p.variants || null,
+
+              // display_locked / published_at も init / storage の値を活かす
+              display_locked: !!(p.display_locked || ex.display_locked),
+              published_at: p.published_at || ex.published_at || null,
+
+              // ▼ バッジ用フラグ（ex にマージ済みなので ex だけ見れば OK）
+              is_new: !!ex.is_new,
+              pre_ok: !!ex.pre_ok,
+
+              first_bonus_low:
+                typeof ex.first_bonus_low !== 'undefined'
+                  ? !!ex.first_bonus_low
+                  : !!(ex.first_bonus_total && Number(ex.first_bonus_total) > 0),
+
+              early_bonus: !!ex.early_bonus,
+              closing_soon: !!ex.closing_soon
+            };
+          }
 
       function keyOf(p){
         return p.id || p.handle || p.url || (p.title + ':' + (p.price || ''));
@@ -497,30 +466,48 @@
           var lockedCls = locked ? ' csh-card--locked' : '';
           var lockedAttr= locked ? ' aria-disabled="true"' : '';
 
-          var badges = '';
-          var is_new = p.is_new;
-          var pre_ok = p.pre_ok;
-          var first_low = p.first_bonus_total && p.first_bonus_total > 0 && p.first_bonus_total <= 10;
-          var early = p.early_bonus;
-          var closing = p.closing_soon;
+          // バッジ
+          var is_new   = !!p.is_new;
+          var pre_ok   = !!p.pre_ok;
+          var first_low;
+          if (typeof p.first_bonus_low !== 'undefined') {
+            first_low = !!p.first_bonus_low;
+          } else {
+            first_low = !!(p.first_bonus_total && p.first_bonus_total > 0);
+          }
+          var early   = !!p.early_bonus;
+          var closing = !!p.closing_soon;
 
-          if (is_new || pre_ok || first_low || early || closing){
+          // Liquid と同じ順番でバッジを生成
+          var badges = '';
+          if (is_new || pre_ok || early || first_low || closing){
             badges += '<div class="csh-badges csh-badges--below">';
-            if (is_new && !pre_ok){
+
+            // ① NEW（常に表示）
+            if (is_new){
               badges += '<span class="csh-badge csh-badge--new">NEW</span>';
             }
+
+            // ② 予約受付中
             if (pre_ok){
               badges += '<span class="csh-badge csh-badge--pre">予約受付中</span>';
             }
-            if (first_low){
-              badges += '<span class="csh-badge csh-badge--first-bonus">初回特典残りわずか</span>';
-            }
+
+            // ③ 早期予約特典あり
             if (early){
               badges += '<span class="csh-badge csh-badge--early">早期予約特典あり</span>';
             }
+
+            // ④ 初回特典残りわずか
+            if (first_low){
+              badges += '<span class="csh-badge csh-badge--first">初回特典残りわずか</span>';
+            }
+
+            // ⑤ 締切間近
             if (closing){
               badges += '<span class="csh-badge csh-badge--closing">締切間近</span>';
             }
+
             badges += '</div>';
           }
 
@@ -660,16 +647,6 @@
       "label": "商品ラベル（初回表示時のみ Liquid 側で制御）",
       "default": true
     },
-    {
-      "type": "range",
-      "id": "new_days",
-      "label": "NEW判定（日数以内の公開）",
-      "min": 1,
-      "max": 60,
-      "step": 1,
-      "default": 14
-    },
-
     { "type": "header", "content": "レイアウト" },
     { "type": "range", "id": "columns_desktop", "label": "（PC）列数", "min": 2, "max": 8, "step": 1, "default": 6 },
     { "type": "range", "id": "gap_pc", "label": "（PC）カード間隔(px)", "min": 8, "max": 32, "step": 2, "default": 16 },
