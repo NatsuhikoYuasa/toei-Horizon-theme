@@ -4612,12 +4612,25 @@ facet-status-component.facets__status {
   line-height: 1.4;
 }
 
-/* =========================================
-   Custom-product-badges 用 共通バッジCSS
-   base_class: csh-badge / cfc-badge / rv-badge など
-   ========================================= */
 
-/* ベースの見た目（形・サイズ） */
+/* === TOEI / CSH / RV / CFC バッジ共通 === */
+
+/* コンテナ（クラスがあればまとめておく） */
+.toei-product-badges,
+.toei-cart-badges,
+.toei-badges,
+.csh-product-badges,
+.csh-cart-badges,
+.csh-badges,
+.rv-badges,
+.cfc-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* 基本バッジ（共通） */
+.toei-badge,
 .csh-badge,
 .cfc-badge,
 .rv-badge {
@@ -4683,4 +4696,55 @@ facet-status-component.facets__status {
     max-width: 880px !important;
     margin: auto;
   }
+}
+
+/* ===== 商品画像ばらつき修正 ===== */
+.csh-thumb,
+.rv-thumb,
+.cfc-card-media {
+  position: relative;
+  border-radius: 5px;
+  overflow: hidden;
+
+  /* 背景を透過に */
+  background: transparent;
+
+  /* 枠の縦横比を固定（お好みで数字調整OK） */
+  aspect-ratio: 700 / 815;
+
+  /* 画像を中央寄せ */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.csh-thumb img,
+.rv-img,
+.cfc-card-media img {
+  /* 枠いっぱいの範囲内で収まるように */
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+
+  object-fit: contain;
+  /* 全体表示（トリミングなし） */
+  display: block;
+  border-radius: 5px;
+}
+
+/* 画像なし時のプレースホルダー（rv用） */
+.rv-thumb__placeholder {
+  font-size: 11px;
+  color: #999;
+  text-align: center;
+  padding: 4px;
+}
+
+/* テキスト太さ揃え */
+.rv-meta,
+.csh-name,
+.csh-price,
+.cfc-card-body {
+  font-weight: 500;
 }
