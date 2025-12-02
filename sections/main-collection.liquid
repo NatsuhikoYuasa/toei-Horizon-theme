@@ -90,10 +90,61 @@
           %}
 
           {% capture children %}
+            {%- assign visible_index = 0 -%}
+
             {% for product in collection.products %}
+
+              {%- comment -%}
+                display_start_at / display_end_at による表示ロック判定
+                - 期間外の商品は「一覧から完全に除外」する
+              {%- endcomment -%}
+              {%- liquid
+                assign display_locked   = false
+                assign display_start_raw = product.metafields.product.display_start_at
+                assign display_end_raw   = product.metafields.product.display_end_at
+
+                if display_start_raw != blank or display_end_raw != blank
+                  assign now_ts = 'now' | date: '%s'
+
+                  if display_start_raw != blank
+                    assign start_ts = display_start_raw | date: '%s'
+                  endif
+
+                  if display_end_raw != blank
+                    assign end_ts = display_end_raw | date: '%s'
+                  endif
+
+                  if display_start_raw != blank and display_end_raw == blank
+                    # start のみ → その日時より前は非表示
+                    if now_ts < start_ts
+                      assign display_locked = true
+                    endif
+                  elsif display_start_raw == blank and display_end_raw != blank
+                    # end のみ → その日時より後は非表示
+                    if now_ts > end_ts
+                      assign display_locked = true
+                    endif
+                  elsif display_start_raw != blank and display_end_raw != blank
+                    # start & end → 期間外は非表示（期間内のみ表示）
+                    if now_ts < start_ts or now_ts > end_ts
+                      assign display_locked = true
+                    endif
+                  endif
+                endif
+              -%}
+
+              {%- comment -%}
+                公開期間外の商品は li 自体を出さない
+              {%- endcomment -%}
+              {% if display_locked %}
+                {% continue %}
+              {% endif %}
+
+              {%- assign visible_index = visible_index | plus: 1 -%}
+
               <li
                 id="{{ section.id }}-{{ product.id }}"
-                class="product-grid__item product-grid__item--{{ forloop.index0 }}"
+                class="product-grid__item product-grid__item--{{ visible_index | minus: 1 }}"
                 data-page="{{ paginate.current_page }}"
                 data-product-id="{{ product.id }}"
                 ref="cards[]"

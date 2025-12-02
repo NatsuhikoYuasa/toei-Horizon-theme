@@ -31,9 +31,10 @@
 
         {% if the_collection.products_count > 0 %}
           <div class="cfc-grid">
-            {% for product in the_collection.products limit: 4 %}
+          {% assign shown_count = 0 %}
+            {% for product in the_collection.products %}
               {%- comment -%} display_start_at / display_end_at による表示ロック判定 {%- endcomment -%}
-              {% liquid
+                            {% liquid
                 assign display_locked = false
                 assign display_start_raw = product.metafields.product.display_start_at
                 assign display_end_raw = product.metafields.product.display_end_at
@@ -65,12 +66,16 @@
                 endif
               %}
 
-              <a
-                class="cfc-card{% if display_locked %} cfc-card--locked{% endif %}"
-                {% unless display_locked %}
-                  href="{{ product.url | within: the_collection }}"
-                {% endunless %}
-              >
+             {% comment %} ロック商品はカード自体を表示しない {% endcomment %}
+             {% if display_locked %}
+               {% continue %}
+             {% endif %}
+
+               <a
+                 class="cfc-card"
+                 href="{{ product.url | within: the_collection }}"
+               >
+
                 <div class="cfc-card-media">
                   {% if product.featured_image %}
                     {{
@@ -100,6 +105,11 @@
                   </div>
                 </div>
               </a>
+              {% assign shown_count = shown_count | plus: 1 %}
+              {% if shown_count >= 4 %}
+                {% break %}
+              {% endif %}
+
             {% endfor %}
           </div>
         {% else %}
