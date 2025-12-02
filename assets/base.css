@@ -4748,3 +4748,31 @@ facet-status-component.facets__status {
 .cfc-card-body {
   font-weight: 500;
 }
+
+/* =========================================
+   コレクション一覧の画像サイズを統一
+   （Horizon product-card 用）
+   ========================================= */
+
+/* 枠の縦横比だけ固定（display は元のまま） */
+.product-grid__item .card-gallery,
+.product-grid__item .product-media-container,
+.product-grid__item .product-media {
+  aspect-ratio: 700 / 815 !important;
+  /* 比率はお好みで */
+}
+
+/* 画像を中央寄せ＆トリミング無しで収める */
+.product-grid__item .product-media__image {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  object-fit: contain !important;
+  /* 全体表示 */
+  object-position: center center;
+  /* 縦横センター */
+}
+
+img.cart-items__media-image.border-style {
+  object-fit: contain;
+}
