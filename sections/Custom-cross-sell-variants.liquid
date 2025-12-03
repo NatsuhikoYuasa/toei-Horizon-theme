@@ -171,7 +171,10 @@
       var STORE_TOKEN = {{ section.settings.storefront_token | json }};
 
       // Liquid から埋め込んだ「variant.id → GID 配列」のマップ
-      var CROSS_SELL_MAP = {{ cross_sell_map | default: '{}' }};
+      // cross_sell_map は capture～assign の処理で必ず JSON 文字列
+      // （例 "{}" や {"123":[...]}）になるようにしているので、
+      // ここではそのまま出力する。
+      var CROSS_SELL_MAP = {{ cross_sell_map }};
 
       // Storefront API のトークンが未設定なら何もしない
       if (!STORE_TOKEN) {
