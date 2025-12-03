@@ -171,9 +171,6 @@
       var STORE_TOKEN = {{ section.settings.storefront_token | json }};
 
       // Liquid から埋め込んだ「variant.id → GID 配列」のマップ
-      // cross_sell_map は capture～assign の処理で必ず JSON 文字列
-      // （例 "{}" や {"123":[...]}）になるようにしているので、
-      // ここではそのまま出力する。
       var CROSS_SELL_MAP = {{ cross_sell_map }};
 
       // Storefront API のトークンが未設定なら何もしない
@@ -215,7 +212,6 @@
         nodes.forEach(function(node){
           if (!node || rendered >= limit) return;
 
-          // ProductVariant ノードのみ扱う
           var product = node.product || {};
           var productId = product.id || null;
 
@@ -413,7 +409,6 @@
         fetchAndRenderByGids(gids);
       }
 
-      // 初期表示：hidden input(data-toei-variant-id) から現在のバリアント ID を取得
       function initFirstRender(){
         try{
           var hiddenInput = document.querySelector('[data-toei-variant-id]');
@@ -434,7 +429,6 @@
         initFirstRender();
       }
 
-      // バリアント変更イベントに追従
       document.addEventListener('variant:changed', function(e){
         try{
           var detail = e && e.detail || {};
