@@ -4316,42 +4316,9 @@ text-component {
 }
 
 /* ==========================================
- * 3. 仮面ライダー メガメニュー（PC）調整
- * ========================================== */
-@media screen and (min-width: 1024px) {
-
-  #submenu-1 [data-menu-grid-id="MegaMenuList-1"],
-  #submenu-1 [data-menu-list-id="MegaMenuList-1"] {
-    --menu-columns-desktop: 1;
-  }
-
-  #submenu-1 [data-menu-list-id="MegaMenuList-1"] .mega-menu__column--span-1 {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-  }
-
-  #submenu-1 [data-menu-list-id="MegaMenuList-1"] .mega-menu__column--span-1>div {
-    flex: 0 0 auto;
-    width: auto;
-    margin: 0 16px 8px 0;
-  }
-
-  #submenu-1 [data-menu-list-id="MegaMenuList-1"] .mega-menu__link {
-    display: inline-flex;
-    align-items: center;
-    padding: 8px 16px;
-    border: 1px solid #E5E5E5;
-    border-radius: 4px;
-    background: #fff;
-    white-space: nowrap;
-  }
-}
-
-/* ==========================================
  * 4. ドロワーメニュー（SP）文字サイズ調整
  * ========================================== */
-@media screen and (max-width: 749px) {
+@media screen and (max-width: 1199px) {
 
   /* 親メニュー（仮面ライダー / スーパー戦隊 など） */
   .menu-drawer__menu-item--mainlist {
@@ -4378,9 +4345,6 @@ text-component {
 /* ==========================================
  * 5. コレクションページ全体レイアウト
  * ========================================== */
-
-/* ベース */
-.template-collection {}
 
 /* PC：左フィルター / 右商品グリッド（4列） */
 @media (min-width: 990px) {
@@ -4685,6 +4649,7 @@ facet-status-component.facets__status {
   background: #dde0e6;
   color: #060816;
 }
+
 
 /* カートページ：商品エリアを広く、サマリーは固定幅にする */
 @media screen and (min-width: 1080px) {
