@@ -173,8 +173,17 @@
       // Liquid から埋め込んだ「variant.id → GID 配列」のマップ
       var CROSS_SELL_MAP = {{ cross_sell_map | default: '{}' }};
 
+      console.debug('[cross-sell variants] init', {
+        sectionId: '{{ section.id }}',
+        limit: limit,
+        showPrice: showPrice,
+        hasStorefrontToken: !!STORE_TOKEN,
+        crossSellMapKeys: CROSS_SELL_MAP ? Object.keys(CROSS_SELL_MAP) : []
+      });
+
       // Storefront API のトークンが未設定なら何もしない
       if (!STORE_TOKEN) {
+        console.warn('[cross-sell variants] missing Storefront API token; hide section');
         root.style.display = 'none';
         return;
       }
@@ -203,6 +212,7 @@
         clearList();
 
         if (!nodes || !nodes.length) {
+          console.debug('[cross-sell variants] no nodes to render');
           root.style.display = 'none';
           return;
         }
@@ -307,6 +317,7 @@
         });
 
         if (!rendered) {
+          console.debug('[cross-sell variants] rendering skipped; no cards added after filtering');
           root.style.display = 'none';
         } else {
           root.style.display = '';
@@ -318,6 +329,7 @@
 
       function fetchAndRenderByGids(gids){
         if (!gids || !gids.length) {
+          console.debug('[cross-sell variants] empty gids for variant', variantId);
           clearList();
           root.style.display = 'none';
           return;
@@ -334,6 +346,7 @@
         });
 
         if (!unique.length) {
+          console.debug('[cross-sell variants] no unique gids after dedupe', gids);
           clearList();
           root.style.display = 'none';
           return;
@@ -342,9 +355,11 @@
         var key = unique.join(',');
         if (key === lastRequestKey && inFlight) {
           // 既に同じリクエストが飛んでいる場合はそのまま任せる
+          console.debug('[cross-sell variants] duplicate in-flight request skipped', key);
           return;
         }
         lastRequestKey = key;
+        console.debug('[cross-sell variants] fetch start', unique);
 
         var endpoint = '/api/2024-01/graphql.json';
         var query = `
@@ -389,6 +404,7 @@
         .then(function(resJson){
           inFlight = null;
           var nodes = (resJson && resJson.data && resJson.data.nodes) || [];
+          console.debug('[cross-sell variants] fetch done', { requested: unique, nodesCount: nodes.length, raw: resJson });
           renderFromNodes(nodes);
         })
         .catch(function(err){
@@ -408,10 +424,12 @@
         var key = String(variantId);
         var gids = CROSS_SELL_MAP && CROSS_SELL_MAP[key];
         if (!gids || !gids.length) {
+          console.debug('[cross-sell variants] no cross-sell metafield for variant', key);
           clearList();
           root.style.display = 'none';
           return;
         }
+        console.debug('[cross-sell variants] update for variant', key, gids);
         fetchAndRenderByGids(gids);
       }
 
@@ -421,11 +439,14 @@
           var hiddenInput = document.querySelector('[data-toei-variant-id]');
           var currentId = hiddenInput && hiddenInput.value;
           if (currentId) {
+            console.debug('[cross-sell variants] initFirstRender current variant id', currentId);
             updateForVariantId(currentId);
           } else {
+            console.debug('[cross-sell variants] initFirstRender no current variant id');
             root.style.display = 'none';
           }
         }catch(e){
+          console.error('[cross-sell variants] initFirstRender error', e);
           root.style.display = 'none';
         }
       }
@@ -448,8 +469,11 @@
           if (numericId.indexOf('/') !== -1) {
             numericId = numericId.split('/').pop();
           }
+          console.debug('[cross-sell variants] variant:changed', { rawId: id, normalized: numericId, detail: detail });
           updateForVariantId(numericId);
-        }catch(err){}
+        }catch(err){
+          console.error('[cross-sell variants] variant:changed handler error', err);
+        }
       });
     })();
   </script>
