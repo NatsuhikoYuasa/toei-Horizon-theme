@@ -223,48 +223,82 @@
       var root = document.getElementById('custom-xsell-{{ section.id }}');
       if (!root) return;
 
+      // 指定されたバリアントIDに対応する .rv-list を表示
       function showForVariantId(variantId) {
         if (!variantId) return;
 
         var lists = root.querySelectorAll('.rv-list');
+        var found = false;
+
         lists.forEach(function(list){
           if (list.dataset.variantId === String(variantId)) {
             list.hidden = false;
+            found = true;
           } else {
             list.hidden = true;
           }
         });
+
+        // 一致するリストがなければセクションごと非表示
+        root.style.display = found ? '' : 'none';
       }
 
-      // 初期表示: hidden input(data-toei-variant-id) があればそれを優先
-      function init(){
+      // hidden input から現在のバリアントIDを取得
+      function getCurrentVariantIdFromInput() {
         var hiddenInput = document.querySelector('[data-toei-variant-id]');
-        var currentId = hiddenInput && hiddenInput.value;
+        if (!hiddenInput) return null;
+        var v = hiddenInput.value;
+        return v ? String(v) : null;
+      }
+
+      // 初期表示処理
+      function init(){
+        var currentId = getCurrentVariantIdFromInput();
         if (currentId) {
+          console.log('[XSell] init current variant:', currentId);
           showForVariantId(currentId);
+        } else {
+          // hidden input が見つからない場合は、
+          // 最初のリストのみ表示しておく
+          var first = root.querySelector('.rv-list');
+          if (first) {
+            console.log('[XSell] init fallback: first list visible');
+            first.hidden = false;
+            root.style.display = '';
+          } else {
+            root.style.display = 'none';
+          }
         }
       }
 
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-      } else {
-        init();
+      // hidden input の値をポーリングして、変更があれば表示を切り替える
+      function startWatcher(){
+        var prevId = getCurrentVariantIdFromInput();
+        if (prevId) {
+          showForVariantId(prevId);
+        }
+
+        setInterval(function(){
+          var currentId = getCurrentVariantIdFromInput();
+          if (!currentId || currentId === prevId) return;
+
+          console.log('[XSell] detected variant change:', prevId, '→', currentId);
+          prevId = currentId;
+          showForVariantId(currentId);
+        }, 300);
       }
 
-      // バリアント変更イベントに追従
-      document.addEventListener('variant:changed', function(e){
-        try{
-          var detail = e && e.detail || {};
-          var v = detail.variant || {};
-          var id = v.id;
-          if (!id) return;
-          var numericId = String(id);
-          if (numericId.indexOf('/') !== -1) {
-            numericId = numericId.split('/').pop();
-          }
-          showForVariantId(numericId);
-        }catch(err){}
-      });
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function(){
+          init();
+          startWatcher();
+        });
+      } else {
+        init();
+        startWatcher();
+      }
+
+      // 旧実装の variant:changed リスナーは不要なので追加しない
     })();
   </script>
 </section>
