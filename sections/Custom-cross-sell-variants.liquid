@@ -1,0 +1,369 @@
+<section
+  id="custom-xsell-{{ section.id }}"
+  class="rv-section section page-width color-{{ section.settings.color_scheme }}"
+  style="
+    {% render 'spacing-style', settings: section.settings %}
+    --rv-gap-pc: {{ section.settings.card_gap | default: 16 }}px;
+    --rv-gap-sp: {{ section.settings.card_gap_mobile | default: 12 }}px;
+    --rv-safe-inline: var(--full-page-grid-margin-inline-offset, var(--page-margin-inline-offset, 16px));
+    padding-block-start: {{ section.settings['padding-block-start'] | default: 36 }}px;
+    padding-block-end:   {{ section.settings['padding-block-end']   | default: 36 }}px;
+  "
+>
+  <div class="rv-inner">
+    <div class="rv-header align-{{ section.settings.heading_align }}">
+      <h2 class="rv-title">{{ section.settings.heading | escape }}</h2>
+    </div>
+
+    <div class="rv-band" aria-hidden="true"></div>
+
+    <div class="rv-list" data-limit="{{ section.settings.limit | default: 6 }}">
+      {% comment %} JSでカードを挿入 {% endcomment %}
+    </div>
+  </div>
+
+  <style>
+    /* ====== 見出し ====== */
+    #custom-xsell-{{ section.id }} .rv-header{ margin-bottom:16px; }
+    #custom-xsell-{{ section.id }} .rv-header.align-center{ text-align:center; }
+    #custom-xsell-{{ section.id }} .rv-title{
+      font-size:22px; line-height:1.35; font-weight:700; margin:0;
+      border-bottom:1px solid rgba(0,0,0,.1); padding-bottom:10px;
+    }
+    .color-scheme-2 #custom-xsell-{{ section.id }} .rv-title,
+    .color-scheme-3 #custom-xsell-{{ section.id }} .rv-title { border-color: rgba(255,255,255,.12); }
+
+    /* ====== PC：グリッド ====== */
+    #custom-xsell-{{ section.id }} .rv-list{
+      display:grid;
+      grid-template-columns: repeat(6, minmax(0,1fr));
+      gap: var(--rv-gap-pc);
+    }
+
+    /* ====== カード ====== */
+    #custom-xsell-{{ section.id }} .rv-card{
+      display:flex; flex-direction:column; text-decoration:none; color:inherit;
+    }
+    #custom-xsell-{{ section.id }} .rv-thumb{
+      display:flex; align-items:center; justify-content:center;
+      border-radius:5px; overflow:hidden;
+    }
+    #custom-xsell-{{ section.id }} .rv-img{ width:100%; height:auto; border-radius:5px; display:block; }
+
+    /* グレーアウト & クリック不可 */
+    #custom-xsell-{{ section.id }} .rv-card--disabled,
+    #custom-xsell-{{ section.id }} .rv-card.rv-locked{
+      pointer-events:none;
+      opacity:.45;
+    }
+
+    /* ▼ バッジ（画像の下） */
+    #custom-xsell-{{ section.id }} .rv-badges{
+      display:flex; gap:6px; margin-top:8px;
+    }
+    #custom-xsell-{{ section.id }} .rv-badge{
+      font-size:10px; font-weight:700; line-height:1; padding:6px 8px;
+      box-shadow:0 1px 2px rgba(0,0,0,.15);
+    }
+
+    #custom-xsell-{{ section.id }} .rv-meta{
+      padding:8px 12px 10px 0; display:grid; gap:6px;
+    }
+    #custom-xsell-{{ section.id }} .rv-title-link{
+      font-size:13px; line-height:1.4; display:-webkit-box;
+      -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; color:inherit;
+    }
+    #custom-xsell-{{ section.id }} .rv-price{ font-size:12px; opacity:.9; }
+
+    #custom-xsell-{{ section.id }}{ background: {{ section.settings.bg_color | default: '#F5F6F9' }}; }
+
+    /* ====== SP：横スクロール ====== */
+    @media (max-width: 768px){
+      #custom-xsell-{{ section.id }}{ position:relative; overflow:visible; }
+      #custom-xsell-{{ section.id }} .rv-band{
+        position:absolute; top:0; bottom:0; right:calc(50% - 50vw);
+        width:48px; background:linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.06));
+        pointer-events:none; opacity:0;
+      }
+      #custom-xsell-{{ section.id }} .rv-list{
+        display:flex !important; gap: var(--rv-gap-sp);
+        overflow-x:auto; overflow-y:visible; -webkit-overflow-scrolling:touch;
+        scroll-snap-type:x proximity; scroll-snap-stop:normal; scrollbar-gutter:stable;
+        scroll-padding-right: var(--rv-safe-inline);
+        width: calc(100vw - var(--rv-safe-inline));
+        margin-right: calc(50% - 50vw - var(--rv-gap-sp));
+      }
+      #custom-xsell-{{ section.id }} .rv-list::after{
+        content:""; flex: 0 0 calc(max(0px, var(--rv-safe-inline) - var(--rv-gap-sp)));
+      }
+      #custom-xsell-{{ section.id }} .rv-list::-webkit-scrollbar{ display:none; }
+      #custom-xsell-{{ section.id }} .rv-card{
+        flex: 0 0 clamp(140px, 38vw, 240px);
+        width: clamp(140px, 38vw, 240px);
+        scroll-snap-align:start;
+      }
+      #custom-xsell-{{ section.id }} .rv-title{ font-size:18px; }
+    }
+
+    /* バッジの折り返し */
+    #custom-xsell-{{ section.id }} .rv-badges{
+      display:flex !important;
+      flex-wrap:wrap !important;
+      gap:6px 6px !important;
+    }
+    #custom-xsell-{{ section.id }} .rv-badges .rv-badge{
+      display:inline-flex !important;
+      align-items:center;
+      white-space:nowrap !important;
+      min-width:max-content;
+    }
+  </style>
+
+  {% capture cross_sell_map %}
+  {
+  {% assign variant_delimiter = '' %}
+  {% for v in product.variants %}
+    {% assign cs_list = v.metafields.variant.cross_sell_variants.value %}
+    {% if cs_list != blank and cs_list.size > 0 %}
+      {{ variant_delimiter }}"{{ v.id }}": [
+        {% assign item_delimiter = '' %}
+        {% for cs_variant in cs_list %}
+          {% assign cs_product = cs_variant.product %}
+          {% if cs_variant == blank or cs_product == blank %}
+            {% continue %}
+          {% endif %}
+          {% assign cs_image = cs_variant.featured_media | default: cs_product.featured_image %}
+          {{ item_delimiter }}{
+            "handle": {{ cs_product.handle | json }},
+            "url": {{ cs_product.url | append: '?variant=' | append: cs_variant.id | json }},
+            "title": {{ cs_product.title | json }},
+            "image": {{ cs_image | image_url: width: 360 | json }},
+            "price": {{ cs_variant.price | json }},
+            "available": {{ cs_variant.available | json }},
+            "product_id": {{ cs_product.id | json }},
+            "variant_id": {{ cs_variant.id | json }}
+          }
+          {% assign item_delimiter = ',' %}
+        {% endfor %}
+      ]
+      {% assign variant_delimiter = ',' %}
+    {% endif %}
+  {% endfor %}
+  }
+  {% endcapture %}
+  {% assign cross_sell_map = cross_sell_map | strip_newlines | strip %}
+  {% if cross_sell_map == '' %}
+    {% assign cross_sell_map = '{}' %}
+  {% endif %}
+
+  <script>
+    (function(){
+      var root = document.getElementById('custom-xsell-{{ section.id }}');
+      if (!root) return;
+
+      var listEl = root.querySelector('.rv-list');
+      if (!listEl) return;
+
+      var limit = parseInt(listEl.dataset.limit || '6', 10);
+      var showPrice = {{ section.settings.show_price | default: true | json }};
+      var CROSS_SELL_MAP = {{ cross_sell_map }};
+      var initialRendered = false;
+
+      function formatMoney(cents){
+        try{
+          if (window.Shopify && Shopify.formatMoney){
+            return Shopify.formatMoney(cents, "{{ shop.money_format | replace: '"', '\\"' }}");
+          }
+        }catch(e){}
+        try{
+          var yen = Math.round((Number(cents) || 0) / 100);
+          return new Intl.NumberFormat('ja-JP',{ style:'currency', currency:'JPY' }).format(yen);
+        }catch(e){}
+        return '';
+      }
+
+      function clearList(){
+        try{
+          while(listEl.firstChild){ listEl.removeChild(listEl.firstChild); }
+        }catch(e){ listEl.innerHTML = ''; }
+      }
+
+      function renderCrossSell(variantId){
+        try{
+          var key = (variantId || '').toString();
+          var items = CROSS_SELL_MAP && CROSS_SELL_MAP[key];
+          clearList();
+
+          if (!items || !items.length){
+            root.style.display = 'none';
+            return;
+          }
+
+          var seenProductIds = {};
+          var rendered = 0;
+
+          items.forEach(function(item){
+            if (!item || rendered >= limit) return;
+            var pid = item.product_id != null ? String(item.product_id) : '';
+            if (pid && seenProductIds[pid]) return;
+            seenProductIds[pid] = true;
+
+            var title = item.title || '';
+            if (!title) return;
+
+            var card = document.createElement('a');
+            card.className = 'rv-card';
+
+            var isAvailable = typeof item.available === 'undefined' ? true : !!item.available;
+            if (!isAvailable){
+              card.classList.add('rv-card--disabled');
+              card.setAttribute('aria-disabled','true');
+              card.href = 'javascript:void(0)';
+            } else {
+              card.href = item.url || '';
+            }
+
+            var thumb = document.createElement('div');
+            thumb.className = 'rv-thumb';
+            if (item.image){
+              var img = document.createElement('img');
+              img.className = 'rv-img';
+              img.src = item.image;
+              img.alt = title;
+              thumb.appendChild(img);
+            } else {
+              var placeholder = document.createElement('span');
+              placeholder.className = 'rv-thumb__placeholder';
+              placeholder.textContent = 'NO IMAGE';
+              thumb.appendChild(placeholder);
+            }
+
+            var meta = document.createElement('div');
+            meta.className = 'rv-meta';
+
+            var titleEl = document.createElement('span');
+            titleEl.className = 'rv-title-link';
+            titleEl.textContent = title;
+            meta.appendChild(titleEl);
+
+            if (showPrice && typeof item.price === 'number'){
+              var priceEl = document.createElement('span');
+              priceEl.className = 'rv-price';
+              priceEl.textContent = formatMoney(item.price);
+              meta.appendChild(priceEl);
+            }
+
+            card.appendChild(thumb);
+            card.appendChild(meta);
+
+            listEl.appendChild(card);
+            rendered += 1;
+          });
+
+          if (!rendered){
+            root.style.display = 'none';
+            return;
+          }
+
+          root.style.display = '';
+        }catch(e){
+          try{ root.style.display = 'none'; }catch(err){}
+        }
+      }
+
+      function tryInitialRender(){
+        if (initialRendered) return;
+        try{
+          var hiddenInput = document.querySelector('[data-toei-variant-id]');
+          var currentId = hiddenInput && hiddenInput.value;
+          if (currentId){
+            renderCrossSell(currentId);
+            initialRendered = true;
+          }
+        }catch(e){}
+      }
+
+      document.addEventListener('variant:changed', function(e){
+        try{
+          var detail = e && e.detail || {};
+          var v = detail.variant || {};
+          if (!v.id) return;
+          renderCrossSell(v.id);
+          initialRendered = true;
+        }catch(err){}
+      });
+
+      setTimeout(tryInitialRender, 500);
+    })();
+  </script>
+</section>
+
+{% schema %}
+{
+  "name": "クロスセル商品（バリアント）",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "見出し", "default": "こちらもおすすめ" },
+    {
+      "type": "select",
+      "id": "heading_align",
+      "label": "見出しの揃え",
+      "default": "left",
+      "options": [
+        { "value": "left", "label": "左寄せ" },
+        { "value": "center", "label": "中央寄せ" }
+      ]
+    },
+    { "type": "color", "id": "bg_color", "label": "背景色", "default": "#F5F6F9" },
+    { "type": "range", "id": "limit", "label": "最大表示数", "min": 1, "max": 12, "step": 1, "default": 6 },
+    { "type": "checkbox", "id": "show_price", "label": "価格を表示する", "default": true },
+
+    { "type": "header", "content": "カード間隔" },
+    {
+      "type": "range",
+      "id": "card_gap",
+      "label": "（PC）商品カードの間隔 (px)",
+      "min": 8,
+      "max": 32,
+      "step": 2,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "card_gap_mobile",
+      "label": "（スマホ）商品カードの間隔 (px)",
+      "min": 6,
+      "max": 24,
+      "step": 1,
+      "default": 12
+    },
+
+    { "type": "header", "content": "余白" },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "上余白",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "下余白",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 36
+    },
+
+    { "type": "color_scheme", "id": "color_scheme", "label": "配色（Horizonのスキーム）", "default": "scheme-1" }
+  ],
+  "presets": [{ "name": "クロスセル商品（Custom）" }],
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  }
+}
+{% endschema %}
