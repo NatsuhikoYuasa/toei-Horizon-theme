@@ -351,16 +351,6 @@
         "name": "metaobject_reference",
         "category": "REFERENCE"
       }
-    },
-    {
-      "key": "publish_date",
-      "namespace": "custom",
-      "name": "publish_date",
-      "description": "",
-      "type": {
-        "name": "date",
-        "category": "DATE_TIME"
-      }
     }
   ],
   "variant": [
