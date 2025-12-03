@@ -379,14 +379,19 @@
             variables: { ids: unique }
           })
         })
-          .then(function(res){ return res.json(); })
+          .then(function(res){
+            console.log('[XSell] raw response status:', res.status);
+            return res.json();
+          })
           .then(function(resJson){
+            console.log('[XSell] GraphQL response:', JSON.stringify(resJson, null, 2));
+
             inFlight = null;
             var nodes = (resJson && resJson.data && resJson.data.nodes) || [];
             renderFromNodes(nodes);
           })
           .catch(function(err){
-            console.error('[cross-sell variants] Storefront API error', err);
+            console.error('[XSell] Storefront API error', err);
             inFlight = null;
             clearList();
             root.style.display = 'none';
