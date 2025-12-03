@@ -223,40 +223,53 @@
       var root = document.getElementById('custom-xsell-{{ section.id }}');
       if (!root) return;
 
+      // .rv-list をまとめて取るヘルパー
+      function getLists() {
+        return root.querySelectorAll('.rv-list');
+      }
+
       // 指定されたバリアントIDに対応する .rv-list を表示
       function showForVariantId(variantId) {
-        var lists = root.querySelectorAll('.rv-list');
+        var lists = getLists();
         if (!lists.length) {
+          console.log('[XSell] no .rv-list nodes, hide section');
           root.style.display = 'none';
           return;
         }
 
-        var found = false;
-
-        if (variantId) {
-          lists.forEach(function(list){
-            if (list.dataset.variantId === String(variantId)) {
-              list.hidden = false;
-              found = true;
-            } else {
-              list.hidden = true;
-            }
-          });
-        }
-
-        if (!found) {
-          // マッチしない場合は 1つ目をとりあえず表示する
+        if (!variantId) {
+          // variantId が取れないときは 1 つ目だけ表示しておく
           lists.forEach(function(list, index){
             list.hidden = index !== 0;
           });
-          console.log('[XSell] no list found for variantId=', variantId, ' → fallback to first list');
+          console.log('[XSell] no variantId, show first list as fallback');
           root.style.display = '';
+          return;
+        }
+
+        var variantIdStr = String(variantId);
+        var found = false;
+
+        lists.forEach(function(list){
+          if (list.dataset.variantId === variantIdStr) {
+            list.hidden = false;
+            found = true;
+          } else {
+            list.hidden = true;
+          }
+        });
+
+        if (!found) {
+          // 対応するリストが無いときはセクションごと消す
+          console.log('[XSell] no list for variantId =', variantIdStr, '→ hide section');
+          root.style.display = 'none';
         } else {
+          console.log('[XSell] show list for variantId =', variantIdStr);
           root.style.display = '';
         }
       }
 
-      // hidden input から現在のバリアントIDを取得
+      // hidden input から現在のバリアントIDを取得（初期表示用フォールバック）
       function getCurrentVariantIdFromInput() {
         var hiddenInput = document.querySelector('[data-toei-variant-id]');
         if (!hiddenInput) return null;
@@ -264,55 +277,43 @@
         return v ? String(v) : null;
       }
 
-      // 初期表示処理
+      // 初期表示
       function init(){
-        var lists = root.querySelectorAll('.rv-list');
-        if (!lists.length) {
-          root.style.display = 'none';
-          return;
-        }
-
         var currentId = getCurrentVariantIdFromInput();
-        console.log('[XSell] init current variant from hidden input:', currentId);
-
-        if (currentId) {
-          showForVariantId(currentId);
-        } else {
-          // hidden input が見つからない場合は 1つ目を表示
-          lists.forEach(function(list, index){
-            list.hidden = index !== 0;
-          });
-          console.log('[XSell] init fallback: first list visible');
-          root.style.display = '';
-        }
-      }
-
-      // hidden input の値をポーリングして、変更があれば表示を切り替える
-      function startWatcher(){
-        var prevId = getCurrentVariantIdFromInput();
-        if (prevId) {
-          showForVariantId(prevId);
-        }
-
-        setInterval(function(){
-          var currentId = getCurrentVariantIdFromInput();
-          if (!currentId || currentId === prevId) return;
-
-          console.log('[XSell] detected variant change:', prevId, '→', currentId);
-          prevId = currentId;
-          showForVariantId(currentId);
-        }, 300);
+        console.log('[XSell] init: hidden input variantId =', currentId);
+        showForVariantId(currentId);
       }
 
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function(){
-          init();
-          startWatcher();
-        });
+        document.addEventListener('DOMContentLoaded', init);
       } else {
         init();
-        startWatcher();
       }
+
+      // バリアント変更イベントに追従（メインの切り替えロジック）
+      document.addEventListener('variant:changed', function(e){
+        try{
+          var detail = e && e.detail || {};
+          var v = detail.variant || {};
+          var id = v.id;
+
+          console.log('[XSell] variant:changed event received. raw id =', id);
+
+          if (!id) return;
+
+          var numericId = String(id);
+          // GID 形式 (gid://shopify/ProductVariant/123...) のときは末尾だけ取り出す
+          if (numericId.indexOf('/') !== -1) {
+            numericId = numericId.split('/').pop();
+          }
+
+          console.log('[XSell] normalized variant id =', numericId);
+
+          showForVariantId(numericId);
+        }catch(err){
+          console.error('[XSell] variant:changed handler error', err);
+        }
+      });
     })();
   </script>
 </section>
