@@ -27,11 +27,16 @@
       </a>
     </div>
 
-    {% if the_collection.products_count > 0 %}
-      <div class="csh-grid">
-        {% for product in the_collection.products limit: section.settings.limit %}
-          {%- comment -%} display_start_at / display_end_at による表示ロック判定 {%- endcomment -%}
-          {% liquid
+        {% if the_collection.products_count > 0 %}
+        <div class="csh-grid">
+          {% assign shown_count = 0 %}
+          {% for product in the_collection.products %}
+            {% if shown_count >= section.settings.limit %}
+              {% break %}
+            {% endif %}
+            {%- comment -%} display_start_at / display_end_at による表示ロック判定 {%- endcomment -%}
+
+                    {% liquid
             assign display_locked = false
             assign display_start_raw = product.metafields.product.display_start_at
             assign display_end_raw = product.metafields.product.display_end_at
@@ -66,13 +71,16 @@
                 endif
               endif
             endif
+
+            if display_locked
+              continue
+            endif
           %}
 
+
           <a
-            class="csh-card{% if display_locked %} csh-card--locked{% endif %}"
-            {% unless display_locked %}
-              href="{{ product.url | within: the_collection }}"
-            {% endunless %}
+            class="csh-card"
+            href="{{ product.url | within: the_collection }}"
           >
             <div class="csh-thumb">
               {% if product.featured_image %}
@@ -99,6 +107,7 @@
               {% endif %}
             </div>
           </a>
+          {% assign shown_count = shown_count | plus: 1 %}
         {% endfor %}
       </div>
     {% else %}

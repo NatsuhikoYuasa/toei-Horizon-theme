@@ -157,6 +157,11 @@
         var p = source[i];
         var h = p && p.handle;
         if (!h || seen[h]) continue;
+
+        // ★ display_locked（truthy）な商品は「そもそも表示対象にしない」
+        var locked = !!p.display_locked;
+        if (locked) continue;
+        
         seen[h] = 1;
         picked.push(p);
       }

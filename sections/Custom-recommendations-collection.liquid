@@ -38,12 +38,17 @@
 
     {% if coll.products_count > 0 %}
       <div class="csh-grid js-home-recos-grid">
+        {% assign shown_count = 0 %}
         {% for product in coll.products %}
+          {% if shown_count >= section.settings.max_products %}
+            {% break %}
+          {% endif %}
+
 
           {%- comment -%}
             display_start_at / display_end_at による表示ロック判定
           {%- endcomment -%}
-          {% liquid
+                    {% liquid
             assign display_locked = false
             assign display_start_raw = product.metafields.product.display_start_at
             assign display_end_raw = product.metafields.product.display_end_at
@@ -162,42 +167,48 @@
             {% assign initial_pairs = initial_pairs | append: ',' | append: pair %}
           {% endif %}
 
+          {%- comment -%} ★ロック商品はデータだけ残して表示はスキップ {%- endcomment -%}
+          {% if display_locked %}
+            {% continue %}
+          {% endif %}
+
+
           {%- comment -%}
             ▼ 実際に表示するカードは max_products 件まで
           {%- endcomment -%}
-          {% if forloop.index <= section.settings.max_products %}
-            <a
-              class="csh-card{% if display_locked %} csh-card--locked{% endif %}"
-              {% unless display_locked %}
-                href="{{ product.url | within: coll }}"
-              {% endunless %}
-            >
-              <div class="csh-thumb">
-                {% if product.featured_image %}
-                  {{ product.featured_image | image_url: width: 700 | image_tag: loading: 'lazy', alt: product.title }}
-                {% endif %}
-              </div>
+          <a
+            class="csh-card{% if display_locked %} csh-card--locked{% endif %}"
+            href="{{ product.url | within: coll }}"
+          >
 
-              {% if section.settings.show_badges %}
-                <div class="csh-badges csh-badges--below">
-                  {% render 'Custom-product-badges', badge_product: product, badge_class: 'csh-badge' %}
+            <div class="csh-thumb">
+              {% if product.featured_image %}
+                {{ product.featured_image | image_url: width: 700 | image_tag: loading: 'lazy', alt: product.title }}
+              {% endif %}
+            </div>
+
+            {% if section.settings.show_badges %}
+              <div class="csh-badges csh-badges--below">
+                {% render 'Custom-product-badges', badge_product: product, badge_class: 'csh-badge' %}
+              </div>
+            {% endif %}
+
+            <div class="csh-body">
+              <div class="csh-name">{{ product.title }}</div>
+              {% if section.settings.show_price %}
+                <div class="csh-price">
+                  {% if product.price_varies %}
+                    {{ product.price_min | money }} — {{ product.price_max | money }}
+                  {% else %}
+                    {{ product.price | money }}
+                  {% endif %}
                 </div>
               {% endif %}
+            </div>
+          </a>
 
-              <div class="csh-body">
-                <div class="csh-name">{{ product.title }}</div>
-                {% if section.settings.show_price %}
-                  <div class="csh-price">
-                    {% if product.price_varies %}
-                      {{ product.price_min | money }} — {{ product.price_max | money }}
-                    {% else %}
-                      {{ product.price | money }}
-                    {% endif %}
-                  </div>
-                {% endif %}
-              </div>
-            </a>
-          {% endif %}
+          {% assign shown_count = shown_count | plus: 1 %}
+
         {% endfor %}
       </div>
     {% else %}
@@ -565,7 +576,7 @@
           return;
         }
 
-        try{
+                try{
           var recos = await fetchRecommendations(lastPid);
           recos = dedupe(recos);
 
@@ -584,6 +595,11 @@
             }
           }
 
+          // ★ display_locked は JS 側でも表示対象から除外
+          recos = recos.filter(function(p){
+            return !p.display_locked;
+          });
+
           if (!recos.length){
             // 0件ならコレクション表示のまま
             return;
@@ -596,6 +612,7 @@
           }
 
           render(recos);
+
         }catch(e){
           console.warn('[home recos] error', e);
         }
