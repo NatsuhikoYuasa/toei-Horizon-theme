@@ -225,22 +225,35 @@
 
       // 指定されたバリアントIDに対応する .rv-list を表示
       function showForVariantId(variantId) {
-        if (!variantId) return;
-
         var lists = root.querySelectorAll('.rv-list');
+        if (!lists.length) {
+          root.style.display = 'none';
+          return;
+        }
+
         var found = false;
 
-        lists.forEach(function(list){
-          if (list.dataset.variantId === String(variantId)) {
-            list.hidden = false;
-            found = true;
-          } else {
-            list.hidden = true;
-          }
-        });
+        if (variantId) {
+          lists.forEach(function(list){
+            if (list.dataset.variantId === String(variantId)) {
+              list.hidden = false;
+              found = true;
+            } else {
+              list.hidden = true;
+            }
+          });
+        }
 
-        // 一致するリストがなければセクションごと非表示
-        root.style.display = found ? '' : 'none';
+        if (!found) {
+          // マッチしない場合は 1つ目をとりあえず表示する
+          lists.forEach(function(list, index){
+            list.hidden = index !== 0;
+          });
+          console.log('[XSell] no list found for variantId=', variantId, ' → fallback to first list');
+          root.style.display = '';
+        } else {
+          root.style.display = '';
+        }
       }
 
       // hidden input から現在のバリアントIDを取得
@@ -253,21 +266,24 @@
 
       // 初期表示処理
       function init(){
+        var lists = root.querySelectorAll('.rv-list');
+        if (!lists.length) {
+          root.style.display = 'none';
+          return;
+        }
+
         var currentId = getCurrentVariantIdFromInput();
+        console.log('[XSell] init current variant from hidden input:', currentId);
+
         if (currentId) {
-          console.log('[XSell] init current variant:', currentId);
           showForVariantId(currentId);
         } else {
-          // hidden input が見つからない場合は、
-          // 最初のリストのみ表示しておく
-          var first = root.querySelector('.rv-list');
-          if (first) {
-            console.log('[XSell] init fallback: first list visible');
-            first.hidden = false;
-            root.style.display = '';
-          } else {
-            root.style.display = 'none';
-          }
+          // hidden input が見つからない場合は 1つ目を表示
+          lists.forEach(function(list, index){
+            list.hidden = index !== 0;
+          });
+          console.log('[XSell] init fallback: first list visible');
+          root.style.display = '';
         }
       }
 
@@ -297,8 +313,6 @@
         init();
         startWatcher();
       }
-
-      // 旧実装の variant:changed リスナーは不要なので追加しない
     })();
   </script>
 </section>
