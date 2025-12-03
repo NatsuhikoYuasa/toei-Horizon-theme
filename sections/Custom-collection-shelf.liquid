@@ -68,121 +68,6 @@
             endif
           %}
 
-          {%- comment -%}
-            ▼ バッジ判定
-            NEW … 公開日が設定日数以内 / tag:new / metafield custom.new_until が未来
-            予約受付中 … PRE-ORDER 判定ロジック（テンプレート／タグ／メタフィールド）
-            初回特典残りわずか … 「初回特典」バリアントの合計在庫が閾値以下
-            早期予約特典あり … 予約商品かつ「早期予約特典あり」バリアントが存在
-            締切間近 … sell_end_at の10日前～当日
-          {%- endcomment -%}
-
-          {%- assign now_ts = 'now' | date: '%s' | plus: 0 -%}
-          {%- assign new_days = section.settings.new_days | default: 14 | plus: 0 -%}
-          {%- assign days_sec = new_days | times: 86400 -%}
-          {%- assign cutoff_ts = now_ts | minus: days_sec -%}
-
-          {%- comment %} ========== NEW（公開日 / tag:new / metafield new_until） ========== {%- endcomment %}
-          {%- assign pub_ts = 0 -%}
-          {%- if product.published_at != blank -%}
-            {%- assign pub_ts = product.published_at | date: '%s' | plus: 0 -%}
-          {%- endif -%}
-          {%- assign is_new_published = false -%}
-          {%- if pub_ts != 0 and pub_ts > cutoff_ts -%}{%- assign is_new_published = true -%}{%- endif -%}
-
-          {%- assign tags_lc = product.tags | join: ',' | downcase -%}
-          {%- assign tags_wrap = ',' | append: tags_lc | append: ',' -%}
-          {%- assign is_new_tag = false -%}
-          {%- if tags_wrap contains ',new,' -%}{%- assign is_new_tag = true -%}{%- endif -%}
-
-          {%- assign is_new_mf = false -%}
-          {%- if product.metafields.custom.new_until != blank -%}
-            {%- assign new_until_ts = product.metafields.custom.new_until | date: '%s' | plus: 0 -%}
-            {%- if new_until_ts > now_ts -%}{%- assign is_new_mf = true -%}{%- endif -%}
-          {%- endif -%}
-
-          {%- assign is_new = false -%}
-          {%- if is_new_published or is_new_tag or is_new_mf -%}{%- assign is_new = true -%}{%- endif -%}
-
-          {%- comment %} ========== 予約受付中（PRE-ORDER 判定） ========== {%- endcomment %}
-          {%- assign t_suffix = product.template_suffix | downcase | default: '' -%}
-
-          {%- assign pre_ok = false -%}
-          {%- if t_suffix contains 'preorder'
-            or tags_wrap contains ',preorder,'
-            or tags_wrap contains ',pre-order,'
-            or tags_wrap contains ',pre order,'
-            or tags_lc contains '予約'
-            or tags_lc contains '先行'
-            or tags_lc contains '先行予約'
-            or product.metafields.custom.preorder
-          -%}
-            {%- assign pre_ok = true -%}
-          {%- endif -%}
-
-          {%- comment -%} ========== 初回特典残りわずか / 早期予約特典あり / 締切間近 ========== {%- endcomment -%}
-          {%- assign first_bonus_total = 0 -%}
-          {%- comment %}初回特典バリアント在庫の合計{%- endcomment %}
-          {%- assign first_bonus_low = false -%}
-          {%- assign early_bonus = false -%}
-          {%- assign closing_soon = false -%}
-
-          {%- assign first_bonus_threshold = 10 | plus: 0 -%}
-          {%- comment %}「残りわずか」の閾値{%- endcomment %}
-          {%- assign ten_days_sec = 864000 | plus: 0 -%}
-          {%- comment %}10日 = 10 * 86400{%- endcomment %}
-          {%- assign min_end_ts = 0 -%}
-
-          {%- for v in product.variants -%}
-            {%- assign v_inventory = v.inventory_quantity | default: 0 | plus: 0 -%}
-            {%- assign v_is_first_bonus = v.metafields.custom.is_first_bonus.value -%}
-            {%- assign v_is_early_bonus = v.metafields.custom.is_early_bonus.value -%}
-
-            {%- comment -%}
-              ▼ 初回特典残りわずか
-              ・メタフィールド custom.is_first_bonus = true のバリアントだけ対象
-              ・その在庫を合計して first_bonus_total に入れる
-            {%- endcomment -%}
-            {%- if v_is_first_bonus and v_inventory > 0 -%}
-              {%- assign first_bonus_total = first_bonus_total | plus: v_inventory -%}
-            {%- endif -%}
-
-            {%- comment -%}
-              ▼ 早期予約特典あり
-              ・商品が予約受付中（pre_ok = true）
-              ・かつ、いずれかのバリアントで custom.is_early_bonus = true
-            {%- endcomment -%}
-            {%- if pre_ok and v_is_early_bonus -%}
-              {%- assign early_bonus = true -%}
-            {%- endif -%}
-
-            {%- comment -%}
-              ▼ 締切間近
-              ・各バリアントの variant.sell_end_at を見て、一番近い日時を min_end_ts に保存
-            {%- endcomment -%}
-            {%- assign v_end_raw = v.metafields.variant.sell_end_at -%}
-            {%- if v_end_raw != blank -%}
-              {%- assign v_end_ts = v_end_raw | date: '%s' | plus: 0 -%}
-              {%- if min_end_ts == 0 or v_end_ts < min_end_ts -%}
-                {%- assign min_end_ts = v_end_ts -%}
-              {%- endif -%}
-            {%- endif -%}
-          {%- endfor -%}
-
-          {%- comment -%}
-            初回特典バリアントの在庫合計が 1〜閾値以内のときだけ true
-          {%- endcomment -%}
-          {%- if first_bonus_total > 0 and first_bonus_total <= first_bonus_threshold -%}
-            {%- assign first_bonus_low = true -%}
-          {%- endif -%}
-
-          {%- if min_end_ts != 0 -%}
-            {%- assign closing_from_ts = min_end_ts | minus: ten_days_sec -%}
-            {%- if now_ts >= closing_from_ts and now_ts <= min_end_ts -%}
-              {%- assign closing_soon = true -%}
-            {%- endif -%}
-          {%- endif -%}
-
           <a
             class="csh-card{% if display_locked %} csh-card--locked{% endif %}"
             {% unless display_locked %}
@@ -197,25 +82,7 @@
 
             {% if section.settings.show_badges %}
               <div class="csh-badges csh-badges--below">
-                {%- if is_new and pre_ok == false -%}
-                  <span class="csh-badge csh-badge--new">NEW</span>
-                {%- endif -%}
-
-                {%- if pre_ok -%}
-                  <span class="csh-badge csh-badge--pre">予約受付中</span>
-                {%- endif -%}
-
-                {%- if first_bonus_low -%}
-                  <span class="csh-badge csh-badge--first-bonus">初回特典残りわずか</span>
-                {%- endif -%}
-
-                {%- if early_bonus -%}
-                  <span class="csh-badge csh-badge--early">早期予約特典あり</span>
-                {%- endif -%}
-
-                {%- if closing_soon -%}
-                  <span class="csh-badge csh-badge--closing">締切間近</span>
-                {%- endif -%}
+                {% render 'Custom-product-badges', badge_product: product, badge_class: 'csh-badge' %}
               </div>
             {% endif %}
 
@@ -259,38 +126,35 @@
     #csh-{{ section.id }} .csh-card{ display:flex; flex-direction:column; color:inherit; text-decoration:none; }
 
     /* ===== サムネイル ===== */
-    #csh-{{ section.id }} .csh-thumb{ border-radius:5px; overflow:hidden; background:#0b0f14; }
+    #csh-{{ section.id }} .csh-thumb{ border-radius:5px; overflow:hidden;}
     #csh-{{ section.id }} .csh-thumb img{ width:100%; height:auto; display:block; border-radius:5px; }
     #csh-{{ section.id }} .csh-thumb::before{ content:none !important; }
 
     /* バッジ（画像の下） */
-    #csh-{{ section.id }} .csh-badges--below{ display:flex; gap:6px; margin-top:8px; }
-    #csh-{{ section.id }} .csh-badge{ font-size:10px; font-weight:700; line-height:1; padding:6px 8px; color:#fff; box-shadow:0 1px 2px rgba(0,0,0,.15); }
-    #csh-{{ section.id }} .csh-badge--new{ background:#e63946; }
-    #csh-{{ section.id }} .csh-badge--pre{ background:#3B82F6; color:#fff; border-radius:0; }
-
-    /* 追加バッジ色 */
-    #csh-{{ section.id }} .csh-badge--first-bonus{ background:#ef4444; }  /* 初回特典残りわずか：赤 */
-    #csh-{{ section.id }} .csh-badge--early{        background:#22c55e; }  /* 早期予約特典あり：緑 */
-    #csh-{{ section.id }} .csh-badge--closing{      background:#f97316; }  /* 締切間近：オレンジ */
-
-    #csh-{{ section.id }} .csh-body{ padding:10px 12px 10px 0; display:grid; gap:6px; }
-    #csh-{{ section.id }} .csh-name{ font-size:13px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-    #csh-{{ section.id }} .csh-price{ font-size:12px; opacity:.9; }
-
-    /* ===== csh: バッジの折り返し制御（強制版） ===== */
-    #csh-{{ section.id }} .csh-badges.csh-badges--below{
+    #csh-{{ section.id }} .csh-badges--below{
       display:flex !important;
       flex-wrap:wrap !important;
       gap:6px 6px;
+      margin-top:8px;
     }
 
-    #csh-{{ section.id }} .csh-badges.csh-badges--below .csh-badge{
-      display:inline-flex !important;
+    /* セクション固有の形・サイズなど */
+    #csh-{{ section.id }} .csh-badge{
+      font-size:10px;
+      font-weight:700;
+      line-height:1;
+      padding:6px 8px;
+      box-shadow:0 1px 2px rgba(0,0,0,.15);
+      border-radius:0;
+      display:inline-flex;
       align-items:center;
-      white-space:nowrap !important;   /* 文字は折り返さない */
-      min-width:max-content;           /* バッジ幅を文字幅に合わせる */
+      white-space:nowrap;
+      min-width:max-content;
     }
+
+    #csh-{{ section.id }} .csh-body{ padding:8px 12px 10px 0; display:grid; gap:6px; }
+    #csh-{{ section.id }} .csh-name{ font-size:13px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    #csh-{{ section.id }} .csh-price{ font-size:12px; opacity:.9; }
 
     /* ===== SP ===== */
     @media (max-width: 768px){
@@ -330,16 +194,6 @@
       "label": "商品ラベル（NEW / 予約受付中 / 初回特典残りわずか / 早期予約特典あり / 締切間近）を表示",
       "default": true
     },
-    {
-      "type": "range",
-      "id": "new_days",
-      "label": "NEW判定（日数以内の公開）",
-      "min": 1,
-      "max": 60,
-      "step": 1,
-      "default": 14
-    },
-
     { "type": "header", "content": "レイアウト" },
     { "type": "range", "id": "columns_desktop", "label": "（PC）列数", "min": 2, "max": 8, "step": 1, "default": 6 },
     { "type": "range", "id": "gap_pc", "label": "（PC）カード間隔(px)", "min": 8, "max": 32, "step": 2, "default": 16 },

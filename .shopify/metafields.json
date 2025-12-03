@@ -22,6 +22,26 @@
         "name": "single_line_text_field",
         "category": "TEXT"
       }
+    },
+    {
+      "key": "display_as_tag",
+      "namespace": "collection",
+      "name": "タグとして表示するか",
+      "description": null,
+      "type": {
+        "name": "boolean",
+        "category": "TRUE_FALSE"
+      }
+    },
+    {
+      "key": "search_keyword_label",
+      "namespace": "collection",
+      "name": "検索キーワード",
+      "description": null,
+      "type": {
+        "name": "single_line_text_field",
+        "category": "TEXT"
+      }
     }
   ],
   "company": [],
