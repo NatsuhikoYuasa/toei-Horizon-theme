@@ -82,6 +82,11 @@
         {% endif %}
       </ul>
     </div>
+  {% elsif title == '商品管理' %}
+    {%- comment -%}
+      商品管理セクションは表示しない
+    {%- endcomment -%}
+
   {% else %}
     <h4 class="predictive-search-results__title">
       {{ title }}
