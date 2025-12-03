@@ -122,39 +122,66 @@
   {% capture cross_sell_map %}
   {
   {% assign variant_delimiter = '' %}
-  {% for v in product.variants %}
-    {% assign cs_list = v.metafields.variant.cross_sell_variants.value %}
-    {% if cs_list != blank and cs_list.size > 0 %}
-      {{ variant_delimiter }}"{{ v.id }}": [
-        {% assign item_delimiter = '' %}
-        {% for cs_variant in cs_list %}
-          {% assign cs_product = cs_variant.product %}
-          {% if cs_variant == blank or cs_product == blank %}
-            {% continue %}
-          {% endif %}
-          {% assign cs_image = cs_variant.featured_media | default: cs_product.featured_image %}
-          {{ item_delimiter }}{
-            "handle": {{ cs_product.handle | json }},
-            "url": {{ cs_product.url | append: '?variant=' | append: cs_variant.id | json }},
-            "title": {{ cs_product.title | json }},
-            "image": {{ cs_image | image_url: width: 360 | json }},
-            "price": {{ cs_variant.price | json }},
-            "available": {{ cs_variant.available | json }},
-            "product_id": {{ cs_product.id | json }},
-            "variant_id": {{ cs_variant.id | json }}
-          }
-          {% assign item_delimiter = ',' %}
-        {% endfor %}
-      ]
-      {% assign variant_delimiter = ',' %}
+{% for v in product.variants %}
+  <!-- debug variant {{ v.id }} raw metafield: {{ v.metafields.variant.cross_sell_variants }} -->
+  {%- comment -%}
+    クロスセルメタフィールドの取り出し
+    - 通常: v.metafields.variant.cross_sell_variants.value
+    - テーマや定義によっては .value なしでも配列として扱える場合があるのでフォールバックを用意
+    - namespace が custom の場合は v.metafields.custom.cross_sell_variants になっている可能性もあるので、
+      必要に応じて下の namespace を変えてください。
+  {%- endcomment -%}
+
+  {% assign cs_field = v.metafields.variant.cross_sell_variants %}
+  {% if cs_field == blank %}
+    {%- comment -%} もし namespace が custom の場合はここを使う {%- endcomment -%}
+    {%- assign cs_field = v.metafields.custom.cross_sell_variants -%}
+  {% endif %}
+
+  {% assign cs_list = blank %}
+  {% if cs_field != blank %}
+    {% if cs_field.value != blank %}
+      {% assign cs_list = cs_field.value %}
+    {% else %}
+      {% assign cs_list = cs_field %}
     {% endif %}
-  {% endfor %}
+  {% endif %}
+
+  {% if cs_list != blank and cs_list.size > 0 %}
+    {{ variant_delimiter }}"{{ v.id }}": [
+      {% assign item_delimiter = '' %}
+      {% for cs_variant in cs_list %}
+        {% assign cs_product = cs_variant.product %}
+        {% if cs_variant == blank or cs_product == blank %}
+          {% continue %}
+        {% endif %}
+        {% assign cs_image = cs_variant.featured_media | default: cs_product.featured_image %}
+        {{ item_delimiter }}{
+          "handle": {{ cs_product.handle | json }},
+          "url": {{ cs_product.url | append: '?variant=' | append: cs_variant.id | json }},
+          "title": {{ cs_product.title | json }},
+          "image": {{ cs_image | image_url: width: 360 | json }},
+          "price": {{ cs_variant.price | json }},
+          "available": {{ cs_variant.available | json }},
+          "product_id": {{ cs_product.id | json }},
+          "variant_id": {{ cs_variant.id | json }}
+        }
+        {% assign item_delimiter = ',' %}
+      {% endfor %}
+    ]
+    {% assign variant_delimiter = ',' %}
+  {% endif %}
+{% endfor %}
+
   }
   {% endcapture %}
   {% assign cross_sell_map = cross_sell_map | strip_newlines | strip %}
   {% if cross_sell_map == '' %}
     {% assign cross_sell_map = '{}' %}
   {% endif %}
+
+<!-- debug cross_sell_map: {{ cross_sell_map | escape }} -->
+
 
   <script>
     (function(){
