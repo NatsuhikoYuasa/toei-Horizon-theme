@@ -94,6 +94,21 @@
         "padding-block-end": 0
       }
     },
+    "cross_sell_variants": {
+      "type": "Custom-cross-sell-variants",
+      "settings": {
+        "heading": "こちらもおすすめ",
+        "heading_align": "left",
+        "bg_color": "#F5F6F9",
+        "limit": 6,
+        "show_price": true,
+        "card_gap": 16,
+        "card_gap_mobile": 12,
+        "padding-block-start": 36,
+        "padding-block-end": 36,
+        "color_scheme": "scheme-1"
+      }
+    },
     "product_recommendations_qggXJq": {
       "type": "product-recommendations",
       "blocks": {
@@ -268,6 +283,7 @@
   },
   "order": [
     "main",
+    "cross_sell_variants",
     "product_recommendations_qggXJq",
     "1764212582f0bd5253"
   ]
