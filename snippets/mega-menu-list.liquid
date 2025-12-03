@@ -71,7 +71,23 @@
     endif
   endif
 %}
-<ul
+{%- comment -%} wb03 add 第二階層タブ {%- endcomment -%}
+{% if parent_link.links != blank %}
+  <ul class="mega-menu__second-level list-unstyled">
+    {% for link in parent_link.links %}
+      <li class="mega-menu__second-level-item">
+        <a href="{{ link.url }}" class="mega-menu__second-level-link">
+          <span class="mega-menu__second-level-title">
+            {{ link.title }}
+          </span>
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+{% comment %} Horizon デフォルトのメガメニュー用リスト
+  今回は上の .mega-menu__second-level を使うため未使用 {% endcomment %}
+{% comment %} <ul
   data-menu-list-id="{{ id }}"
   class="mega-menu__list list-unstyled"
   style="--menu-image-border-radius: {{ image_border_radius }}px;"
@@ -183,7 +199,14 @@
       endif
     %}
   {% endfor %}
-</ul>
+</ul> {% endcomment %}
+
+{% comment %} wb03 add もっと見るボタン追加 {% endcomment %}
+<div class="mega-menu__more-link-wrapper">
+  <a href="{{ parent_link.url }}" class="mega-menu__more-link">
+    もっと見る
+  </a>
+</div>
 
 {% liquid
   # decide how many grid columns are needed for the menu list, and how many columns are needed for the featured content
@@ -346,3 +369,158 @@
       </ul>
     </span>
 {% endcase %}
+
+{% comment %} wb03 add メニュー用css {% endcomment %}
+{% stylesheet %}
+/* ================================
+   第一階層メニュー（仮面ライダー〜定番）
+   ================================ */
+/* ================================
+   第一階層（ヘッダーのカテゴリ）
+   ================================ */
+
+/* 太さ500に */
+.menu-list__link-title {
+  font-weight: 500;
+}
+
+/* すべての第一階層：hover で赤 */
+.menu-list__link:hover .menu-list__link-title,
+.menu-list__link:focus-visible .menu-list__link-title {
+  color: #e63946;
+}
+
+/* 「＋／×」を出すのは第二階層があるものだけ（aria-controls を持つリンク） */
+.menu-list__link[aria-controls] .menu-list__link-title {
+  position: relative;
+  padding-right: 12px;
+}
+
+.menu-list__link[aria-controls] .menu-list__link-title::after {
+  content: '+';
+  position: absolute;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+}
+
+/* 開いているときは × ＋ 文字色も赤 */
+.menu-list__link[aria-controls][aria-expanded="true"] .menu-list__link-title::after {
+  content: '×';
+  color: #e63946;
+}
+
+/* 第二階層がないものは aria-controls 自体が無いので + / × は出ないが、
+   上の .menu-list__link:hover... で文字だけ赤になります。 */
+
+/* ================================
+   メガメニュー本体の幅調整
+   ================================ */
+
+.header-menu .mega-menu.section {
+  max-width: 560px;        /* ドロップダウン全体の横幅を狭める */
+  margin: 0 auto;
+}
+
+/* ================================
+   第二階層タブ（四角いボタン）
+   ================================ */
+
+.mega-menu__second-level {
+  display: flex;
+  flex-wrap: nowrap;       /* PC は横一列固定 */
+  gap: 8px;
+  align-items: center;
+  margin: 16px auto 0;
+  max-width: 560px;        /* 上の mega-menu と合わせる */
+}
+
+.mega-menu__second-level-item {
+  flex: 0 0 auto;
+}
+
+.mega-menu__second-level-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 24px;
+  border-radius: 999px;
+  border: 1px solid rgb(var(--color-foreground-rgb) / 0.16);
+  background-color: #fff;
+  font-size: 12px;
+  line-height: 1;
+  text-decoration: none;
+  color: rgb(var(--color-foreground-rgb) / 0.7);
+  white-space: nowrap;
+}
+
+/* hoverで枠・文字を少し強調（お好みで） */
+.mega-menu__second-level-link:hover {
+  border-color: rgb(var(--color-foreground-rgb) / 0.3);
+  background-color: rgb(var(--color-foreground-rgb) / 0.02);
+}
+
+/* ================================
+   「もっと見る」
+   ================================ */
+.mega-menu__more-link-wrapper {
+  display: flex;
+  justify-content: flex-start;  /* 左寄せ（デザインに合わせるなら右寄せでもOK） */
+  max-width: 560px;
+  margin: 16px auto 0;          /* 第二階層タブと行を分ける */
+}
+
+.mega-menu__more-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  text-decoration: none;
+  color: rgb(var(--color-foreground-rgb));
+}
+
+/* 丸い「＞」アイコン */
+.mega-menu__more-link::after {
+  content: '›';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background-color: rgb(var(--color-foreground-rgb) / 0.06);
+  font-size: 14px;
+}
+
+/* 第二階層タブ（四角いボタン） */
+.mega-menu__second-level {
+  display: flex;
+  flex-wrap: wrap;       /* 横並び + はみ出したら折り返し */
+  gap: 8px;
+  align-items: center;
+  margin: 16px auto 0;
+  max-width: 560px;
+}
+
+.mega-menu__second-level-item {
+  flex: 0 0 auto;
+}
+
+/* 「もっと見る」 */
+.mega-menu__more-link-wrapper {
+  display: block;             /* ← block で第二階層と行を分ける */
+  max-width: 560px;
+  margin: 16px auto 0;        /* 上のタブと別行になるよう余白 */
+}
+
+.mega-menu__more-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  text-decoration: none;
+  color: rgb(var(--color-foreground-rgb));
+}
+
+{% endstylesheet %}

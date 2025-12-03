@@ -4316,39 +4316,6 @@ text-component {
 }
 
 /* ==========================================
- * 3. 仮面ライダー メガメニュー（PC）調整
- * ========================================== */
-@media screen and (min-width: 1024px) {
-
-  #submenu-1 [data-menu-grid-id="MegaMenuList-1"],
-  #submenu-1 [data-menu-list-id="MegaMenuList-1"] {
-    --menu-columns-desktop: 1;
-  }
-
-  #submenu-1 [data-menu-list-id="MegaMenuList-1"] .mega-menu__column--span-1 {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-  }
-
-  #submenu-1 [data-menu-list-id="MegaMenuList-1"] .mega-menu__column--span-1>div {
-    flex: 0 0 auto;
-    width: auto;
-    margin: 0 16px 8px 0;
-  }
-
-  #submenu-1 [data-menu-list-id="MegaMenuList-1"] .mega-menu__link {
-    display: inline-flex;
-    align-items: center;
-    padding: 8px 16px;
-    border: 1px solid #E5E5E5;
-    border-radius: 4px;
-    background: #fff;
-    white-space: nowrap;
-  }
-}
-
-/* ==========================================
  * 4. ドロワーメニュー（SP）文字サイズ調整
  * ========================================== */
 @media screen and (max-width: 749px) {
@@ -4378,9 +4345,6 @@ text-component {
 /* ==========================================
  * 5. コレクションページ全体レイアウト
  * ========================================== */
-
-/* ベース */
-.template-collection {}
 
 /* PC：左フィルター / 右商品グリッド（4列） */
 @media (min-width: 990px) {
@@ -4627,61 +4591,64 @@ facet-status-component.facets__status {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  margin-bottom: 16px;
 }
 
 /* 基本バッジ（共通） */
 .toei-badge,
 .csh-badge,
-.rv-badge,
-.cfc-badge {
-  font-size: 0.6rem !important;
-  padding: 4px 10px !important;
-  border-radius: 0 !important;
-  border: none !important;
-  font-weight: 600 !important;
+.cfc-badge,
+.rv-badge {
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 6px 8px;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  min-width: max-content;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .15);
+  border-radius: 0;
 }
 
 /* NEW */
-.toei-badge--new,
 .csh-badge--new,
-.rv-badge--new,
-.cfc-badge--new {
-  background: #d93231 !important;
-  color: #fff !important;
+.cfc-badge--new,
+.rv-badge--new {
+  background: #e63946;
+  color: #fff;
 }
 
 /* 予約受付中 */
-.toei-badge--pre,
 .csh-badge--pre,
-.rv-badge--pre,
-.cfc-badge--pre {
-  background: #060816 !important;
-  color: #fff !important;
+.cfc-badge--pre,
+.rv-badge--pre {
+  background: #060816;
+  color: #fff;
 }
 
-/* 初回特典残りわずか / 締切間近（グレー） */
-.toei-badge--first,
-.toei-badge--closing,
-.csh-badge--first-bonus,
-.csh-badge--closing,
-.rv-badge--first,
-.rv-badge--closing,
-.cfc-badge--first-bonus,
-.cfc-badge--closing {
-  background: #dde0e6 !important;
-  color: #060816 !important;
+/* 初回特典残りわずか */
+.csh-badge--first,
+.cfc-badge--first,
+.rv-badge--first {
+  background: #dde0e6;
+  color: #060816;
 }
 
 /* 早期予約特典あり */
-.toei-badge--early,
 .csh-badge--early,
-.rv-badge--early,
-.cfc-badge--early {
-  background: #060816 !important;
-  color: #fff !important;
+.cfc-badge--early,
+.rv-badge--early {
+  background: #060816;
+  color: #fff;
 }
 
+/* 締切間近 */
+.csh-badge--closing,
+.cfc-badge--closing,
+.rv-badge--closing {
+  background: #dde0e6;
+  color: #060816;
+}
 
 /* カートページ：商品エリアを広く、サマリーは固定幅にする */
 @media screen and (min-width: 1080px) {
@@ -4692,5 +4659,124 @@ facet-status-component.facets__status {
   tr.cart-items__table-row {
     max-width: 880px !important;
     margin: auto;
+  }
+}
+
+/* ===== 商品画像ばらつき修正 ===== */
+.csh-thumb,
+.rv-thumb,
+.cfc-card-media {
+  position: relative;
+  border-radius: 5px;
+  overflow: hidden;
+
+  /* 背景を透過に */
+  background: transparent;
+
+  /* 枠の縦横比を固定（お好みで数字調整OK） */
+  aspect-ratio: 700 / 815;
+
+  /* 画像を中央寄せ */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.csh-thumb img,
+.rv-img,
+.cfc-card-media img {
+  /* 枠いっぱいの範囲内で収まるように */
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+
+  object-fit: contain;
+  /* 全体表示（トリミングなし） */
+  display: block;
+  border-radius: 5px;
+}
+
+/* 画像なし時のプレースホルダー（rv用） */
+.rv-thumb__placeholder {
+  font-size: 11px;
+  color: #999;
+  text-align: center;
+  padding: 4px;
+}
+
+/* テキスト太さ揃え */
+.rv-meta,
+.csh-name,
+.csh-price,
+.cfc-card-body {
+  font-weight: 500;
+}
+
+/* =========================================
+   コレクション一覧の画像サイズを統一
+   （Horizon product-card 用）
+   ========================================= */
+
+/* 枠の縦横比だけ固定（display は元のまま） */
+.product-grid__item .card-gallery,
+.product-grid__item .product-media-container,
+.product-grid__item .product-media {
+  aspect-ratio: 700 / 815 !important;
+  /* 比率はお好みで */
+}
+
+/* 画像を中央寄せ＆トリミング無しで収める */
+.product-grid__item .product-media__image {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  object-fit: contain !important;
+  /* 全体表示 */
+  object-position: center center;
+  /* 縦横センター */
+}
+
+img.cart-items__media-image.border-style {
+  object-fit: contain;
+}
+
+/* =========================================
+   コレクション一覧：商品画像の枠を統一＆中央寄せ
+   ========================================= */
+
+/* 画像枠（カード上部）の高さを固定して、真ん中に寄せる */
+.product-grid__item .card-gallery {
+  /* 好きな高さに調整。今の見た目なら 320〜360px くらい */
+  height: 340px;
+  display: flex;
+  align-items: center;
+  /* 縦方向センター */
+  justify-content: center;
+  /* 横方向センター */
+}
+
+/* 枠いっぱいを高さ基準に使う */
+.product-grid__item .card-gallery .product-media-container,
+.product-grid__item .card-gallery .product-media {
+  height: 100%;
+}
+
+/* 画像は枠内に収まるように（トリミング無し） */
+.product-grid__item .card-gallery .product-media__image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  /* 画像全体が見えるように */
+  object-position: center center;
+  display: block;
+}
+
+/* スマホでは少し低めにする例（お好みで） */
+@media (max-width: 749px) {
+  .product-grid__item .card-gallery {
+    height: 260px;
   }
 }

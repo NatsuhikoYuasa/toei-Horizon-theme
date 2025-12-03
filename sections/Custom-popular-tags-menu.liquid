@@ -122,36 +122,7 @@
            2行目：3〜5番目 → 3列（33.333%）
            3行目：6〜10番目 → 5列（20%）
         ------------------------------------------------- */
-    @media screen and (min-width: 1024px) {
-
-      /* 上に余白＋5個を均等幅で並べる */
-      #submenu-1 [data-menu-list-id="MegaMenuList-1"] .mega-menu__column--span-1 {
-        margin-top: 16px;                /* ← 上の余白 */
-        display: flex;
-        flex-wrap: nowrap;               /* 5個で1列に固定 */
-        gap: 12px;                       /* 四角どうしの間隔 */
-      }
-
-      /* 各四角のサイズを統一（5分割） */
-      #submenu-1 [data-menu-list-id="MegaMenuList-1"] .mega-menu__column--span-1 > div {
-        flex: 1 1 0;
-        width: auto;
-        margin: 0;                       /* 以前つけた margin があればリセット */
-      }
-
-      /* 中のリンクをボタン風＋幅100%にしておく */
-      #submenu-1 [data-menu-list-id="MegaMenuList-1"] .mega-menu__link {
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        width: 100%;
-        padding: 8px 16px;
-        border: 1px solid #E5E5E5;
-        border-radius: 4px;
-        background: #fff;
-        white-space: nowrap;
-      }
-    }
+   
 
 
         @media (min-width: 990px){
