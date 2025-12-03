@@ -7,5 +7,14 @@
 {%- assign product_resource = closest.product | default: product -%}
 
 {% if product_resource %}
-  {% render 'Custom-product-badges', product: product_resource %}
+  <div class="toei-product-badges toei-badges" data-toei-badges>
+    {% render 'Custom-product-badges', product: product_resource %}
+  </div>
 {% endif %}
+
+{% schema %}
+{
+  "name": "商品バッジ（Custom）",
+  "settings": []
+}
+{% endschema %}

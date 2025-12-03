@@ -158,78 +158,12 @@
                     ▽▽ バッジはここ（タイトルの上）に表示 ▽▽
                   {%- endcomment -%}
 
-                  {%- liquid
-                    assign product = item.product
-                    assign selected_variant = item.variant
-
-                    # ===== 予約テンプレ判定（product.template_suffix を利用） =====
-                    assign is_preorder_template = false
-                    if product.template_suffix contains 'preorder'
-                      assign is_preorder_template = true
-                    endif
-
-                    # ===== NEW（公開日60日以内） =====
-                    assign now_ts_badge = 'now' | date: '%s' | plus: 0
-                    assign new_days = 60 | plus: 0
-                    assign days_sec = new_days | times: 86400
-                    assign cutoff_ts = now_ts_badge | minus: days_sec
-
-                    assign pub_ts = 0
-                    if product.published_at != blank
-                      assign pub_ts = product.published_at | date: '%s' | plus: 0
-                    endif
-
-                    assign badge_new = false
-                    if pub_ts != 0 and pub_ts > cutoff_ts
-                      assign badge_new = true
-                    endif
-
-                    # ===== 予約受付中（preorderテンプレだけ） =====
-                    assign badge_preorder = false
-                    if is_preorder_template
-                      assign badge_preorder = true
-                    endif
-
-                    # ===== バリエーション別バッジ =====
-                    assign badge_first_bonus = false
-                    if selected_variant.metafields.custom.is_first_bonus
-                      assign badge_first_bonus = true
-                    endif
-
-                    assign badge_early_bonus = false
-                    if selected_variant.metafields.custom.is_early_bonus
-                      assign badge_early_bonus = true
-                    endif
-
-                    assign badge_closing_soon = false
-                    assign v_end_raw = selected_variant.metafields.variant.sell_end_at
-                    if v_end_raw != blank
-                      assign ten_days_sec = 864000 | plus: 0
-                      assign v_end_ts = v_end_raw | date: '%s' | plus: 0
-                      assign v_from_ts = v_end_ts | minus: ten_days_sec
-                      if now_ts_badge >= v_from_ts and now_ts_badge <= v_end_ts
-                        assign badge_closing_soon = true
-                      endif
-                    endif
-                  -%}
-
-                  {%- comment -%} ★ バッジ（タイトルの上） {%- endcomment -%}
-                  <div class="toei-product-badges cart-item__badges">
-                    {% if badge_new %}
-                      <span class="toei-badge toei-badge--new">NEW</span>
-                    {% endif %}
-                    {% if badge_preorder %}
-                      <span class="toei-badge toei-badge--pre">予約受付中</span>
-                    {% endif %}
-                    {% if badge_early_bonus %}
-                      <span class="toei-badge toei-badge--early">早期予約特典あり</span>
-                    {% endif %}
-                    {% if badge_first_bonus %}
-                      <span class="toei-badge toei-badge--first">初回特典残りわずか</span>
-                    {% endif %}
-                    {% if badge_closing_soon %}
-                      <span class="toei-badge toei-badge--closing">締切間近</span>
-                    {% endif %}
+                  <div class="cart-item__badges">
+                    {% render 'Custom-product-badges',
+                      line_item: item,
+                      context: 'cart',
+                      badge_class: 'rv-badge'
+                    %}
                   </div>
 
                   {% if item.product.vendor and block_settings.vendor %}
@@ -674,10 +608,6 @@
     margin-block-start: var(--margin-2xs);
   }
 
-  .cart-items__details * {
-    font-size: var(--cart-font-size--sm);
-  }
-
   .cart-items__details a {
     text-decoration: none;
   }
@@ -715,7 +645,7 @@
   .cart-items__release-date {
     margin-top: 2px;
     font-size: 11px;
-    color: #18060066;
+    color: #180600;
   }
 
   /* 単体価格（タイトル下の ¥○○○○）は PC/SP 共通で非表示 */

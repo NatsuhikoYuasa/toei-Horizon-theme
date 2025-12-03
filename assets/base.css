@@ -4650,6 +4650,7 @@ facet-status-component.facets__status {
   color: #060816;
 }
 
+
 /* カートページ：商品エリアを広く、サマリーは固定幅にする */
 @media screen and (min-width: 1080px) {
   .cart-page {

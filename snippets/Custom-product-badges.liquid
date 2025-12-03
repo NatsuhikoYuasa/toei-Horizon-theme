@@ -1,207 +1,179 @@
 {%- comment -%}
-  Custom-product-badges.liquid
-  商品ページ用：バッジ表示スニペット（単体で完結）
+  共通バッジスニペット
 
-  判定ロジック（汎用コレクションと同じ考え方）：
-  - NEW
-    - 公開日が「new_days」日以内
-    - または tag:new
-    - または metafield custom.new_until が未来
-  - 予約受付中
-    - テンプレートサフィックスに "preorder"
-    - またはタグに preorder/pre-order/pre order
-    - またはタグに「予約」「先行」「先行予約」を含む
-    - または metafield custom.preorder が true
-  - 初回特典残りわずか
-    - variant.metafields.custom.is_first_bonus = true の在庫合計が
-      1〜first_bonus_threshold 個以内
-  - 早期予約特典あり
-    - 予約受付中かつ variant.metafields.custom.is_early_bonus = true が存在
-  - 締切間近
-    - 各バリアントの metafields.variant.sell_end_at のうち最短の日時の
-      10日前〜当日まで
+  利用パターン：
+  1) 一覧・おすすめ・最近見たなど（商品単位）
+     → {% render 'Custom-product-badges', badge_product: product %}
+
+  2) カート（line_item のバリアント単位）
+     → {% render 'Custom-product-badges', line_item: line_item, context: 'cart' %}
+
+  context:
+    - product（デフォルト）
+    - cart（カート用：小さいバッジ）
 {%- endcomment -%}
 
-{%- assign badge_product = product | default: closest.product | default: product_resource -%}
+{%- liquid
+  assign context = context | default: 'product'
 
-{%- if badge_product != blank -%}
+  # context == 'cart' の判定
+  assign is_cart = false
+  if context == 'cart'
+    assign is_cart = true
+  endif
 
-  {%- comment -%} 現在時刻 {%- endcomment -%}
-  {%- assign now_ts = 'now' | date: '%s' | plus: 0 -%}
+  # ===== 対象 product / variant の決定 =====
+  assign p = nil
+  assign v = nil
 
-  {%- comment -%}
-    NEW 判定
-  {%- endcomment -%}
-  {%- assign new_days = 14 | plus: 0 -%}
-  {%- assign days_sec = new_days | times: 86400 -%}
-  {%- assign cutoff_ts = now_ts | minus: days_sec -%}
+  if line_item
+    # カートなど：line_item から取得
+    assign p = line_item.product
+    assign v = line_item.variant
+  else
+    # 従来どおり badge_product または product
+    assign p = badge_product | default: product
+  endif
 
-  {%- assign pub_ts = 0 -%}
-  {%- if badge_product.published_at != blank -%}
-    {%- assign pub_ts = badge_product.published_at | date: '%s' | plus: 0 -%}
-  {%- endif -%}
+  if p == blank or p.id == blank
+    assign has_badge = false
+  else
+    assign now_ts = 'now' | date: '%s' | plus: 0
 
-  {%- assign is_new_published = false -%}
-  {%- if pub_ts != 0 and pub_ts > cutoff_ts -%}
-    {%- assign is_new_published = true -%}
-  {%- endif -%}
+    ##### --- NEW（公開日から60日以内：商品単位） ---
+    assign new_days  = 60 | plus: 0
+    assign days_sec  = new_days | times: 86400
+    assign cutoff_ts = now_ts | minus: days_sec
 
-  {%- assign tags_lc = badge_product.tags | join: ',' | downcase -%}
-  {%- assign tags_wrap = ',' | append: tags_lc | append: ',' -%}
+    assign is_new = false
+    if p.published_at != blank
+      assign pub_ts = p.published_at | date: '%s' | plus: 0
+      if pub_ts >= cutoff_ts and pub_ts <= now_ts
+        assign is_new = true
+      endif
+    endif
 
-  {%- assign is_new_tag = false -%}
-  {%- if tags_wrap contains ',new,' -%}
-    {%- assign is_new_tag = true -%}
-  {%- endif -%}
+    # ▼ ここから下は、cart かどうかでロジックを分岐
+    assign badge_preorder = false
+    assign badge_first    = false
+    assign badge_early    = false
+    assign badge_closing  = false
 
-  {%- assign is_new_mf = false -%}
-  {%- if badge_product.metafields.custom.new_until != blank -%}
-    {%- assign new_until_ts = badge_product.metafields.custom.new_until | date: '%s' | plus: 0 -%}
-    {%- if new_until_ts > now_ts -%}
-      {%- assign is_new_mf = true -%}
-    {%- endif -%}
-  {%- endif -%}
+    if line_item and v
+      ##### ▼▼ カート：バリアント単位で判定 ▼▼ #####
 
-  {%- assign is_new = false -%}
-  {%- if is_new_published or is_new_tag or is_new_mf -%}
-    {%- assign is_new = true -%}
-  {%- endif -%}
+      # 予約受付中 → variant.metafields.variant.is_preorder == true
+      if v.metafields.variant.is_preorder.value
+        assign badge_preorder = true
+      endif
 
-  {%- comment -%}
-    予約受付中（PRE-ORDER）判定
-  {%- endcomment -%}
-  {%- assign t_suffix = badge_product.template_suffix | downcase | default: '' -%}
-  {%- assign pre_ok = false -%}
+      # 初回特典残りわずか → custom.is_first_bonus
+      if v.metafields.custom.is_first_bonus.value
+        assign badge_first = true
+      endif
 
-  {%- if
-    t_suffix contains 'preorder'
-    or tags_wrap contains ',preorder,'
-    or tags_wrap contains ',pre-order,'
-    or tags_wrap contains ',pre order,'
-    or tags_lc contains '予約'
-    or tags_lc contains '先行'
-    or tags_lc contains '先行予約'
-    or badge_product.metafields.custom.preorder
-  -%}
-    {%- assign pre_ok = true -%}
-  {%- endif -%}
+      # 早期予約特典あり → custom.is_early_bonus
+      if v.metafields.custom.is_early_bonus.value
+        assign badge_early = true
+      endif
 
-  {%- comment -%}
-    初回特典／早期予約特典／締切間近
-  {%- endcomment -%}
-  {%- assign first_bonus_total = 0 -%}
-  {%- assign first_bonus_low   = false -%}
-  {%- assign early_bonus       = false -%}
-  {%- assign closing_soon      = false -%}
+      # 締切間近 → sell_end_at が 10 日以内
+      assign sell_end_raw = v.metafields.variant.sell_end_at
+      if sell_end_raw != blank
+        assign end_ts = sell_end_raw | date: '%s' | plus: 0
+        assign ten_days_sec    = 10 | times: 86400
+        assign closing_from_ts = end_ts | minus: ten_days_sec
+        if now_ts >= closing_from_ts and now_ts <= end_ts
+          assign badge_closing = true
+        endif
+      endif
 
-  {%- assign first_bonus_threshold = 10 | plus: 0 -%}
-  {%- assign ten_days_sec = 864000 | plus: 0 -%}
-  {%- assign min_end_ts = 0 -%}
+    else
+      ##### ▼▼ 一覧・最近見たなど：商品全体で判定（元のロジック） ▼▼ #####
 
-  {%- for v in badge_product.variants -%}
-    {%- assign v_inventory       = v.inventory_quantity | default: 0 | plus: 0 -%}
-    {%- assign v_is_first_bonus  = v.metafields.custom.is_first_bonus.value -%}
-    {%- assign v_is_early_bonus  = v.metafields.custom.is_early_bonus.value -%}
-    {%- assign v_end_raw         = v.metafields.variant.sell_end_at -%}
+      # 予約受付中（いずれかのバリアント is_preorder=true）
+      assign pre_ok = false
+      for v2 in p.variants
+        if v2.metafields.variant.is_preorder.value
+          assign pre_ok = true
+          break
+        endif
+      endfor
 
-    {%- comment -%} 初回特典残りわずか用：在庫合計 {%- endcomment -%}
-    {%- if v_is_first_bonus and v_inventory > 0 -%}
-      {%- assign first_bonus_total = first_bonus_total | plus: v_inventory -%}
-    {%- endif -%}
+      # 初回特典残りわずか
+      assign first_bonus_low = false
+      for v2 in p.variants
+        if v2.metafields.custom.is_first_bonus.value
+          assign first_bonus_low = true
+          break
+        endif
+      endfor
 
-    {%- comment -%} 早期予約特典あり {%- endcomment -%}
-    {%- if pre_ok and v_is_early_bonus -%}
-      {%- assign early_bonus = true -%}
-    {%- endif -%}
+      # 早期予約特典あり
+      assign early_bonus = false
+      for v2 in p.variants
+        if v2.metafields.custom.is_early_bonus.value
+          assign early_bonus = true
+          break
+        endif
+      endfor
 
-    {%- comment -%} 締切間近判定のため、最も早い sell_end_at を保存 {%- endcomment -%}
-    {%- if v_end_raw != blank -%}
-      {%- assign v_end_ts = v_end_raw | date: '%s' | plus: 0 -%}
-      {%- if min_end_ts == 0 or v_end_ts < min_end_ts -%}
-        {%- assign min_end_ts = v_end_ts -%}
-      {%- endif -%}
-    {%- endif -%}
-  {%- endfor -%}
+      # 締切間近（全バリアントの sell_end_at の最短）
+      assign closing_soon = false
+      assign min_end_ts   = 0
 
-  {%- if first_bonus_total > 0 and first_bonus_total <= first_bonus_threshold -%}
-    {%- assign first_bonus_low = true -%}
-  {%- endif -%}
+      for v2 in p.variants
+        assign end_raw = v2.metafields.variant.sell_end_at
+        if end_raw != blank
+          assign end_ts = end_raw | date: '%s' | plus: 0
+          if min_end_ts == 0 or end_ts < min_end_ts
+            assign min_end_ts = end_ts
+          endif
+        endif
+      endfor
 
-  {%- if min_end_ts != 0 -%}
-    {%- assign closing_from_ts = min_end_ts | minus: ten_days_sec -%}
-    {%- if now_ts >= closing_from_ts and now_ts <= min_end_ts -%}
-      {%- assign closing_soon = true -%}
-    {%- endif -%}
-  {%- endif -%}
+      if min_end_ts != 0
+        assign ten_days_sec     = 10 | times: 86400
+        assign closing_from_ts  = min_end_ts | minus: ten_days_sec
+        if now_ts >= closing_from_ts and now_ts <= min_end_ts
+          assign closing_soon = true
+        endif
+      endif
 
-  {%- assign has_any_badge = false -%}
-  {%- if is_new or pre_ok or first_bonus_low or early_bonus or closing_soon -%}
-    {%- assign has_any_badge = true -%}
-  {%- endif -%}
+      # 一覧側の判定結果を共通変数に反映
+      assign badge_preorder = pre_ok
+      assign badge_first    = first_bonus_low
+      assign badge_early    = early_bonus
+      assign badge_closing  = closing_soon
+    endif
 
-  {%- if has_any_badge -%}
-    <div class="wb-pdp-badges">
-      {%- if is_new and pre_ok == false -%}
-        <span class="wb-pdp-badge wb-pdp-badge--new">NEW</span>
-      {%- endif -%}
+    assign has_badge = false
+    if is_new or badge_preorder or badge_first or badge_early or badge_closing
+      assign has_badge = true
+    endif
+  endif
+-%}
 
-      {%- if pre_ok -%}
-        <span class="wb-pdp-badge wb-pdp-badge--pre">予約受付中</span>
-      {%- endif -%}
+{% if has_badge %}
+  {%- assign base_class = badge_class | default: 'badge' -%}
 
-      {%- if first_bonus_low -%}
-        <span class="wb-pdp-badge wb-pdp-badge--first-bonus">初回特典残りわずか</span>
-      {%- endif -%}
+  {% if is_new %}
+    <span class="{{ base_class }} {{ base_class }}--new">NEW</span>
+  {% endif %}
 
-      {%- if early_bonus -%}
-        <span class="wb-pdp-badge wb-pdp-badge--early">早期予約特典あり</span>
-      {%- endif -%}
+  {% if badge_preorder %}
+    <span class="{{ base_class }} {{ base_class }}--pre">予約受付中</span>
+  {% endif %}
 
-      {%- if closing_soon -%}
-        <span class="wb-pdp-badge wb-pdp-badge--closing">締切間近</span>
-      {%- endif -%}
-    </div>
-  {%- endif -%}
+  {% if badge_early %}
+    <span class="{{ base_class }} {{ base_class }}--early">早期予約特典あり</span>
+  {% endif %}
 
-  <style>
-    .wb-pdp-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 8px;
-    }
+  {% if badge_first %}
+    <span class="{{ base_class }} {{ base_class }}--first">初回特典残りわずか</span>
+  {% endif %}
 
-    .wb-pdp-badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 6px 8px;
-      font-size: 10px;
-      font-weight: 700;
-      line-height: 1;
-      color: #fff;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, .15);
-      white-space: nowrap;
-    }
-
-    .wb-pdp-badge--new {
-      background: #e63946;
-    }
-
-    .wb-pdp-badge--pre {
-      background: #3B82F6;
-    }
-
-    .wb-pdp-badge--first-bonus {
-      background: #ef4444;
-    }
-
-    .wb-pdp-badge--early {
-      background: #22c55e;
-    }
-
-    .wb-pdp-badge--closing {
-      background: #f97316;
-    }
-  </style>
-
-{%- endif -%}
+  {% if badge_closing %}
+    <span class="{{ base_class }} {{ base_class }}--closing">締切間近</span>
+  {% endif %}
+{% endif %}
