@@ -4742,6 +4742,13 @@ img.cart-items__media-image.border-style {
   object-fit: contain;
 }
 
+/* サーチページ */
+@media screen and (max-width: 749px) {
+  results-list.section.product-grid-container.spacing-style {
+    padding: 32px 16px;
+  }
+}
+
 /* wb03 add 最終調整 */
 /* =============================
  * 数量ボタン（− ＋）の色調整

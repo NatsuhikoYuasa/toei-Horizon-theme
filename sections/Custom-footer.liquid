@@ -11,58 +11,200 @@
   "
 >
   <div class="wb-footer__inner">
-    <div class="wb-footer__brand">
-      {% if section.settings.logo != blank %}
-        <div class="wb-footer__logo">
-          {{
-            section.settings.logo
-            | image_url: width: 400
-            | image_tag: loading: 'lazy', alt: section.settings.shop_name
-          }}
-        </div>
-      {% else %}
-        <p class="wb-footer__shop-name">
-          {{ section.settings.shop_name }}
-        </p>
-      {% endif %}
+    {%- comment -%}
+      左カラム：ブランド / SNS / 外部リンクボタン / メルマガフォーム
+    {%- endcomment -%}
+    <div class="wb-footer__left">
+      <div class="wb-footer__brand">
+        {% if section.settings.logo != blank %}
+          <div class="wb-footer__logo">
+            {{
+              section.settings.logo
+              | image_url: width: 400
+              | image_tag: loading: 'lazy', alt: section.settings.shop_name
+            }}
+          </div>
+        {% else %}
+          <p class="wb-footer__shop-name">
+            {{ section.settings.shop_name }}
+          </p>
+        {% endif %}
 
-      {% if section.settings.follow_label != '-' %}
-        <p class="wb-footer__follow-label">
-          {{ section.settings.follow_label }}
-        </p>
-      {% endif %}
+        {% if section.settings.follow_label != '-' %}
+          <p class="wb-footer__follow-label">
+            {{ section.settings.follow_label }}
+          </p>
+        {% endif %}
 
-      {% if section.blocks.size > 0 %}
-        <div class="wb-footer__sns">
-          {% for block in section.blocks %}
-            {% if block.type == 'sns' %}
-              {% assign url = block.settings.url | default: '#' %}
-              <a
-                href="{{ url }}"
-                class="wb-footer__sns-link"
-                target="_blank"
-                rel="noopener"
-                {{ block.shopify_attributes }}
+        {% if section.blocks.size > 0 %}
+          <div class="wb-footer__sns">
+            {% for block in section.blocks %}
+              {% if block.type == 'sns' %}
+                {% assign url = block.settings.url | default: '#' %}
+                <a
+                  href="{{ url }}"
+                  class="wb-footer__sns-link"
+                  target="_blank"
+                  rel="noopener"
+                  {{ block.shopify_attributes }}
+                >
+                  <span class="wb-footer__sns-circle">
+                    {% if block.settings.icon != blank %}
+                      {{
+                        block.settings.icon
+                        | image_url: width: 48
+                        | image_tag: loading: 'lazy', alt: block.settings.label
+                      }}
+                    {% else %}
+                      <span class="wb-footer__sns-fallback">{{ block.settings.label }}</span>
+                    {% endif %}
+                  </span>
+                </a>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      {%- comment -%}
+        外部リンクボタン（東映ビデオ株式会社 公式サイト / 東映ONLINE STORE）
+      {%- endcomment -%}
+            <div class="wb-footer__external-links">
+        {% if section.settings.external_link_1_label != '-' %}
+          <a
+            href="{{ section.settings.external_link_1_url }}"
+            class="wb-footer__external-link-card"
+            target="_blank"
+            rel="noopener"
+          >
+            <span class="wb-footer__external-link-text">
+              {{ section.settings.external_link_1_label }}
+            </span>
+            <span class="wb-footer__external-link-icon" aria-hidden="true">
+              {% if section.settings.external_link_1_icon != blank %}
+                {{
+                  section.settings.external_link_1_icon
+                  | image_url: width: 24
+                  | image_tag: loading: 'lazy', alt: ''
+                }}
+              {% else %}
+                <span class="wb-footer__external-link-icon-inner"></span>
+              {% endif %}
+            </span>
+          </a>
+        {% endif %}
+
+        {% if section.settings.external_link_2_label != '-' %}
+          <a
+            href="{{ section.settings.external_link_2_url }}"
+            class="wb-footer__external-link-card"
+            target="_blank"
+            rel="noopener"
+          >
+            <span class="wb-footer__external-link-text">
+              {{ section.settings.external_link_2_label }}
+            </span>
+            <span class="wb-footer__external-link-icon" aria-hidden="true">
+              {% if section.settings.external_link_2_icon != blank %}
+                {{
+                  section.settings.external_link_2_icon
+                  | image_url: width: 24
+                  | image_tag: loading: 'lazy', alt: ''
+                }}
+              {% else %}
+                <span class="wb-footer__external-link-icon-inner"></span>
+              {% endif %}
+            </span>
+          </a>
+        {% endif %}
+      </div>
+
+      {%- comment -%}
+        メルマガフォーム
+      {%- endcomment -%}
+      {% if section.settings.newsletter_title != '-' %}
+        <div class="wb-footer__newsletter-card">
+          <p class="wb-footer__newsletter-title">
+            {{ section.settings.newsletter_title }}
+          </p>
+          {% if section.settings.newsletter_text != '-' %}
+            <p class="wb-footer__newsletter-text">
+              {{ section.settings.newsletter_text }}
+            </p>
+          {% endif %}
+
+          {% form 'customer', id: 'FooterNewsletter-TOEI' %}
+            <input type="hidden" name="contact[tags]" value="newsletter">
+
+            <div class="wb-footer__newsletter-form">
+              <div class="wb-footer__newsletter-input-wrap">
+                <input
+                  id="NewsletterEmail-{{ section.id }}"
+                  type="email"
+                  name="contact[email]"
+                  class="wb-footer__newsletter-input"
+                  value="{{ form.email }}"
+                  autocorrect="off"
+                  autocapitalize="off"
+                  autocomplete="email"
+                  placeholder="{{ section.settings.newsletter_placeholder }}"
+                  required
+                >
+              </div>
+
+              <button
+                type="submit"
+                class="wb-footer__newsletter-button"
               >
-                <span class="wb-footer__sns-circle">
-                  {% if block.settings.icon != blank %}
-                    {{
-                      block.settings.icon
-                      | image_url: width: 48
-                      | image_tag: loading: 'lazy', alt: block.settings.label
-                    }}
-                  {% else %}
-                    <span class="wb-footer__sns-fallback">{{ block.settings.label }}</span>
-                  {% endif %}
-                </span>
-              </a>
+                {{ section.settings.newsletter_button_label }}
+              </button>
+            </div>
+
+            {% if form.posted_successfully? %}
+              <p class="wb-footer__newsletter-message wb-footer__newsletter-message--success">
+                {{ 'newsletter.success' | t }}
+              </p>
+            {% elsif form.errors %}
+              <p class="wb-footer__newsletter-message wb-footer__newsletter-message--error">
+                {{ form.errors.translated_fields.email | default: 'メールアドレス' }}
+                {{ form.errors.messages.email }}
+              </p>
             {% endif %}
-          {% endfor %}
+          {% endform %}
         </div>
       {% endif %}
     </div>
 
-    <div class="wb-footer__spacer"></div>
+    {%- comment -%}
+      右カラム：メニュー（2カラム）
+    {%- endcomment -%}
+    <div class="wb-footer__right">
+      <div class="wb-footer__menus">
+        {% if section.settings.menu_1 %}
+          <ul class="wb-footer__menu">
+            {% for link in linklists[section.settings.menu_1].links %}
+              <li class="wb-footer__menu-item">
+                <a href="{{ link.url }}" class="wb-footer__menu-link">
+                  {{ link.title }}
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+        {% if section.settings.menu_2 %}
+          <ul class="wb-footer__menu">
+            {% for link in linklists[section.settings.menu_2].links %}
+              <li class="wb-footer__menu-item">
+                <a href="{{ link.url }}" class="wb-footer__menu-link">
+                  {{ link.title }}
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+    </div>
   </div>
 
   {% if section.settings.copyright_text != '-' %}
@@ -73,112 +215,319 @@
 </section>
 
 <style>
+  #footer-{{ section.id }} {
+    padding: 60px 0 40px;
+    font-size: 14px;
+  }
+
+  /* 全体レイアウト ============================== */
+  #footer-{{ section.id }} .wb-footer__inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 40px;
+    color: #060816!important;
+  }
+
+  /* 左右 1:1 レイアウト（PC 基準） */
+  #footer-{{ section.id }} .wb-footer__left,
+  #footer-{{ section.id }} .wb-footer__right {
+    flex: 1 1 0;
+    max-width: 50%;
+  }
+
+  #footer-{{ section.id }} .wb-footer__brand {
+    margin-bottom: 32px;
+  }
+
+  /* 右カラム内でメニューを中央寄せ */
+  #footer-{{ section.id }} .wb-footer__right {
+    display: flex;
+    justify-content: center;
+  }
+
+  /* ロゴ・ショップ名 ============================ */
+
+  /* ロゴ幅（カスタマイズ設定） */
+  #footer-{{ section.id }} .wb-footer__logo img {
+    display: block;
+    max-width: {{ section.settings.logo_width }}px;
+    height: auto;
+    margin: 0 0 20px;
+  }
+
+  #footer-{{ section.id }} .wb-footer__shop-name {
+    font-size: 13px;
+    margin: 0 0 20px;
+  }
+
+  /* Follow us on + 下線 ========================= */
+  #footer-{{ section.id }} .wb-footer__follow-label {
+    font-size: 11px;
+    color: rgb(0 0 0 / 0.6);
+    margin: 0 0 14px;
+    position: relative;
+    display: block;      /* ラベルをブロック化 */
+    width: 100%;         /* 左ブロックいっぱいに */
+    padding-bottom: 8px;
+  }
+
+  #footer-{{ section.id }} .wb-footer__follow-label::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;         /* 下線もブロック幅いっぱい */
+    height: 1px;
+    background: rgb(0 0 0 / 0.15);
+  }
+
+  /* SNS アイコン ================================ */
+  #footer-{{ section.id }} .wb-footer__sns {
+    display: flex;
+    gap: 16px;
+  }
+
+  #footer-{{ section.id }} .wb-footer__sns-link {
+    display: inline-flex;
+  }
+
+  /* 白丸背景：少し大きく */
+  #footer-{{ section.id }} .wb-footer__sns-circle {
+    width: 40px;
+    height: 40px;
+    background: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* アイコン画像も少し大きく */
+  #footer-{{ section.id }} .wb-footer__sns-circle img {
+    width: 22px !important;
+    height: 22px !important;
+    object-fit: contain;
+    display: block;
+  }
+
+  /* テキスト fallback */
+  #footer-{{ section.id }} .wb-footer__sns-fallback {
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  /* 外部リンクカード ============================ */
+
+  /* PC では横並びで 2枚並列 */
+  #footer-{{ section.id }} .wb-footer__external-links {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  #footer-{{ section.id }} .wb-footer__external-link-card {
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    background: #ffffff;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: inherit;
+  }
+
+  #footer-{{ section.id }} .wb-footer__external-link-card:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .06);
+    transform: translateY(-1px);
+  }
+
+  #footer-{{ section.id }} .wb-footer__external-link-text {
+    display: inline-block;
+  }
+
+  #footer-{{ section.id }} .wb-footer__external-link-icon {
+    flex: 0 0 auto;
+    margin-left: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 外部リンク用 画像アイコン */
+  #footer-{{ section.id }} .wb-footer__external-link-icon img {
+    width: 20px;
+    height: 20px;
+    display: block;
+    object-fit: contain;
+  }
+
+  /* ダミーの赤い □（画像未設定時のみ） */
+  #footer-{{ section.id }} .wb-footer__external-link-icon-inner {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    border: 1px solid #e03131;
+  }
+
+  /* メルマガカード ============================== */
+  #footer-{{ section.id }} .wb-footer__newsletter-card {
+    margin-top: 16px;
+    padding: 20px 18px 18px;
+    background: #ffffff;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  #footer-{{ section.id }} .wb-footer__newsletter-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin: 0 0 10px;
+  }
+
+  #footer-{{ section.id }} .wb-footer__newsletter-text {
+    font-size: 12px;
+    line-height: 1.6;
+    margin: 0 0 14px;
+  }
+
+  #footer-{{ section.id }} .wb-footer__newsletter-form {
+    display: flex;
+    gap: 8px;
+  }
+
+  #footer-{{ section.id }} .wb-footer__newsletter-input-wrap {
+    flex: 1 1 auto;
+  }
+
+  #footer-{{ section.id }} .wb-footer__newsletter-input {
+    width: 100%;
+    font-size: 12px;
+    padding: 10px 12px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: #f8f8f8;
+  }
+
+  #footer-{{ section.id }} .wb-footer__newsletter-button {
+    flex: 0 0 80px;
+    border: none;
+    border-radius: 3px;
+    padding: 10px 0;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    background: #e03131;
+    color: #ffffff;
+  }
+
+  #footer-{{ section.id }} .wb-footer__newsletter-message {
+    margin-top: 8px;
+    font-size: 11px;
+  }
+
+  #footer-{{ section.id }} .wb-footer__newsletter-message--success {
+    color: #2f9e44;
+  }
+
+  #footer-{{ section.id }} .wb-footer__newsletter-message--error {
+    color: #e03131;
+  }
+
+  /* 右側メニュー ================================ */
+
+  /* PC：2カラムを中央寄せ（横間隔広め） */
+  #footer-{{ section.id }} .wb-footer__menus {
+    display: flex;
+    gap: 160px;  /* ← ここで PC の横間隔を広めに */
+    justify-content: center;
+    font-weight: 600;
+  }
+
+  #footer-{{ section.id }} .wb-footer__menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  #footer-{{ section.id }} .wb-footer__menu-item + .wb-footer__menu-item {
+    margin-top: 10px;
+  }
+
+  #footer-{{ section.id }} .wb-footer__menu-link {
+    font-size: 13px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  #footer-{{ section.id }} .wb-footer__menu-link:hover {
+    text-decoration: underline;
+  }
+
+  /* コピーライト ================================ */
+  #footer-{{ section.id }} .wb-footer__copyright {
+    margin-top: 40px;
+    text-align: center;
+    font-size: 10px;
+    opacity: .7;
+    padding-inline: 20px;
+  }
+
+  /* SP レイアウト（～749px） ==================== */
+  @media (max-width: 749px) {
     #footer-{{ section.id }} {
-      padding: 60px 0 40px;
-      font-size: 14px;
+      padding: 40px 0 30px;
     }
 
+    /* 左右カラムは縦並び＆横いっぱい */
     #footer-{{ section.id }} .wb-footer__inner {
-      display: flex;
-      justify-content: space-between;
+      flex-direction: column;
       align-items: flex-start;
-      gap: 40px;
-      /* padding-inline は page-width 側に任せる */
+      gap: 24px;
     }
 
-    #footer-{{ section.id }} .wb-footer__brand {
-      max-width: 360px;
+    #footer-{{ section.id }} .wb-footer__left,
+    #footer-{{ section.id }} .wb-footer__right {
+      max-width: 100%;
+      width: 100%;
     }
 
-    /* ロゴ幅（カスタマイズ設定） */
-    #footer-{{ section.id }} .wb-footer__logo img {
-      display: block;
-      max-width: {{ section.settings.logo_width }}px;
-      height: auto;
-      margin: 0 0 20px;
+    /* リンク2つ＋メルマガカードも横いっぱい */
+    #footer-{{ section.id }} .wb-footer__external-links {
+      flex-direction: column;
+      width: 100%;
     }
 
-    #footer-{{ section.id }} .wb-footer__shop-name {
-      font-size: 13px;
-      margin: 0 0 20px;
+    #footer-{{ section.id }} .wb-footer__external-link-card,
+    #footer-{{ section.id }} .wb-footer__newsletter-card {
+      width: 100%;
     }
 
-    /* Follow us on + 下線 */
-    #footer-{{ section.id }} .wb-footer__follow-label {
-      font-size: 11px;
-      color: rgb(0 0 0 / 0.6);
-      margin: 0 0 14px;
-      position: relative;
-      display: inline-block;
-      padding-bottom: 8px;
+    #footer-{{ section.id }} .wb-footer__right {
+      justify-content: flex-start;
     }
 
-    #footer-{{ section.id }} .wb-footer__follow-label::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      bottom: 0;
-      width: 520px; /* 下線の長さ：他セクションと合わせつつ長めに */
-      height: 1px;
-      background: rgb(0 0 0 / 0.15);
+    /* メニューは 2 列（50%ずつ） */
+    #footer-{{ section.id }} .wb-footer__menus {
+      display: flex !important;
+      flex-wrap: nowrap;
+      gap: 16px 40px;
+      justify-content: flex-start !important;
     }
 
-    /* SNS アイコン全体 */
-    #footer-{{ section.id }} .wb-footer__sns {
-      display: flex;
-      gap: 16px;
+    #footer-{{ section.id }} .wb-footer__menu {
+      width: 50% !important;
     }
+  }
 
-    /* 白丸背景 */
-    #footer-{{ section.id }} .wb-footer__sns-circle {
-      width: 34px;
-      height: 34px;
-      background: #ffffff;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    /* アイコン画像を統一サイズで表示 */
-    #footer-{{ section.id }} .wb-footer__sns-circle img {
-      width: 18px !important;
-      height: 18px !important;
-      object-fit: contain;
-      display: block;
-    }
-
-    /* テキスト fallback */
-    #footer-{{ section.id }} .wb-footer__sns-fallback {
-      font-size: 12px;
-      line-height: 1;
-    }
-
-    #footer-{{ section.id }} .wb-footer__copyright {
-      margin-top: 40px;
-      text-align: center;
-      font-size: 10px;
-      opacity: .7;
-      padding-inline: 20px;
-    }
-
-    @media (max-width: 768px) {
-      #footer-{{ section.id }} {
-        padding: 40px 0 30px;
-      }
-
-      #footer-{{ section.id }} .wb-footer__inner {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 24px;
-      }
-
-      /* SP で下線が長すぎる場合は短く */
-      #footer-{{ section.id }} .wb-footer__follow-label::after {
-        width: 260px;
-      }
-    }
 </style>
 
 {% schema %}
@@ -223,6 +572,79 @@
       "label": "「Follow us on」テキスト",
       "default": "Follow us on"
     },
+
+    /* 外部リンクボタン */
+    {
+      "type": "text",
+      "id": "external_link_1_label",
+      "label": "外部リンク1 ラベル",
+      "default": "東映ビデオ株式会社 公式サイト"
+    },
+    {
+      "type": "url",
+      "id": "external_link_1_url",
+      "label": "外部リンク1 URL"
+    },
+    {
+      "type": "image_picker",
+      "id": "external_link_1_icon",
+      "label": "外部リンク1 アイコン画像"
+    },
+    {
+      "type": "text",
+      "id": "external_link_2_label",
+      "label": "外部リンク2 ラベル",
+      "default": "東映ONLINE STORE"
+    },
+    {
+      "type": "url",
+      "id": "external_link_2_url",
+      "label": "外部リンク2 URL"
+    },
+    {
+      "type": "image_picker",
+      "id": "external_link_2_icon",
+      "label": "外部リンク2 アイコン画像"
+    },
+
+    /* メルマガフォーム */
+    {
+      "type": "text",
+      "id": "newsletter_title",
+      "label": "メルマガタイトル",
+      "default": "メルマガ会員募集中"
+    },
+    {
+      "type": "textarea",
+      "id": "newsletter_text",
+      "label": "メルマガ説明文",
+      "default": "新商品情報や限定商品のお得なキャンペーンなどの特別なお知らせをお届け"
+    },
+    {
+      "type": "text",
+      "id": "newsletter_placeholder",
+      "label": "メールアドレスプレースホルダー",
+      "default": "メールアドレス"
+    },
+    {
+      "type": "text",
+      "id": "newsletter_button_label",
+      "label": "登録ボタンの文言",
+      "default": "登録"
+    },
+
+    /* 右側メニュー */
+    {
+      "type": "link_list",
+      "id": "menu_1",
+      "label": "フッターメニュー1"
+    },
+    {
+      "type": "link_list",
+      "id": "menu_2",
+      "label": "フッターメニュー2"
+    },
+
     {
       "type": "text",
       "id": "copyright_text",
