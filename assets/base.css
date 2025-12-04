@@ -4741,3 +4741,177 @@ facet-status-component.facets__status {
 img.cart-items__media-image.border-style {
   object-fit: contain;
 }
+
+/* wb03 add 最終調整 */
+/* =============================
+ * 数量ボタン（− ＋）の色調整
+ * ============================= */
+.toei-quantity-controls {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.toei-qty-btn {
+  -webkit-appearance: none;
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: rgb(var(--color-foreground-rgb));
+  /* 通常の文字色（黒系） */
+  font-size: 20px;
+  line-height: 1;
+  padding: 0 10px;
+  cursor: pointer;
+}
+
+/* =============================
+ * フィルター内チェックボックスの二重線対策
+ * ============================= */
+.facets .checkbox__input:focus-visible+.checkbox__label,
+.facets .checkbox__input:focus-visible+.checkbox__label .icon-checkmark {
+  outline: none;
+  box-shadow: none;
+}
+
+/************************************************
+ * フィルターの pill（開始前・映画・グッズなど）を
+ * 通常のチェックボックスと同じ見た目にする
+ ************************************************/
+
+/* pill 全体のベース */
+.facets .facets__pill-wrapper {
+  position: relative;
+  display: block;
+}
+
+/* 本体の input は隠す（ラベルクリックで操作） */
+.facets .facets__pill-input {
+  position: absolute;
+  opacity: 0;
+  margin: 0;
+  width: var(--checkbox-size);
+  height: var(--checkbox-size);
+}
+
+/* ラベル行：.checkbox__label と揃える */
+.facets .facets__pill-label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: var(--checkbox-cursor);
+  line-height: var(--checkbox-size);
+  min-width: var(--minimum-touch-target);
+
+  /* 左に □ を置く余白 */
+  padding-left: calc(var(--checkbox-size) + 8px);
+  padding-top: 0;
+  padding-bottom: 0;
+
+  /* pill っぽい装飾を殺す */
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* □ 部分：.checkbox .icon-checkmark 相当を擬似要素で再現 */
+.facets .facets__pill-label::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: var(--checkbox-left, 1.5px);
+  width: var(--checkbox-size);
+  height: var(--checkbox-size);
+  transform: translateY(-50%);
+  box-sizing: border-box;
+
+  border-radius: var(--checkbox-border-radius);
+  border: var(--checkbox-border);
+  background-color: var(--color-background);
+}
+
+/* チェック状態の見た目（チェック時は塗りつぶし） */
+.facets .facets__pill-input:checked+.facets__pill-label::before {
+  background-color: rgb(var(--color-foreground-rgb));
+}
+
+.facets .facets__pill-input:checked+.facets__pill-label {
+  color: rgb(var(--color-foreground-rgb));
+}
+
+/* 不要ならフォーカス時の枠も消す（「二重線」対策） */
+.facets .facets__pill-input:focus-visible+.facets__pill-label {
+  outline: none;
+}
+
+
+
+/* pill（開始前／映画／グッズ）の □ サイズと見た目を固定で指定 */
+.facets .facets__pill-label {
+  line-height: 22px !important;
+  padding-left: 30px !important;
+  /* 22px（□）+ 8px（余白） */
+}
+
+/* □ のボックスをちゃんと表示させる */
+.facets .facets__pill-label::before {
+  width: 22px !important;
+  height: 22px !important;
+  left: 0 !important;
+  border-radius: 7px !important;
+  border: 1px solid rgb(var(--color-foreground-rgb) / var(--opacity-35-55)) !important;
+  background-color: var(--color-background);
+}
+
+/* チェックされたときの塗りつぶし */
+.facets .facets__pill-input:checked+.facets__pill-label::before {
+  background-color: rgb(var(--color-foreground-rgb)) !important;
+}
+
+/* pill のフォーカス枠も消して二重線防止 */
+.facets .facets__pill-input:focus-visible+.facets__pill-label {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+
+/**********************************************
+ *  フィルター：pill 型（予約・販売期間／商品ジャンルなど）調整
+ **********************************************/
+
+/* 共通の見た目をスリム＆左寄せに */
+.facets__inputs-list--grid .facets__pill-label {
+  font-size: 13px;
+  line-height: 1.3;
+  padding: 6px 10px !important;
+  /* 左の変な余白をリセット */
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  /* テキスト左寄せ */
+  width: 100%;
+  border-radius: 4px;
+  border: 1px solid rgb(var(--color-foreground-rgb) / 0.2);
+  background-color: var(--color-background);
+  color: rgb(var(--color-foreground-rgb));
+  box-shadow: none;
+}
+
+/* 選択時でも文字色は黒のまま・背景も白のままにする */
+.facets__pill-input:checked+.facets__pill-label {
+  color: rgb(var(--color-foreground-rgb)) !important;
+  background-color: var(--color-background) !important;
+  border-color: rgb(var(--color-primary-rgb)) !important;
+}
+
+
+
+/**********************************************
+ * カート / フィルター ドロワーの × から丸枠を外す
+ **********************************************/
+button.cart-drawer__close-button.close-button.button-unstyled:focus-visible,
+button.close-button:focus-visible,
+button.facets__close-button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}

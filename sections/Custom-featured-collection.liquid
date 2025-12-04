@@ -31,10 +31,10 @@
 
         {% if the_collection.products_count > 0 %}
           <div class="cfc-grid">
-          {% assign shown_count = 0 %}
+            {% assign shown_count = 0 %}
             {% for product in the_collection.products %}
               {%- comment -%} display_start_at / display_end_at による表示ロック判定 {%- endcomment -%}
-                            {% liquid
+              {% liquid
                 assign display_locked = false
                 assign display_start_raw = product.metafields.product.display_start_at
                 assign display_end_raw = product.metafields.product.display_end_at
@@ -66,16 +66,15 @@
                 endif
               %}
 
-             {% comment %} ロック商品はカード自体を表示しない {% endcomment %}
-             {% if display_locked %}
-               {% continue %}
-             {% endif %}
+              {% comment %} ロック商品はカード自体を表示しない {% endcomment %}
+              {% if display_locked %}
+                {% continue %}
+              {% endif %}
 
-               <a
-                 class="cfc-card"
-                 href="{{ product.url | within: the_collection }}"
-               >
-
+              <a
+                class="cfc-card"
+                href="{{ product.url | within: the_collection }}"
+              >
                 <div class="cfc-card-media">
                   {% if product.featured_image %}
                     {{
@@ -97,11 +96,26 @@
                 <div class="cfc-card-body">
                   <div class="cfc-card-title">{{ product.title }}</div>
                   <div class="cfc-card-price">
-                    {% if product.price_varies %}
-                      {{ product.price_min | money }} — {{ product.price_max | money }}
-                    {% else %}
-                      {{ product.price | money }}
-                    {% endif %}
+                    {%- assign has_sale = false -%}
+                    {%- if product.compare_at_price_max > product.price -%}
+                      {%- assign has_sale = true -%}
+                    {%- endif -%}
+
+                    {%- if has_sale -%}
+                      <span class="cfc-card-price-current">{{ product.price | money }}</span>
+                      <span class="cfc-card-price-compare"
+                        ><s>{{ product.compare_at_price_max | money }}</s></span
+                      >
+                    {%- else -%}
+                      <span class="cfc-card-price-current">
+                        {%- if product.price_varies -%}
+                          {{ product.price_min | money }} — {{ product.price_max | money }}
+                        {%- else -%}
+                          {{ product.price | money }}
+                        {%- endif -%}
+                      </span>
+                    {%- endif -%}
+                    <span class="cfc-card-price-tax">（税込）</span>
                   </div>
                 </div>
               </a>
@@ -109,7 +123,6 @@
               {% if shown_count >= 4 %}
                 {% break %}
               {% endif %}
-
             {% endfor %}
           </div>
         {% else %}
@@ -255,6 +268,9 @@
       }
 
       #section-{{ section.id }} .cfc-title { margin-top: 40px; }
+    }
+    .cfc-card-price-tax {
+      font-size: 10px;
     }
   </style>
 </section>
