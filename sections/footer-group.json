@@ -96,6 +96,7 @@
         "text_BGBfJw",
         "email_signup_FbLDG7"
       ],
+      "disabled": true,
       "name": "t:names.email_signup",
       "settings": {
         "content_direction": "row",
@@ -512,6 +513,7 @@
         "group_dhtD9b",
         "email_signup_M3Ew7f"
       ],
+      "disabled": true,
       "name": "t:names.footer",
       "settings": {
         "section_width": "page-width",
