@@ -94,6 +94,68 @@
         "padding-block-end": 0
       }
     },
+    "custom_cross_sell_variants_qJAH6e": {
+      "type": "Custom-cross-sell-variants",
+      "name": "クロスセル商品（Custom）",
+      "settings": {
+        "heading": "関連商品",
+        "heading_align": "left",
+        "bg_color": "#ffffff",
+        "limit": 6,
+        "show_price": true,
+        "card_gap": 16,
+        "card_gap_mobile": 12,
+        "padding-block-start": 36,
+        "padding-block-end": 36,
+        "color_scheme": ""
+      }
+    },
+    "custom_up_sell_variants_8bJCaU": {
+      "type": "Custom-up-sell-variants",
+      "name": "アップセル商品（Custom）",
+      "settings": {
+        "heading": "こちらもおすすめ",
+        "heading_align": "left",
+        "bg_color": "#ffffff",
+        "limit": 6,
+        "show_price": true,
+        "card_gap": 16,
+        "card_gap_mobile": 12,
+        "padding-block-start": 36,
+        "padding-block-end": 36,
+        "color_scheme": ""
+      }
+    },
+    "1764212582f0bd5253": {
+      "type": "_blocks",
+      "settings": {
+        "content_direction": "column",
+        "vertical_on_mobile": true,
+        "horizontal_alignment": "flex-start",
+        "vertical_alignment": "center",
+        "align_baseline": false,
+        "horizontal_alignment_flex_direction_column": "flex-start",
+        "vertical_alignment_flex_direction_column": "center",
+        "gap": 12,
+        "section_width": "page-width",
+        "section_height": "",
+        "section_height_custom": 50,
+        "color_scheme": "scheme-3",
+        "background_media": "none",
+        "video_position": "cover",
+        "background_image_position": "cover",
+        "border": "none",
+        "border_width": 1,
+        "border_opacity": 100,
+        "border_radius": 0,
+        "toggle_overlay": false,
+        "overlay_color": "#00000026",
+        "overlay_style": "solid",
+        "gradient_direction": "to top",
+        "padding-block-start": 0,
+        "padding-block-end": 0
+      }
+    },
     "product_recommendations_qggXJq": {
       "type": "product-recommendations",
       "blocks": {
@@ -234,68 +296,6 @@
         "color_scheme": "scheme-1",
         "padding-block-start": 48,
         "padding-block-end": 48
-      }
-    },
-    "1764212582f0bd5253": {
-      "type": "_blocks",
-      "settings": {
-        "content_direction": "column",
-        "vertical_on_mobile": true,
-        "horizontal_alignment": "flex-start",
-        "vertical_alignment": "center",
-        "align_baseline": false,
-        "horizontal_alignment_flex_direction_column": "flex-start",
-        "vertical_alignment_flex_direction_column": "center",
-        "gap": 12,
-        "section_width": "page-width",
-        "section_height": "",
-        "section_height_custom": 50,
-        "color_scheme": "",
-        "background_media": "none",
-        "video_position": "cover",
-        "background_image_position": "cover",
-        "border": "none",
-        "border_width": 1,
-        "border_opacity": 100,
-        "border_radius": 0,
-        "toggle_overlay": false,
-        "overlay_color": "#00000026",
-        "overlay_style": "solid",
-        "gradient_direction": "to top",
-        "padding-block-start": 0,
-        "padding-block-end": 0
-      }
-    },
-    "custom_cross_sell_variants_qJAH6e": {
-      "type": "Custom-cross-sell-variants",
-      "name": "クロスセル商品（Custom）",
-      "settings": {
-        "heading": "関連商品",
-        "heading_align": "left",
-        "bg_color": "#F5F6F9",
-        "limit": 6,
-        "show_price": true,
-        "card_gap": 16,
-        "card_gap_mobile": 12,
-        "padding-block-start": 36,
-        "padding-block-end": 36,
-        "color_scheme": ""
-      }
-    },
-    "custom_up_sell_variants_8bJCaU": {
-      "type": "Custom-up-sell-variants",
-      "name": "アップセル商品（Custom）",
-      "settings": {
-        "heading": "こちらもおすすめ",
-        "heading_align": "left",
-        "bg_color": "#F5F6F9",
-        "limit": 6,
-        "show_price": true,
-        "card_gap": 16,
-        "card_gap_mobile": 12,
-        "padding-block-start": 36,
-        "padding-block-end": 36,
-        "color_scheme": ""
       }
     }
   },
