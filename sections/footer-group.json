@@ -177,7 +177,8 @@
       "settings": {
         "bg_color": "#e6e8ee",
         "text_color": "#000000",
-        "logo_width": 220,
+        "logo": "shopify://shop_images/logo.svg",
+        "logo_width": 160,
         "shop_name": "TOEI VIDEO ONLINE SHOP（仮）",
         "follow_label": "Follow us on",
         "external_link_1_label": "東映ビデオ株式会社 公式サイト",
