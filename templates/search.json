@@ -83,7 +83,6 @@
         },
         "product-card": {
           "type": "_product-card",
-          "disabled": true,
           "static": true,
           "settings": {
             "product_card_gap": 4,
