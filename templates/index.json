@@ -179,28 +179,28 @@
         "collection_YLAPXt": {
           "type": "collection",
           "settings": {
-            "collection": "pick_up_series_product_collection_4",
+            "collection": "pick_up_series_product_collection_1",
             "title": ""
           }
         },
         "collection_4eKtDW": {
           "type": "collection",
           "settings": {
-            "collection": "新商品-wb",
+            "collection": "pick_up_series_product_collection_2",
             "title": ""
           }
         },
         "collection_t6Kryn": {
           "type": "collection",
           "settings": {
-            "collection": "新商品-wb",
+            "collection": "pick_up_series_product_collection_3",
             "title": ""
           }
         },
         "collection_6UY4DE": {
           "type": "collection",
           "settings": {
-            "collection": "新商品-wb",
+            "collection": "pick_up_series_product_collection_4",
             "title": ""
           }
         }
