@@ -4741,3 +4741,10 @@ facet-status-component.facets__status {
 img.cart-items__media-image.border-style {
   object-fit: contain;
 }
+
+/* サーチページ */
+@media screen and (max-width: 749px) {
+  results-list.section.product-grid-container.spacing-style {
+    padding: 32px 16px;
+  }
+}
