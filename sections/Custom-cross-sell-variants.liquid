@@ -61,9 +61,8 @@
         {%- assign xsell_variants = xsell_field.value -%}
 
         <div
-          class="rv-list"
+          class="rv-list{% if v.id == current_variant.id %} rv-list--active{% endif %}"
           data-variant-id="{{ v.id }}"
-          {% unless v.id == current_variant.id %}hidden{% endunless %}
           data-limit="{{ section.settings.limit | default: 6 }}"
         >
           {%- assign rendered_count = 0 -%}
@@ -133,8 +132,12 @@
     .color-scheme-2 #custom-xsell-{{ section.id }} .rv-title,
     .color-scheme-3 #custom-xsell-{{ section.id }} .rv-title { border-color: rgba(255,255,255,.12); }
 
-    /* ====== PC：グリッド ====== */
+    /* ====== リストの表示制御 ====== */
     #custom-xsell-{{ section.id }} .rv-list{
+      display:none; /* デフォルト非表示 */
+    }
+    /* アクティブなバリアントだけ表示 */
+    #custom-xsell-{{ section.id }} .rv-list.rv-list--active{
       display:grid;
       grid-template-columns: repeat(6, minmax(0,1fr));
       gap: var(--rv-gap-pc);
@@ -184,8 +187,10 @@
         width:48px; background:linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.06));
         pointer-events:none; opacity:0;
       }
-      #custom-xsell-{{ section.id }} .rv-list{
-        display:flex !important; gap: var(--rv-gap-sp);
+      /* SP 時もアクティブなものだけ flex で表示 */
+      #custom-xsell-{{ section.id }} .rv-list.rv-list--active{
+        display:flex !important;
+        gap: var(--rv-gap-sp);
         overflow-x:auto; overflow-y:visible; -webkit-overflow-scrolling:touch;
         scroll-snap-type:x proximity; scroll-snap-stop:normal; scrollbar-gutter:stable;
         scroll-padding-right: var(--rv-safe-inline);
@@ -240,7 +245,11 @@
         if (!variantId) {
           // variantId が取れないときは 1 つ目だけ表示しておく
           lists.forEach(function(list, index){
-            list.hidden = index !== 0;
+            if (index === 0) {
+              list.classList.add('rv-list--active');
+            } else {
+              list.classList.remove('rv-list--active');
+            }
           });
           console.log('[XSell] no variantId, show first list as fallback');
           root.style.display = '';
@@ -252,10 +261,10 @@
 
         lists.forEach(function(list){
           if (list.dataset.variantId === variantIdStr) {
-            list.hidden = false;
+            list.classList.add('rv-list--active');
             found = true;
           } else {
-            list.hidden = true;
+            list.classList.remove('rv-list--active');
           }
         });
 
