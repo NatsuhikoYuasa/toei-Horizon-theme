@@ -215,6 +215,7 @@
       "block_order": [
         "text_cbcgyb"
       ],
+      "disabled": true,
       "name": "t:names.product_recommendations",
       "settings": {
         "product": "{{ closest.product }}",
@@ -264,11 +265,45 @@
         "padding-block-start": 0,
         "padding-block-end": 0
       }
+    },
+    "custom_cross_sell_variants_qJAH6e": {
+      "type": "Custom-cross-sell-variants",
+      "name": "クロスセル商品（Custom）",
+      "settings": {
+        "heading": "関連商品",
+        "heading_align": "left",
+        "bg_color": "#F5F6F9",
+        "limit": 6,
+        "show_price": true,
+        "card_gap": 16,
+        "card_gap_mobile": 12,
+        "padding-block-start": 36,
+        "padding-block-end": 36,
+        "color_scheme": ""
+      }
+    },
+    "custom_up_sell_variants_8bJCaU": {
+      "type": "Custom-up-sell-variants",
+      "name": "アップセル商品（Custom）",
+      "settings": {
+        "heading": "こちらもおすすめ",
+        "heading_align": "left",
+        "bg_color": "#F5F6F9",
+        "limit": 6,
+        "show_price": true,
+        "card_gap": 16,
+        "card_gap_mobile": 12,
+        "padding-block-start": 36,
+        "padding-block-end": 36,
+        "color_scheme": ""
+      }
     }
   },
   "order": [
     "main",
-    "product_recommendations_qggXJq",
-    "1764212582f0bd5253"
+    "custom_cross_sell_variants_qJAH6e",
+    "custom_up_sell_variants_8bJCaU",
+    "1764212582f0bd5253",
+    "product_recommendations_qggXJq"
   ]
 }
