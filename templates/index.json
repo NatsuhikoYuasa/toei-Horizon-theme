@@ -165,21 +165,21 @@
         "collection_AUyijz": {
           "type": "collection",
           "settings": {
-            "collection": "新商品-wb",
+            "collection": "new_product_collection",
             "title": ""
           }
         },
         "collection_Arkmpm": {
           "type": "collection",
           "settings": {
-            "collection": "新商品-wb",
+            "collection": "near_deadline_product_collection",
             "title": ""
           }
         },
         "collection_YLAPXt": {
           "type": "collection",
           "settings": {
-            "collection": "新商品-wb",
+            "collection": "pick_up_series_product_collection_4",
             "title": ""
           }
         },
