@@ -71,7 +71,23 @@
     endif
   endif
 %}
-<ul
+{%- comment -%} wb03 add 第二階層タブ {%- endcomment -%}
+{% if parent_link.links != blank %}
+  <ul class="mega-menu__second-level list-unstyled">
+    {% for link in parent_link.links %}
+      <li class="mega-menu__second-level-item">
+        <a href="{{ link.url }}" class="mega-menu__second-level-link">
+          <span class="mega-menu__second-level-title">
+            {{ link.title }}
+          </span>
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+{% comment %} Horizon デフォルトのメガメニュー用リスト
+  今回は上の .mega-menu__second-level を使うため未使用 {% endcomment %}
+{% comment %} <ul
   data-menu-list-id="{{ id }}"
   class="mega-menu__list list-unstyled"
   style="--menu-image-border-radius: {{ image_border_radius }}px;"
@@ -183,7 +199,14 @@
       endif
     %}
   {% endfor %}
-</ul>
+</ul> {% endcomment %}
+
+{% comment %} wb03 add もっと見るボタン追加 {% endcomment %}
+<div class="mega-menu__more-link-wrapper">
+  <a href="{{ parent_link.url }}" class="mega-menu__more-link">
+    もっと見る
+  </a>
+</div>
 
 {% liquid
   # decide how many grid columns are needed for the menu list, and how many columns are needed for the featured content
@@ -346,3 +369,189 @@
       </ul>
     </span>
 {% endcase %}
+
+{% comment %} wb03 add メニュー用css {% endcomment %}
+{% stylesheet %}
+/* ================================
+   第一階層（ヘッダーのカテゴリ）
+   ================================ */
+
+/* 太さ500に */
+.menu-list__link-title {
+  font-weight: 500;
+}
+
+/* すべての第一階層：hover で赤 */
+.menu-list__link:hover .menu-list__link-title,
+.menu-list__link:focus-visible .menu-list__link-title {
+  color: #e63946;
+}
+
+/* 第一階層カテゴリ同士の左右余白を少し広げる */
+.header-menu .menu-list {
+  column-gap: 40px;  /* お好みで 36〜48 くらいに調整OK */
+}
+
+/* 「＋／×」を出すのは第二階層があるものだけ（aria-controls を持つリンク） */
+.menu-list__link[aria-controls] .menu-list__link-title {
+  position: relative;
+  padding-right: 10px;  /* ← 余白を少し減らす */
+}
+
+.menu-list__link[aria-controls] .menu-list__link-title::after {
+  content: '+';
+  position: absolute;
+  right: -2px;         /* ← 文字と＋の間を詰める（ほぼ 2px 程度） */
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+}
+
+/* 開いているときは × ＋ 文字色も赤 */
+.menu-list__link[aria-controls][aria-expanded="true"] .menu-list__link-title::after {
+  content: '×';
+  color: #e63946;
+}
+
+/* ================================
+   メガメニューの幅・位置
+   ================================ */
+
+/* ドロップダウン中身に左右20pxの余白 → ヘッダーとツラを揃える */
+.header-menu .mega-menu__grid {
+  padding-inline: 20px;
+  padding-bottom: 20px;
+}
+
+/* 第二階層タブと「もっと見る」を
+   グリッド 1列分まるごと使うようにして上下に積む */
+.header-menu .mega-menu__second-level,
+.header-menu .mega-menu__more-link-wrapper {
+  grid-column: 1 / -1;
+}
+
+/* ================================
+   第二階層タブ（四角いボタン）
+   ================================ */
+
+.mega-menu__second-level {
+  display: flex;
+  flex-wrap: nowrap;     /* 横一列固定 */
+  gap: 8px;
+  align-items: center;
+  margin: 16px 0 0;
+}
+
+.mega-menu__second-level-item {
+  flex: 0 0 auto;
+}
+
+.mega-menu__second-level-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 28px;      /* ← ひと回り大きく */
+  border-radius: 8px;     /* ← 角丸 8px */
+  border: 1px solid rgb(var(--color-foreground-rgb) / 0.16);
+  background-color: #fff;
+  font-size: 13px;        /* 少しだけ大きめに */
+  line-height: 1;
+  text-decoration: none;
+  color: rgb(var(--color-foreground-rgb) / 0.7);
+  white-space: nowrap;
+}
+
+.mega-menu__second-level-link:hover {
+  border-color: rgb(var(--color-foreground-rgb) / 0.3);
+  background-color: rgb(var(--color-foreground-rgb) / 0.02);
+}
+
+/* ================================
+   「もっと見る」
+   ================================ */
+
+.mega-menu__more-link-wrapper {
+  display: flex;
+  justify-content: flex-end; /* ← 右寄せに変更 */
+  margin: 12px 0 0;
+}
+
+.mega-menu__more-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  text-decoration: none;
+  color: rgb(var(--color-foreground-rgb));
+}
+
+/* 丸い「＞」アイコン */
+.mega-menu__more-link::after {
+  content: '›';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background-color: rgb(var(--color-foreground-rgb) / 0.06);
+  font-size: 14px;
+}
+
+/* ================================
+   「さらに表示する」内のメニュー調整
+   ================================ */
+
+/* ▼「さらに表示する」で開くオーバーフローメニューの余白 */
+.header-menu .menu-list__list--overflow {
+  padding-inline: 20px;  /* 左右 20px */
+  padding-block: 12px;   /* 上下はお好みで */
+}
+
+/* ▼中のカテゴリ名のフォントサイズを他と合わせる */
+.header-menu .menu-list__list--overflow .menu-list__link-title {
+  font-size: var(--font-size-base);  /* 通常と同じ */
+  line-height: 1.6;
+  font-weight: 500;                  /* 第一階層と同じ太さ */
+}
+
+/* 念のため：オーバーフロー側でも + の余白を 10px に */
+.header-menu .menu-list__list--overflow
+  .menu-list__link[aria-controls] .menu-list__link-title {
+  padding-right: 10px;
+}
+
+/* ドロップダウンを開いている間も、第一階層タイトルを赤のままに */
+.menu-list__link[aria-expanded="true"] .menu-list__link-title {
+  color: #e63946;
+}
+/* ================================
+   「さらに表示する」内のカテゴリ見た目調整
+   ================================ */
+
+/* フォントサイズを通常の第一階層と揃える */
+.header-menu__overflow .menu-list__link-title,
+.menu-list--overflow .menu-list__link-title {
+  font-size: var(--font-body-size);
+}
+
+/* 左右に 20px の余白をつけてツラを合わせる */
+.header-menu__overflow .menu-list,
+.menu-list--overflow {
+  padding-inline: 20px;
+}
+
+/* 750px〜1200px のときだけ PCメニュー→ハンバーガー表示に切り替え */
+@media screen and (min-width: 750px) and (max-width: 1199px) {
+  /* 上部のカテゴリー（PC メニュー）を非表示 */
+  .header-menu {
+    display: none !important;
+  }
+
+  /* ハンバーガー（header-drawer）側を表示 */
+  .header__drawer.desktop\:hidden {
+    display: block !important;
+  }
+}
+
+{% endstylesheet %}

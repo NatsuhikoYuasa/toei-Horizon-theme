@@ -5,6 +5,11 @@
   type="module"
   fetchpriority="low"
 ></script>
+<script
+  src="{{ 'component-cart-quantity-selector.js' | asset_url }}"
+  type="module"
+  fetchpriority="low"
+></script>
 
 <div
   {{ block.shopify_attributes }}
@@ -26,6 +31,7 @@
     >
       {{ 'actions.continue_shopping' | t }}
     </a>
+
   {%- else -%}
     <span
       class="visually-hidden"
@@ -34,6 +40,7 @@
     >
       {{- cart.item_count -}}
     </span>
+
     <form
       action="{{ routes.cart_url }}"
       class="cart-form"
@@ -42,10 +49,10 @@
     >
       <div
         class="cart-items spacing-style{% if block_settings.dividers %} cart-items--dividers{% endif %}"
-        style="{%  render 'spacing-style', settings: block_settings %} --cart-items-gap:{{ block_settings.gap | append: "px" }};"
+        style="{% render 'spacing-style', settings: block_settings %} --cart-items-gap:{{ block_settings.gap | append: 'px' }};"
       >
         {%- comment -%}
-          ▽▽ 商品 / 数量 / 金額 のヘッダー行 ▽▽
+          ▽▽ 商品 / 数量 / 金額 のヘッダー行（カートページのみ） ▽▽
         {%- endcomment -%}
         {% if request.page_type == 'cart' %}
           <div class="cart-items__header-row">
@@ -126,17 +133,21 @@
                     {% liquid
                       assign ratio = 1
                       assign border_opacity = settings.cart_thumbnail_border_opacity | divided_by: 100.0
-                      assign border_override = '--border-width: [cart_thumbnail_border_width]px; --border-style: [cart_thumbnail_border_style]; --border-color: rgb(var(--color-border-rgb) / [cart_thumbnail_border_opacity]); --border-radius: [cart_thumbnail_border_radius]px;' | replace: '[cart_thumbnail_border_width]', settings.cart_thumbnail_border_width | replace: '[cart_thumbnail_border_style]', settings.cart_thumbnail_border | replace: '[cart_thumbnail_border_opacity]', border_opacity | replace: '[cart_thumbnail_border_radius]', settings.cart_thumbnail_border_radius
+
+                      assign border_override = '--border-width: [cart_thumbnail_border_width]px; --border-style: [cart_thumbnail_border_style]; --border-color: rgb(var(--color-border-rgb) / [cart_thumbnail_border_opacity]); --border-radius: [cart_thumbnail_border_radius]px;'
+                      assign border_override = border_override | replace: '[cart_thumbnail_border_width]', settings.cart_thumbnail_border_width | replace: '[cart_thumbnail_border_style]', settings.cart_thumbnail_border | replace: '[cart_thumbnail_border_opacity]', border_opacity | replace: '[cart_thumbnail_border_radius]', settings.cart_thumbnail_border_radius
 
                       if settings.cart_thumbnail_border_radius > 0
                         assign border_override = border_override | append: ' overflow: hidden;'
                       endif
+
                       if block_settings.image_ratio == 'portrait'
                         assign ratio = 0.8
                       elsif block_settings.image_ratio == 'adapt'
                         assign ratio = item.image.aspect_ratio
                       endif
                     %}
+
                     <a
                       href="{{ item.url }}"
                       class="cart-items__media-container"
@@ -155,9 +166,8 @@
                   headers="productInformation"
                 >
                   {%- comment -%}
-                    ▽▽ バッジはここ（タイトルの上）に表示 ▽▽
+                    ▽▽ バッジ（NEW / 予約受付中など） ▽▽
                   {%- endcomment -%}
-
                   <div class="cart-item__badges">
                     {% render 'Custom-product-badges',
                       line_item: item,
@@ -167,9 +177,7 @@
                   </div>
 
                   {% if item.product.vendor and block_settings.vendor %}
-                    <p>
-                      {{ item.product.vendor }}
-                    </p>
+                    <p>{{ item.product.vendor }}</p>
                   {% endif %}
 
                   {%- comment -%} ★ 商品タイトル {%- endcomment -%}
@@ -180,14 +188,13 @@
                   </p>
 
                   {%- liquid
-                    # バリアントの発売日メタフィールドを取得
-                    # メタフィールド定義：namespace「variant」 key「release_date」想定
-                    assign release_raw = selected_variant.metafields.variant.release_date
+                    assign release_raw = item.variant.metafields.variant.release_date
+                    assign preorder_flag = item.variant.metafields.variant.is_preorder
                   -%}
                   {%- if release_raw != blank -%}
                     <p class="cart-items__release-date">
                       {{ release_raw | date: '%Y年%-m月%-d日' }}
-                      {%- if is_preorder_template -%}
+                      {%- if preorder_flag == true or preorder_flag == 'true' or preorder_flag == 1 or preorder_flag == '1' -%}
                         発売予定
                       {%- else -%}
                         発売
@@ -247,17 +254,10 @@
                     {% endif %}
                   {%- endif -%}
 
-                  {% if item.line_level_discount_allocations.size > 0 %}
-                    <ul
-                      class="list-unstyled"
-                      role="list"
-                    >
-                      {%- for discount in item.line_level_discount_allocations -%}
-                        <li>{{ discount.discount_application.title | escape }}</li>
-                      {%- endfor -%}
-                    </ul>
-                  {% endif %}
-
+                  {%- comment -%}
+                    単価部分（タイトル直下の価格）は非表示にしているので
+                    実際の小計は右端の「小計」列で表示
+                  {%- endcomment -%}
                   <div class="cart-items__unit-price">
                     {% if item.original_price != item.final_price %}
                       <span class="visually-hidden">{{ 'content.price_sale' | t }}</span>
@@ -297,19 +297,19 @@
                   %}
                   {% render 'quantity-selector',
                     product: item.product,
+                    variant: item.variant,
                     in_cart_quantity: item.quantity,
                     line_index: item.index,
-                    min: 0,
                     class: 'cart-primary-typography quantity-selector--cart',
                     can_update_quantity: can_update_quantity
                   %}
 
+                  {% assign can_remove = item.instructions.can_remove | default: true, allow_false: true %}
                   <button
                     class="button button--tertiary cart-items__remove"
                     type="button"
                     aria-label="{{ 'accessibility.remove_item' | t: title: item.title | escape }}"
                     on:click="/onLineItemRemove/{{ item.index | plus: 1 }}"
-                    {% assign can_remove = item.instructions.can_remove | default: true, allow_false: true %}
                     {% if can_remove == false %}
                       hidden
                     {% endif %}
@@ -376,10 +376,11 @@
     </form>
   {%- endif -%}
 </div>
+
 {% stylesheet %}
   /* ──────────────────────────────
    基本レイアウト
-────────────────────────────── */
+  ────────────────────────────── */
   .cart-items {
     --cart-item-media-width-min: 2.5rem;
     --cart-item-media-width-max: 7.5rem;
@@ -403,7 +404,7 @@
 
   /* ──────────────────────────────
    「商品 / 数量 / 金額」ヘッダー行
-────────────────────────────── */
+  ────────────────────────────── */
 
   .cart-items__header-row {
     display: none; /* モバイルとドロワーでは非表示。PC だけ Container Query で表示 */
@@ -432,7 +433,7 @@
   /* ──────────────────────────────
    行本体：モバイル基準レイアウト
    （価格 → 数量の順で縦に並べる）
-────────────────────────────── */
+  ────────────────────────────── */
 
   .cart-items__table-row {
     --cart-item-price-width: 6rem;
@@ -501,10 +502,9 @@
   /* ──────────────────────────────
    PC レイアウト（Cart ページのみ）
    Container 幅 720px 以上で適用
-────────────────────────────── */
+  ────────────────────────────── */
 
   @container cart-items (min-width: 720px) {
-    /* 商品 / 数量 / 金額 ヘッダーを表示 */
     .cart-items__header-row {
       max-width: 880px;
       margin-inline: auto;
@@ -518,14 +518,12 @@
       margin-bottom: var(--cart-items-gap);
     }
 
-    /* ヘッダーと行を同じ最大幅＆位置に */
     .cart-items__header-row,
     .cart-items__table-row {
       max-width: 880px;
       margin-inline: auto;
     }
 
-    /* 行本体もヘッダーと同じ 4 列グリッドに */
     .cart-items__table-row {
       --cart-item-price-width: 6rem;
 
@@ -541,7 +539,6 @@
       grid-area: media;
     }
 
-    /* PC では details を自動配置にしてバッジと画像のツラを合わせる */
     .cart-items__details {
       grid-area: auto;
     }
@@ -580,28 +577,8 @@
   }
 
   /* ──────────────────────────────
-   モバイル専用（〜749px）
-   ・ヘッダー非表示
-   ・価格は左寄せ（行頭寄せ）
-────────────────────────────── */
-
-  @media screen and (max-width: 749px) {
-    .cart-items__header-row {
-      display: none;
-    }
-
-    .cart-items__price {
-      text-align: left;
-    }
-
-    .cart-items__price-inner {
-      justify-content: flex-start;
-    }
-  }
-
-  /* ──────────────────────────────
    商品詳細・バッジ・リリース日
-────────────────────────────── */
+  ────────────────────────────── */
 
   .cart-items__details > * + *,
   .cart-items__bundle li {
@@ -616,14 +593,13 @@
     font-size: var(--cart-font-size--md);
     color: var(--color-foreground);
     text-transform: var(--product-title-case);
-    font-weight: 600; /* タイトル少し太く */
+    font-weight: 600;
   }
 
   .cart-items__title a {
     color: inherit;
   }
 
-  /* バッジ（NEW / 予約受付中 など） */
   .cart-item__badges {
     display: flex;
     flex-wrap: wrap;
@@ -636,26 +612,23 @@
     display: inline-block;
   }
 
-  /* バリアント情報はタイトル下には出さない */
   .cart-items__variants {
     display: none;
   }
 
-  /* variant.release_date 表示 */
   .cart-items__release-date {
     margin-top: 2px;
     font-size: 11px;
     color: #180600;
   }
 
-  /* 単体価格（タイトル下の ¥○○○○）は PC/SP 共通で非表示 */
   .cart-items__unit-price {
     display: none;
   }
 
   /* ──────────────────────────────
    数量カウンター＋削除ボタン
-────────────────────────────── */
+  ────────────────────────────── */
 
   .cart-items__quantity .quantity-selector {
     display: inline-flex;
@@ -712,20 +685,19 @@
 
   /* ──────────────────────────────
    価格表示（小計）
-────────────────────────────── */
+  ────────────────────────────── */
 
   .cart-items__price-inner {
     display: inline-flex;
     align-items: baseline;
     gap: 4px;
-    font-weight: 500; /* 少し太め */
-    justify-content: flex-end; /* PC 基準：右寄せ */
+    font-weight: 500;
+    justify-content: flex-end;
   }
 
-  /* 金額本体を固定幅＋タブラー数字で揃える */
   .cart-items__price-value {
     display: inline-block;
-    min-width: 7rem; /* 桁数が違っても幅を揃える */
+    min-width: 7rem;
     text-align: right;
     font-variant-numeric: tabular-nums;
     -moz-font-feature-settings: 'tnum';
@@ -741,9 +713,36 @@
     font-size: var(--cart-font-size--xs);
   }
 
+    /* ──────────────────────────────
+   モバイル専用（〜749px）
+   ・ヘッダー非表示
+   ・カートページの金額を左寄せ
+  ────────────────────────────── */
+  @media screen and (max-width: 749px) {
+    /* 見出し行はスマホでは非表示 */
+    .cart-items__header-row {
+      display: none;
+    }
+
+    /* カートページの金額だけ左寄せにする（ドロワーは .cart-drawer 側で制御） */
+    .cart-page .cart-items__price {
+      text-align: left;
+    }
+
+    .cart-page .cart-items__price-inner {
+      justify-content: flex-start;
+    }
+
+    .cart-page .cart-items__price-value {
+      min-width: auto;
+      text-align: left;
+    }
+  }
+
+
   /* ──────────────────────────────
    画像
-────────────────────────────── */
+  ────────────────────────────── */
 
   .cart-items__media-container {
     display: flex;
@@ -769,7 +768,7 @@
 
   /* ──────────────────────────────
    エラー表示
-────────────────────────────── */
+  ────────────────────────────── */
 
   .cart-items__error {
     display: flex;
@@ -779,7 +778,8 @@
     opacity: 1;
     overflow: hidden;
     transform: translateY(0);
-    transition: opacity var(--drawer-animation-speed) var(--animation-easing),
+    transition:
+      opacity var(--drawer-animation-speed) var(--animation-easing),
       transform var(--drawer-animation-speed) var(--animation-easing);
   }
 
@@ -801,7 +801,7 @@
 
   /* ──────────────────────────────
    カートサマリー・ボタン周り（既存ほぼ踏襲）
-────────────────────────────── */
+  ────────────────────────────── */
 
   .cart__original-total-container,
   .cart__total-container {
@@ -985,14 +985,12 @@
 
   /* ──────────────────────────────
    ドロワーカート専用の調整
-────────────────────────────── */
+  ────────────────────────────── */
 
-  /* ドロワーでは「商品 / 数量 / 金額」ヘッダー不要 */
   .cart-drawer .cart-items__header-row {
     display: none !important;
   }
 
-  /* ドロワー内の価格は常に左寄せ */
   .cart-drawer .cart-items__price {
     text-align: left;
     align-items: flex-start;
@@ -1003,17 +1001,68 @@
     justify-content: flex-start;
   }
 
+  .cart-drawer .cart-items__price-value {
+    text-align: left;  /* ドロワー内だけ左寄せ */
+    min-width: auto;   /* 7rem の縛りを解除 */
+  }
+
   .cart-drawer__tax-label {
     margin-left: 4px;
     font-size: 0.75em;
   }
 
-  @media screen and (max-width: 800px) {
-    .cart-items__price-value {
-      min-width: auto;
+  .cart-items__table-row.cart-items__nested-line td:first-child {
+    width: 60%;
+    justify-self: right;
+  }
+
+  html:active-view-transition-type(page-navigation) .cart-items__table-row {
+    view-transition-name: none !important;
+  }
+
+  .cart-items__table-row.removing {
+    overflow: hidden;
+    animation: removeRow calc(var(--animation-speed) * 2) var(--animation-easing) forwards;
+    animation-delay: var(--animation-speed);
+  }
+
+  @keyframes removeRow {
+    0% {
+      height: var(--row-height);
     }
-    .cart-drawer .cart-items__price {
-      text-align: right;
+
+    100% {
+      opacity: 0;
+      height: 0;
+      padding-bottom: 0;
+      margin-bottom: 0;
+      border-color: transparent;
     }
+  }
+
+  /* ──────────────────────────────
+   空カート時の「買い物を続ける」ボタン
+   Cartページ／ドロワー共通デザイン
+  ────────────────────────────── */
+  .cart-page .cart-items__empty-button,
+  .cart-drawer .cart-items__empty-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff !important;
+    color: #e53935 !important;
+    border: 1px solid #e53935 !important;
+    border-radius: 8px;
+    padding-inline: 40px;
+    padding-block: 10px;
+    box-shadow: none;
+    text-decoration: none;
+  }
+
+  .cart-page .cart-items__empty-button::before,
+  .cart-page .cart-items__empty-button::after,
+  .cart-drawer .cart-items__empty-button::before,
+  .cart-drawer .cart-items__empty-button::after {
+    content: none;
   }
 {% endstylesheet %}

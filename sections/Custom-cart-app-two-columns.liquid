@@ -1,3 +1,36 @@
+{%- liquid
+  assign has_preorder = false
+  assign has_regular = false
+
+  for item in cart.items
+    assign v = item.variant
+    assign is_preorder = false
+
+    # ★ 予約フラグ：variant メタフィールド is_preorder を見る
+    if v.metafields.variant.is_preorder
+      assign is_preorder = true
+    endif
+
+    if is_preorder
+      assign has_preorder = true
+    else
+      assign has_regular = true
+    endif
+  endfor
+
+  assign delivery_mode = 'none'
+  if has_preorder and has_regular
+    assign delivery_mode = 'mixed'
+      # ② 既発＋予約
+  elsif has_preorder
+    assign delivery_mode = 'preorder_only'
+      # ① 予約のみ
+  elsif has_regular
+    assign delivery_mode = 'regular_only'
+      # ③ 既発のみ
+  endif
+-%}
+
 <div class="section-background color-{{ section.settings.color_scheme }}"></div>
 
 <section
@@ -14,7 +47,10 @@
       {%- assign first_block = blocks.first -%}
 
       <!-- 左カラム -->
-      <div class="cart-app-two-columns__column cart-app-two-columns__column--left">
+      <div
+        class="cart-app-two-columns__column cart-app-two-columns__column--left"
+        data-delivery-mode="{{ delivery_mode }}"
+      >
         {% render first_block %}
       </div>
 
@@ -159,6 +195,115 @@
       redeemBtn.textContent = '適用';
     }
   });
+
+
+  document.addEventListener('DOMContentLoaded', function () {
+  // 左カラムに付けた data-delivery-mode を取得
+  var column = document.querySelector(
+    '.cart-app-two-columns__column--left[data-delivery-mode]'
+  );
+  if (!column) return;
+
+  var mode = column.getAttribute('data-delivery-mode'); // preorder_only / mixed / regular_only
+
+  // AMP のウィジェットは読み込みが遅いのでポーリングで待つ
+  var tries = 0;
+  var timer = setInterval(function () {
+    tries++;
+    if (setupDeliveryWidget(mode) || tries > 50) {
+      clearInterval(timer);
+    }
+  }, 200);
+
+  function setupDeliveryWidget(mode) {
+    var root = document.getElementById('cart-delivery-datetime_section_os2');
+    if (!root) return false;
+
+    var titles = root.querySelectorAll('.delivery-title');
+    if (titles.length < 3) return false;
+
+    // 0: 「お届け希望日時」, 1: 「お届け希望日」, 2: 「お届け希望時間」
+    var dateTitle = titles[1];
+    var timeTitle = titles[2];
+
+    var dateContainer = dateTitle ? dateTitle.nextElementSibling : null;
+    var timeContainer = timeTitle ? timeTitle.nextElementSibling : null;
+    var minDateCaution = root.querySelector('.delivery-mindate-caution');
+
+    function removePreorderNote() {
+      var note = root.querySelector('.delivery-preorder-note');
+      if (note) note.remove();
+    }
+
+    // ① 予約のみ：日付ブロックを非表示（時間はそのまま）
+    if (mode === 'preorder_only') {
+      if (dateTitle) dateTitle.style.display = 'none';
+      if (dateContainer) dateContainer.style.display = 'none';
+      // 念のためメッセージも消す
+      removePreorderNote();
+
+      if (timeTitle) timeTitle.style.display = '';
+      if (timeContainer) timeContainer.style.display = '';
+    }
+      // ② 既発 + 予約：日付も時間も表示 + 注意文を「お届け希望日」のすぐ下に追加
+      else if (mode === 'mixed') {
+        if (dateTitle) dateTitle.style.display = '';
+        if (dateContainer) dateContainer.style.display = '';
+        if (timeTitle) timeTitle.style.display = '';
+        if (timeContainer) timeContainer.style.display = '';
+
+        // 既存があれば一旦削除してから追加
+        removePreorderNote();
+
+        // 「お届け希望日」タイトルの直下に注意文を入れる
+        if (dateTitle && !root.querySelector('.delivery-preorder-note')) {
+          var p = document.createElement('p');
+          p.className = 'delivery-preorder-note';
+          p.textContent = '予約商品は発売後最短でのお届けになります。';
+
+          // お届け希望日タイトルのすぐ下に挿入
+          dateTitle.insertAdjacentElement('afterend', p);
+        }
+      }
+    // ③ 既発のみ：日付・時間ともに通常表示（注意文無し）
+    else {
+      if (dateTitle) dateTitle.style.display = '';
+      if (dateContainer) dateContainer.style.display = '';
+      if (timeTitle) timeTitle.style.display = '';
+      if (timeContainer) timeContainer.style.display = '';
+      removePreorderNote();
+    }
+
+    return true;
+  }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+  // カート一覧テーブルを取得
+  var table = document.querySelector('table.cart-items__table');
+  if (!table) return;
+
+  var tbody = table.querySelector('tbody');
+  if (!tbody) return;
+
+  var observer = new MutationObserver(function (mutations) {
+    for (var i = 0; i < mutations.length; i++) {
+      var m = mutations[i];
+
+      // tr が削除された or 追加されたタイミングで1回だけリロード
+      if (m.type === 'childList' && (m.removedNodes.length > 0 || m.addedNodes.length > 0)) {
+        observer.disconnect(); // 二重発火防止
+        setTimeout(function () {
+          window.location.reload();
+        }, 120); // できるだけ速く・でも DOM 更新後に
+        break;
+      }
+    }
+  });
+
+  observer.observe(tbody, { childList: true });
+});
+
 </script>
 
 {% stylesheet %}
