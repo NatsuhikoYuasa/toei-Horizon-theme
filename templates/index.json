@@ -236,7 +236,7 @@
       "name": "特集コレクション（Custom）",
       "settings": {
         "collection": "series-101138",
-        "show_badges": true,
+        "show_badges": false,
         "card_gap": 16,
         "card_gap_mobile": 12
       }
@@ -283,7 +283,7 @@
       "name": "特集コレクション（Custom）",
       "settings": {
         "collection": "新商品-wb",
-        "show_badges": true,
+        "show_badges": false,
         "card_gap": 16,
         "card_gap_mobile": 12
       }
