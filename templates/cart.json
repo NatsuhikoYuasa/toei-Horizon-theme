@@ -16,7 +16,7 @@
           "type": "_cart-title",
           "static": true,
           "settings": {
-            "title": "Cart",
+            "title": "ショッピングカート",
             "show_count": true,
             "type_preset": "h4",
             "alignment": "left",
@@ -80,7 +80,7 @@
             "icon_color": "#4455ac",
             "condition_description_font_color": "#8f6900",
             "condition_description_font_size": 12,
-            "prefecture_caution_font_color": "rgb(223, 93, 93)",
+            "prefecture_caution_font_color": "#df5d5d",
             "prefecture_caution_background_color": "#f8d7da",
             "description_font_color": "",
             "description_font_size": 12
