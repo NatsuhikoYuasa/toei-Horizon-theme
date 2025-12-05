@@ -99,7 +99,7 @@
       "name": "クロスセル商品（Custom）",
       "settings": {
         "heading": "関連商品",
-        "heading_align": "left",
+        "heading_align": "center",
         "bg_color": "#ffffff",
         "limit": 6,
         "show_price": true,
@@ -115,7 +115,7 @@
       "name": "アップセル商品（Custom）",
       "settings": {
         "heading": "こちらもおすすめ",
-        "heading_align": "left",
+        "heading_align": "center",
         "bg_color": "#ffffff",
         "limit": 6,
         "show_price": true,
