@@ -162,19 +162,19 @@
     "custom_pickup_collections_BaGwNK": {
       "type": "Custom-pickup-collections",
       "blocks": {
+        "collection_Arkmpm": {
+          "type": "collection",
+          "settings": {
+            "collection": "near_deadline_product_collection",
+            "title": ""
+          }
+        },
         "collection_AUyijz": {
           "type": "collection",
           "settings": {
             "collection": "series-101109",
             "title": "仮面ライダー",
             "image": "shopify://shop_images/BSTD02301_0f1a8ea9-da9c-4578-82a0-f8c2956a7683.jpg"
-          }
-        },
-        "collection_Arkmpm": {
-          "type": "collection",
-          "settings": {
-            "collection": "near_deadline_product_collection",
-            "title": ""
           }
         },
         "collection_YLAPXt": {
@@ -207,8 +207,8 @@
         }
       },
       "block_order": [
-        "collection_AUyijz",
         "collection_Arkmpm",
+        "collection_AUyijz",
         "collection_YLAPXt",
         "collection_4eKtDW",
         "collection_t6Kryn",
@@ -246,7 +246,7 @@
       "name": "特集コレクション（Custom）",
       "settings": {
         "collection": "新商品-wb",
-        "show_badges": true,
+        "show_badges": false,
         "card_gap": 16,
         "card_gap_mobile": 12
       }
