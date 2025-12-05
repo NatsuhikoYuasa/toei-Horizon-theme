@@ -126,7 +126,7 @@
       "name": "あなたにおすすめ（Custom）",
       "settings": {
         "title_personal": "あなたにおすすめ",
-        "fallback_collection": "初回訪問者へおすすめ-wb",
+        "fallback_collection": "limited_collection",
         "recommendation_type": "related",
         "max_products": 6,
         "show_price": true,
