@@ -292,7 +292,7 @@
       "type": "Custom-collection-shelf",
       "name": "汎用コレクション（Custom）",
       "settings": {
-        "collection": "新商品-wb",
+        "collection": "new_product_collection",
         "limit": 6,
         "show_price": true,
         "show_badges": true,
