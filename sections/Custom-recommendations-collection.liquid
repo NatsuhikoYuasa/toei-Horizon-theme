@@ -98,13 +98,14 @@
             if product != blank and product.id != blank
               assign now_ts = 'now' | date: '%s' | plus: 0
 
-              ##### --- NEW（公開日から60日以内） ---
+              ##### --- NEW（display_start_at から60日以内） ---
               assign sixty_days = 60 | times: 86400
               assign cutoff_ts = now_ts | minus: sixty_days
 
-              if product.published_at != blank
-                assign pub_ts = product.published_at | date: '%s' | plus: 0
-                if pub_ts >= cutoff_ts and pub_ts <= now_ts
+              assign ds = product.metafields.product.display_start_at
+              if ds != blank
+                assign ds_ts = ds | date: '%s'
+                if ds_ts >= cutoff_ts and ds_ts <= now_ts
                   assign is_new = true
                 endif
               endif
@@ -197,11 +198,24 @@
               <div class="csh-name">{{ product.title }}</div>
               {% if section.settings.show_price %}
                 <div class="csh-price">
-                  {% if product.price_varies %}
-                    {{ product.price_min | money }} — {{ product.price_max | money }}
-                  {% else %}
-                    {{ product.price | money }}
-                  {% endif %}
+                  {%- assign has_sale = false -%}
+                  {%- if product.compare_at_price_max > product.price -%}
+                    {%- assign has_sale = true -%}
+                  {%- endif -%}
+
+                  {%- if has_sale -%}
+                    <span class="csh-price-current">{{ product.price | money }}</span>
+                    <span class="csh-price-compare"><s>{{ product.compare_at_price_max | money }}</s></span>
+                  {%- else -%}
+                    <span class="csh-price-current">
+                      {%- if product.price_varies -%}
+                        {{ product.price_min | money }} — {{ product.price_max | money }}
+                      {%- else -%}
+                        {{ product.price | money }}
+                      {%- endif -%}
+                    </span>
+                  {%- endif -%}
+                  <span class="csh-price-tax">（税込）</span>
                 </div>
               {% endif %}
             </div>
@@ -366,16 +380,48 @@
         return null;
       }
 
-      function priceHTMLFromProduct(p){
+            function priceHTMLFromProduct(p){
         if (!SHOW_PRICE) return '';
-        var oneC = toCents(p.price != null ? p.price : (p.price_min != null ? p.price_min : (p.variants && p.variants[0] && p.variants[0].price)));
-        var minC = toCents(p.price_min);
-        var maxC = toCents(p.price_max);
 
-        if (p.price_varies && minC != null && maxC != null) return formatMoney(minC) + ' — ' + formatMoney(maxC);
-        if (oneC != null) return formatMoney(oneC);
-        if (minC != null) return formatMoney(minC);
-        return '';
+        // 現在価格（最小）・最大価格・元値
+        var priceMinC = toCents(
+          p.price_min != null ? p.price_min :
+          (p.price != null ? p.price :
+           (p.variants && p.variants[0] && p.variants[0].price))
+        );
+        var priceMaxC     = toCents(p.price_max);
+        var compareMaxC   = toCents(p.compare_at_price_max);
+
+        var hasSale = compareMaxC != null && priceMinC != null && compareMaxC > priceMinC;
+
+        var taxHtml = '<span class="csh-price-tax">（税込）</span>';
+
+        // セール時：現在価格 + 斜線付き元値
+        if (hasSale){
+          var currentHtml = formatMoney(priceMinC);
+          var compareHtml = formatMoney(compareMaxC);
+
+          return (
+            '<span class="csh-price-current">' + currentHtml + '</span>'
+            + '<span class="csh-price-compare"><s>' + compareHtml + '</s></span>'
+            + taxHtml
+          );
+        }
+
+        // 通常時：バリアントレンジ or 単価
+        var priceText;
+        if (p.price_varies && priceMinC != null && priceMaxC != null && priceMaxC !== priceMinC){
+          priceText = formatMoney(priceMinC) + ' — ' + formatMoney(priceMaxC);
+        } else if (priceMinC != null){
+          priceText = formatMoney(priceMinC);
+        } else {
+          return '';
+        }
+
+        return (
+          '<span class="csh-price-current">' + priceText + '</span>'
+          + taxHtml
+        );
       }
 
       function productHref(p){
@@ -408,17 +454,12 @@
         console.warn('[home recos] exMap error', e);
       }
 
-            function normalize(p){
+          function normalize(p){
             var handle = p.handle || null;
 
-            // Liquid で埋め込んだ初期値（fallback コレクションのフラグ）
             var init = handle && initialEx[handle] ? initialEx[handle] : {};
-
-            // recentlyViewedEx 側（あれば）
             var exFromStorage = handle && exMap[handle] ? exMap[handle] : {};
 
-            // init をベースに、storage 側を上書きマージ
-            // → storage に無いキー（is_new / pre_ok など）は init の値が残る
             var ex = Object.assign({}, init, exFromStorage);
 
             return {
@@ -426,27 +467,26 @@
               title: p.title,
               handle: handle,
               url: p.url || p.online_store_url || null,
-              online_store_url: p.online_store_url || null,
               featured_image: primaryImage(p),
               price: p.price,
               price_min: p.price_min,
               price_max: p.price_max,
               price_varies: p.price_varies,
+              compare_at_price_max: p.compare_at_price_max,
               variants: p.variants || null,
 
-              // display_locked / published_at も init / storage の値を活かす
               display_locked: !!(p.display_locked || ex.display_locked),
-              published_at: p.published_at || ex.published_at || null,
 
-              // ▼ バッジ用フラグ（ex にマージ済みなので ex だけ見れば OK）
+              // ★ 追加
+              display_start_at: ex.display_start_at || p.display_start_at || null,
+
+              // バッジフラグ
               is_new: !!ex.is_new,
               pre_ok: !!ex.pre_ok,
-
-              first_bonus_low:
+              first_bonus_low: 
                 typeof ex.first_bonus_low !== 'undefined'
                   ? !!ex.first_bonus_low
                   : !!(ex.first_bonus_total && Number(ex.first_bonus_total) > 0),
-
               early_bonus: !!ex.early_bonus,
               closing_soon: !!ex.closing_soon
             };

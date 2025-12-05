@@ -603,6 +603,26 @@
         "name": "json",
         "category": "JSON"
       }
+    },
+    {
+      "key": "is_new_product",
+      "namespace": "variant",
+      "name": "新商品か",
+      "description": null,
+      "type": {
+        "name": "boolean",
+        "category": "TRUE_FALSE"
+      }
+    },
+    {
+      "key": "is_near_deadline",
+      "namespace": "variant",
+      "name": "締切間近か",
+      "description": null,
+      "type": {
+        "name": "boolean",
+        "category": "TRUE_FALSE"
+      }
     }
   ],
   "shop": []
