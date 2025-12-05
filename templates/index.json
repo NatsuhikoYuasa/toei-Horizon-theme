@@ -165,8 +165,9 @@
         "collection_AUyijz": {
           "type": "collection",
           "settings": {
-            "collection": "new_product_collection",
-            "title": ""
+            "collection": "series-101109",
+            "title": "仮面ライダー",
+            "image": "shopify://shop_images/BSTD02301_0f1a8ea9-da9c-4578-82a0-f8c2956a7683.jpg"
           }
         },
         "collection_Arkmpm": {
@@ -234,7 +235,7 @@
       "type": "Custom-featured-collection",
       "name": "特集コレクション（Custom）",
       "settings": {
-        "collection": "新商品-wb",
+        "collection": "series-101138",
         "show_badges": true,
         "card_gap": 16,
         "card_gap_mobile": 12
