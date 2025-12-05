@@ -4842,13 +4842,18 @@ button.facets__close-button:focus-visible {
 
 
 /**********************************************
- *  フィルター：pill 型（開始前／映画／グッズなど）共通調整
- *  ※ .facets を付けてセレクタ強度を上げるのがポイント
+ *  フィルター：メタオブジェクト系（開始前／映画／グッズなど）
+ *  pill 型 → 通常チェックボックス風に統一
  **********************************************/
 
-/* pill 行のレイアウトをシンプルに */
+/* pill リストを縦並びに */
+.facets .facets__inputs-list--grid {
+  display: block !important;
+}
+
+/* 各行ラッパー */
 .facets .facets__inputs-list--grid .facets__pill-wrapper {
-  display: block;
+  display: block !important;
 }
 
 /* input は隠してラベルクリックで操作 */
@@ -4858,87 +4863,47 @@ button.facets__close-button:focus-visible {
   pointer-events: none !important;
 }
 
-/* pill 本体の見た目（通常状態） */
+/* pill ラベルの基本スタイル（共通） */
 .facets .facets__inputs-list--grid .facets__pill-label {
-  position: relative !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  width: 100% !important;
-  min-width: auto !important;
-
-  font-size: 13px !important;
-  line-height: 1.3 !important;
-  padding: 6px 10px !important;
-
-  border-radius: 4px !important;
-  border: 1px solid rgb(var(--color-foreground-rgb) / 0.2) !important;
-  background-color: var(--color-background) !important;
-  color: rgb(var(--color-foreground-rgb)) !important;
-  box-shadow: none !important;
-  background-image: none !important;
-  text-align: left !important;
-}
-
-/* テーマ側の ::before / ::after を完全に消す（青い棒・黒四角対策） */
-.facets .facets__inputs-list--grid .facets__pill-label::before,
-.facets .facets__inputs-list--grid .facets__pill-label::after {
-  content: none !important;
-}
-
-/* チェック時：文字は黒のまま・背景も白のまま・枠だけ色付き */
-.facets .facets__inputs-list--grid .facets__pill-input:checked+.facets__pill-label,
-.facets .facets__inputs-list--grid .facets__pill-label[data-selected="true"] {
-  color: rgb(var(--color-foreground-rgb)) !important;
-  background-color: var(--color-background) !important;
-  border-color: rgb(var(--color-primary-rgb)) !important;
-}
-
-/* フォーカス時の二重線を消す */
-.facets .facets__inputs-list--grid .facets__pill-input:focus-visible+.facets__pill-label {
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-/* =========================================
- * メタオブジェクト系フィルター（開始前 / 映画 など）を
- * チェックボックス風に統一
- * ========================================= */
-
-/* ピル型リストを縦並びに */
-.facets__inputs .facets__inputs-list--grid {
-  display: block !important;
-}
-
-/* 行全体をラベルっぽく */
-.facets__inputs .facets__inputs-list--grid .facets__pill-wrapper {
-  display: block !important;
-}
-
-/* input は隠してラベルで操作 */
-.facets__inputs .facets__inputs-list--grid .facets__pill-input {
-  position: absolute !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-/* ラベルを「□ テキスト」レイアウトに */
-.facets__inputs .facets__inputs-list--grid .facets__pill-label {
+  /* 既存レイアウト用プロパティはそのまま残してOK */
   position: relative !important;
   display: flex !important;
   align-items: center !important;
   justify-content: flex-start !important;
-  padding-left: 22px !important;
-  /* 左に□ぶんの余白 */
+  width: 100% !important;
+  min-width: auto !important;
+  font-size: 13px !important;
+  line-height: 1.3 !important;
+  padding: 0 0 0 22px !important;
   margin: 0 !important;
+  border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
-  border: none !important;
+  background-image: none !important;
+  text-align: left !important;
+  cursor: pointer !important;
+
+  /* 🔽 基本は薄めの文字色（チェックボックスと同じ雰囲気） */
+  color: rgb(var(--color-foreground-rgb) / var(--opacity-60));
+  transition: color 0.2s ease, font-weight 0.2s ease;
 }
 
-/* 左の疑似チェックボックス */
-.facets__inputs .facets__inputs-list--grid .facets__pill-label::before {
+/* 通常チェックボックスのルールと同じノリで pill にも hover を付ける */
+.facets .facets__inputs-list--grid .facets__pill-wrapper:hover .facets__pill-label,
+.facets .facets__inputs-list--grid .facets__pill-label:hover {
+  color: rgb(var(--color-foreground-rgb) / var(--opacity-90));
+}
+
+/* 擬似要素を一旦クリア（念のため） */
+.facets .facets__inputs-list--grid .facets__pill-label::before,
+.facets .facets__inputs-list--grid .facets__pill-label::after {
+  content: none !important;
+  background: none !important;
+}
+
+/* 左の疑似チェックボックス（未チェック） */
+.facets .facets__inputs-list--grid .facets__pill-label::before {
   content: "" !important;
   position: absolute !important;
   left: 0 !important;
@@ -4948,43 +4913,93 @@ button.facets__close-button:focus-visible {
   height: 14px !important;
   border-radius: 4px !important;
   border: 1px solid rgb(var(--color-foreground-rgb) / var(--opacity-35-55));
-  background: #fff !important;
+  background-color: #fff !important;
 }
 
-/* チェック時の見た目 */
-.facets__inputs .facets__inputs-list--grid .facets__pill-input:checked+.facets__pill-label::before {
-  background: currentColor !important;
+/* 未チェック時 hover：枠を少し濃く＋うっすら背景 */
+.facets .facets__inputs-list--grid .facets__pill-label:hover::before {
+  border-color: rgb(var(--color-foreground-rgb) / 0.55) !important;
+  background-color: rgb(var(--color-foreground-rgb) / 0.04) !important;
 }
 
-/* チェック時に文字色が反転しないように */
-.facets__inputs .facets__inputs-list--grid .facets__pill-input:checked+.facets__pill-label {
+/* チェック時の□の見た目だけ制御（文字色は触らない） */
+.facets .facets__inputs-list--grid .facets__pill-input:checked+.facets__pill-label::before {
+  background-color: var(--color-foreground) !important;
+  border-color: var(--color-foreground) !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-image: url("data:image/svg+xml,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M4.75439%2010.7485L7.68601%2014.5888C7.79288%2014.7288%207.84632%2014.7988%207.91174%2014.8242C7.96907%2014.8466%208.03262%2014.8469%208.09022%2014.8253C8.15596%2014.8007%208.21026%2014.7314%208.31886%2014.5927L15.2475%205.74658%22%20stroke%3D%22white%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E") !important;
+}
+
+.facets .facets__inputs-list--grid .facets__pill-input:checked+.facets__pill-label {
+  /* ここでは color を設定しないことがポイント */
   background: transparent !important;
 }
 
-/* ▼ チェック時のデザインを通常チェックボックスと揃える ▼ */
-
-/* チェックされたら四角を塗りつぶす＆枠色も変更 */
-.facets__inputs .facets__inputs-list--grid .facets__pill-input:checked+.facets__pill-label::before {
-  background-color: var(--color-foreground);
-  border-color: var(--color-foreground);
+@media screen and (min-width: 750px) {
+  .facets .facets__inputs-list--grid .facets__pill-input:checked+.facets__pill-label::before {
+    background-size: 14px 14px !important;
+  }
 }
 
-/* 中にチェックマークを描画 */
-.facets__inputs .facets__inputs-list--grid .facets__pill-input:checked+.facets__pill-label::after {
-  content: "" !important;
-  position: absolute !important;
-  left: 4px !important;
-  /* 四角の中で良い位置になるように */
-  top: 50% !important;
-  transform: translateY(-60%) rotate(-45deg) !important;
-  width: 8px !important;
-  height: 4px !important;
-  border-left: 2px solid #fff !important;
-  border-bottom: 2px solid #fff !important;
-  box-sizing: border-box !important;
+/* チェック＋hover：少しだけ明るく（チェックはそのまま） */
+.facets .facets__inputs-list--grid .facets__pill-input:checked+.facets__pill-label:hover::before {
+  filter: brightness(1.05);
 }
 
-/* テキスト色はそのまま（反転させない） */
-.facets__inputs .facets__inputs-list--grid .facets__pill-input:checked+.facets__pill-label {
-  color: inherit !important;
+/* チェック時も文字色はそのまま */
+.facets .facets__inputs-list--grid .facets__pill-input:checked+.facets__pill-label {
+  background: transparent !important;
+}
+
+/* フォーカス時の二重線を消す */
+.facets .facets__inputs-list--grid .facets__pill-input:focus-visible+.facets__pill-label {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 最後に操作した（フォーカス中の）ラベルだけ文字色を濃くする */
+.facets .facets__inputs-list--grid .facets__pill-input:focus-visible+.facets__pill-label,
+.facets .facets__inputs-list--grid .facets__pill-label:focus-visible {
+  color: rgb(var(--color-foreground-rgb)) !important;
+}
+
+/* row レイアウト用の余計なマージン削除（必要なら） */
+.facets__inputs-wrapper.facets__inputs-wrapper--row {
+  margin: 0;
+}
+
+@media screen and (max-width: 749px) {
+  .facets .facets__inputs-list--grid .facets__pill-label::before {
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 7px !important;
+  }
+
+  /* モバイル：未選択は薄めの色 */
+  .facets .facets__inputs-list--grid .facets__pill-label {
+    padding: 0 0 0 30px !important;
+  }
+
+}
+
+/* ブログ記事ページ：アイキャッチ画像を中央寄せ */
+[id$="__blog-post-image"].shopify-block {
+  display: flex;
+  /* 子要素（画像ブロック）を横方向フレックスに */
+  justify-content: center;
+  /* 中央寄せ */
+}
+
+/* 念のため、内側ブロック側の調整も少しだけ */
+[id$="__blog-post-image"].shopify-block .blog-post-featured-image {
+  margin: 0;
+  /* 変なマージンがあればリセット */
+}
+
+/* 画像自体も中央に寄せておく保険 */
+[id$="__blog-post-image"].shopify-block .blog-post-featured-image__image {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }

@@ -6,29 +6,33 @@
     - Liquid 上の値:
       v.metafields.variant.up_sell_variants.value
       → 各要素が「バリアントオブジェクト」として参照可能
-
-  - 仕組み
-    1. Liquid で各バリアントごとにアップセル候補をカードとして全部描画
-    2. .rv-list[data-variant-id="xxx"] ごとにラップしておき、
-       JS で現在選択中バリアントに対応するリストだけを表示
-
-  - JS では API 呼び出しは一切行わず、DOM の表示制御だけをする。
 {%- endcomment -%}
 
 {%- comment -%}
   まず「一つでもアップセルが設定されているバリアントがあるか」をチェック。
   なければセクション自体を出さない。
 {%- endcomment -%}
-{%- assign has_any_cross_sell = false -%}
+{%- assign has_any_upsell = false -%}
 {%- for v in product.variants -%}
   {%- assign xsell_field = v.metafields.variant.up_sell_variants -%}
   {%- if xsell_field and xsell_field.value != blank -%}
-    {%- assign has_any_cross_sell = true -%}
+    {%- assign has_any_upsell = true -%}
     {%- break -%}
   {%- endif -%}
 {%- endfor -%}
 
-{%- if has_any_cross_sell -%}
+{%- if has_any_upsell -%}
+
+{%- comment %} バッジ判定＆販売期間（display_start_at / display_end_at）判定用の変数 {% endcomment -%}
+{%- liquid
+  assign xs_now_ts        = 'now' | date: '%s' | plus: 0
+  assign xs_ten_days_sec  = 864000 | plus: 0
+  # 締切間近（10日）
+  assign xs_new_days      = 60 | plus: 0
+  # NEW 60日
+  assign xs_new_days_sec  = xs_new_days | times: 86400
+-%}
+
 <section
   id="custom-xsell-{{ section.id }}"
   class="rv-section section page-width color-{{ section.settings.color_scheme }}"
@@ -48,11 +52,6 @@
 
     <div class="rv-band" aria-hidden="true"></div>
 
-    {%- comment -%}
-      ここで「バリアントごとのアップセルリスト」を全部描画する。
-      data-variant-id で紐付けして、JS 側で表示 / 非表示を切り替える。
-    {%- endcomment -%}
-
     {%- assign current_variant = product.selected_or_first_available_variant -%}
 
     {%- for v in product.variants -%}
@@ -67,54 +66,138 @@
         >
           {%- assign rendered_count = 0 -%}
           {%- for cross_v in xsell_variants -%}
-            {%- if rendered_count >= section.settings.limit -%}
-              {%- break -%}
-            {%- endif -%}
-
-            {%- assign rendered_count = rendered_count | plus: 1 -%}
-
             {%- assign cv = cross_v -%}
             {%- assign cv_product = cv.product -%}
 
-            {%- capture card_url -%}
-              {{ cv.url }}
-            {%- endcapture -%}
+            {%- liquid
+              # -------------------------
+              # 表示可否（display_start_at / display_end_at）
+              # -------------------------
+              assign xs_show = true
 
-            {%- assign card_url = card_url | strip -%}
+              assign xs_display_start_raw = cv_product.metafields.product.display_start_at
+              assign xs_display_end_raw   = cv_product.metafields.product.display_end_at
 
-            {%- assign card_available = cv.available -%}
+              if xs_display_start_raw != blank
+                assign xs_display_start_ts = xs_display_start_raw | date: '%s' | plus: 0
+                if xs_now_ts < xs_display_start_ts
+                  assign xs_show = false
+                endif
+              endif
 
-            <a
-              class="rv-card{% unless card_available %} rv-card--disabled{% endunless %}"
-              href="{% if card_available %}{{ card_url }}{% else %}javascript:void(0){% endif %}"
-              {% unless card_available %}aria-disabled="true"{% endunless %}
-            >
-              <div class="rv-thumb">
-                {%- if cv.image -%}
-                  {{ cv.image
-                    | image_url: width: 400
-                    | image_tag:
-                      loading: 'lazy',
-                      class: 'rv-img',
-                      alt: cv_product.title
-                  }}
-                {%- else -%}
-                  <span class="rv-thumb__placeholder">NO IMAGE</span>
-                {%- endif -%}
-              </div>
+              if xs_display_end_raw != blank
+                assign xs_display_end_ts = xs_display_end_raw | date: '%s' | plus: 0
+                if xs_now_ts > xs_display_end_ts
+                  assign xs_show = false
+                endif
+              endif
 
-              <div class="rv-meta">
-                <span class="rv-title-link">
-                  {{ cv_product.title }}
-                </span>
+              # -------------------------
+              # バッジ判定
+              # -------------------------
+              assign xs_badge_new     = false
+              assign xs_badge_pre     = false
+              assign xs_badge_early   = false
+              assign xs_badge_first   = false
+              assign xs_badge_closing = false
 
-                {%- if section.settings.show_price -%}
-                  <span class="rv-price">
-                    {{ cv.price | money }}
+              # NEW（product.display_start_at から60日間）
+              if xs_display_start_raw != blank
+                assign xs_start_ts   = xs_display_start_raw | date: '%s' | plus: 0
+                assign xs_new_end_ts = xs_start_ts | plus: xs_new_days_sec
+                if xs_now_ts >= xs_start_ts and xs_now_ts <= xs_new_end_ts
+                  assign xs_badge_new = true
+                endif
+              endif
+
+              # 予約受付中
+              if cv.metafields.variant.is_preorder
+                assign xs_badge_pre = true
+              endif
+
+              # 初回特典残りわずか
+              if cv.metafields.custom.is_first_bonus
+                assign xs_badge_first = true
+              endif
+
+              # 早期予約特典あり
+              if cv.metafields.custom.is_early_bonus
+                assign xs_badge_early = true
+              endif
+
+              # 締切間近（sell_end_at の10日前〜当日）
+              assign xs_sell_end_raw = cv.metafields.variant.sell_end_at
+              if xs_sell_end_raw != blank
+                assign xs_sell_end_ts2    = xs_sell_end_raw | date: '%s' | plus: 0
+                assign xs_closing_from_ts = xs_sell_end_ts2 | minus: xs_ten_days_sec
+                if xs_now_ts >= xs_closing_from_ts and xs_now_ts <= xs_sell_end_ts2
+                  assign xs_badge_closing = true
+                endif
+              endif
+            -%}
+
+            {%- if xs_show -%}
+              {%- assign rendered_count = rendered_count | plus: 1 -%}
+              {%- if rendered_count > section.settings.limit -%}
+                {%- break -%}
+              {%- endif -%}
+
+              {%- capture card_url -%}
+                {{ cv.url }}
+              {%- endcapture -%}
+              {%- assign card_url = card_url | strip -%}
+              {%- assign card_available = cv.available -%}
+
+              <a
+                class="rv-card{% unless card_available %} rv-card--disabled{% endunless %}"
+                href="{% if card_available %}{{ card_url }}{% else %}javascript:void(0){% endif %}"
+                {% unless card_available %}aria-disabled="true"{% endunless %}
+              >
+                <div class="rv-thumb">
+                  {%- if cv.image -%}
+                    {{ cv.image
+                      | image_url: width: 400
+                      | image_tag:
+                        loading: 'lazy',
+                        class: 'rv-img',
+                        alt: cv_product.title
+                    }}
+                  {%- else -%}
+                    <span class="rv-thumb__placeholder">NO IMAGE</span>
+                  {%- endif -%}
+                </div>
+
+                <div class="rv-meta">
+                  <div class="rv-badges">
+                    {%- if xs_badge_new -%}
+                      <span class="rv-badge rv-badge--new">NEW</span>
+                    {%- endif -%}
+                    {%- if xs_badge_pre -%}
+                      <span class="rv-badge rv-badge--pre">予約受付中</span>
+                    {%- endif -%}
+                    {%- if xs_badge_early -%}
+                      <span class="rv-badge rv-badge--early">早期予約特典あり</span>
+                    {%- endif -%}
+                    {%- if xs_badge_first -%}
+                      <span class="rv-badge rv-badge--first">初回特典残りわずか</span>
+                    {%- endif -%}
+                    {%- if xs_badge_closing -%}
+                      <span class="rv-badge rv-badge--closing">締切間近</span>
+                    {%- endif -%}
+                  </div>
+
+                  <span class="rv-title-link">
+                    {{ cv_product.title }}
                   </span>
-                {%- endif -%}
-              </div>
-            </a>
+
+                  {%- if section.settings.show_price -%}
+                    <span class="rv-price">
+                      {{ cv.price | money }}<span class="rv-price__tax">（税込）</span>
+                    </span>
+                  {%- endif -%}
+                </div>
+              </a>
+            {%- endif -%}
           {%- endfor -%}
         </div>
       {%- endif -%}
@@ -134,9 +217,8 @@
 
     /* ====== リストの表示制御 ====== */
     #custom-xsell-{{ section.id }} .rv-list{
-      display:none; /* デフォルト非表示 */
+      display:none;
     }
-    /* アクティブなバリアントだけ表示 */
     #custom-xsell-{{ section.id }} .rv-list.rv-list--active{
       display:grid;
       grid-template-columns: repeat(6, minmax(0,1fr));
@@ -153,33 +235,39 @@
     }
     #custom-xsell-{{ section.id }} .rv-img{ width:100%; height:auto; border-radius:5px; display:block; }
 
-    /* グレーアウト & クリック不可 */
     #custom-xsell-{{ section.id }} .rv-card--disabled{
       pointer-events:none;
       opacity:.45;
     }
 
-    /* ▼ バッジ（今は未使用だが、今後の拡張用） */
+    /* ▼ バッジ */
     #custom-xsell-{{ section.id }} .rv-badges{
-      display:flex; gap:6px; margin-top:8px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+    }
+    #custom-xsell-{{ section.id }} .rv-badges:not(:empty){
+      margin-top:8px;
     }
     #custom-xsell-{{ section.id }} .rv-badge{
       font-size:10px; font-weight:700; line-height:1; padding:6px 8px;
       box-shadow:0 1px 2px rgba(0,0,0,.15);
+      white-space:nowrap;
+      min-width:max-content;
     }
 
     #custom-xsell-{{ section.id }} .rv-meta{
-      padding:8px 12px 10px 0; display:grid; gap:6px;
+      display:grid; gap:6px;
     }
     #custom-xsell-{{ section.id }} .rv-title-link{
       font-size:13px; line-height:1.4; display:-webkit-box;
       -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; color:inherit;
     }
     #custom-xsell-{{ section.id }} .rv-price{ font-size:12px; opacity:.9; }
+    #custom-xsell-{{ section.id }} .rv-price__tax{ font-size:10px; }
 
     #custom-xsell-{{ section.id }}{ background: {{ section.settings.bg_color | default: '#F5F6F9' }}; }
 
-    /* ====== SP：横スクロール ====== */
     @media (max-width: 768px){
       #custom-xsell-{{ section.id }}{ position:relative; overflow:visible; }
       #custom-xsell-{{ section.id }} .rv-band{
@@ -187,7 +275,6 @@
         width:48px; background:linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.06));
         pointer-events:none; opacity:0;
       }
-      /* SP 時もアクティブなものだけ flex で表示 */
       #custom-xsell-{{ section.id }} .rv-list.rv-list--active{
         display:flex !important;
         gap: var(--rv-gap-sp);
@@ -209,17 +296,8 @@
       #custom-xsell-{{ section.id }} .rv-title{ font-size:18px; }
     }
 
-    /* バッジの折り返し */
-    #custom-xsell-{{ section.id }} .rv-badges{
-      display:flex !important;
-      flex-wrap:wrap !important;
-      gap:6px 6px !important;
-    }
-    #custom-xsell-{{ section.id }} .rv-badges .rv-badge{
-      display:inline-flex !important;
-      align-items:center;
-      white-space:nowrap !important;
-      min-width:max-content;
+    .rv-title-link {
+      margin-top: 2px;
     }
   </style>
 
@@ -228,12 +306,10 @@
       var root = document.getElementById('custom-xsell-{{ section.id }}');
       if (!root) return;
 
-      // .rv-list をまとめて取るヘルパー
       function getLists() {
         return root.querySelectorAll('.rv-list');
       }
 
-      // 指定されたバリアントIDに対応する .rv-list を表示
       function showForVariantId(variantId) {
         var lists = getLists();
         if (!lists.length) {
@@ -243,7 +319,6 @@
         }
 
         if (!variantId) {
-          // variantId が取れないときは 1 つ目だけ表示しておく
           lists.forEach(function(list, index){
             if (index === 0) {
               list.classList.add('rv-list--active');
@@ -269,7 +344,6 @@
         });
 
         if (!found) {
-          // 対応するリストが無いときはセクションごと消す
           console.log('[Upsell] no list for variantId =', variantIdStr, '→ hide section');
           root.style.display = 'none';
         } else {
@@ -278,7 +352,6 @@
         }
       }
 
-      // hidden input から現在のバリアントIDを取得（初期表示用フォールバック）
       function getCurrentVariantIdFromInput() {
         var hiddenInput = document.querySelector('[data-toei-variant-id]');
         if (!hiddenInput) return null;
@@ -286,7 +359,6 @@
         return v ? String(v) : null;
       }
 
-      // 初期表示
       function init(){
         var currentId = getCurrentVariantIdFromInput();
         console.log('[Upsell] init: hidden input variantId =', currentId);
@@ -299,7 +371,6 @@
         init();
       }
 
-      // バリアント変更イベントに追従（メインの切り替えロジック）
       document.addEventListener('variant:changed', function(e){
         try{
           var detail = e && e.detail || {};
@@ -311,7 +382,6 @@
           if (!id) return;
 
           var numericId = String(id);
-          // GID 形式 (gid://shopify/ProductVariant/123...) のときは末尾だけ取り出す
           if (numericId.indexOf('/') !== -1) {
             numericId = numericId.split('/').pop();
           }

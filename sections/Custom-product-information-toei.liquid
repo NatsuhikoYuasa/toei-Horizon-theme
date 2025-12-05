@@ -46,21 +46,25 @@
     assign is_preorder_variant = true
   endif
 
-  # ===== NEW（公開日60日以内 / テンプレ関係なし） =====
-  assign now_ts_badge = 'now' | date: '%s' | plus: 0
-  assign new_days = 60 | plus: 0
-  assign days_sec = new_days | times: 86400
-  assign cutoff_ts = now_ts_badge | minus: days_sec
-
-  assign pub_ts = 0
-  if product.published_at != blank
-    assign pub_ts = product.published_at | date: '%s' | plus: 0
-  endif
-
+    # ===== NEW（product.display_start_at から60日間だけ） =====
   assign badge_new = false
-  if pub_ts != 0 and pub_ts > cutoff_ts
-    assign badge_new = true
+
+  assign display_start_raw = product.metafields.product.display_start_at
+
+  if display_start_raw != blank
+    assign now_ts_badge = 'now' | date: '%s' | plus: 0
+    assign new_days = 60 | plus: 0
+    assign days_sec = new_days | times: 86400
+
+    assign start_ts = display_start_raw | date: '%s' | plus: 0
+    assign end_ts   = start_ts | plus: days_sec
+
+    # start 〜 start+60日 の間だけ NEW
+    if now_ts_badge >= start_ts and now_ts_badge <= end_ts
+      assign badge_new = true
+    endif
   endif
+
 %}
 
 <script type="application/ld+json">
@@ -277,17 +281,27 @@
                 </dd>
               </div>
 
-              {%- if is_preorder_variant -%}
-                <div
-                  class="toei-reservation-item toei-reservation-item--important"
-                  data-toei-cutoff-row
-                >
-                  <dt class="visually-hidden">予約締切</dt>
-                  <dd data-toei-cutoff-note>
-                    {{ selected_variant.metafields.variant.initial_preorder_cutoff_note | strip_newlines }}までに予約頂いた場合は発売日にお届け予定です。
-                  </dd>
-                </div>
-              {%- endif -%}
+              {%- assign cutoff_note = selected_variant.metafields.variant.initial_preorder_cutoff_note
+                | strip_newlines
+              -%}
+
+              <div
+                class="toei-reservation-item toei-reservation-item--important"
+                data-toei-cutoff-row
+                style="
+                  {%- unless is_preorder_variant and cutoff_note != blank -%}
+                    display:none;
+                  {%- endunless -%}
+                "
+              >
+                <dt class="visually-hidden">予約締切</dt>
+                <dd data-toei-cutoff-note>
+                  {%- if is_preorder_variant and cutoff_note != blank -%}
+                    {{ cutoff_note }}までに予約頂いた場合は発売日にお届け予定です。
+                  {%- endif -%}
+                </dd>
+              </div>
+
             </dl>
           </div>
 
@@ -446,7 +460,13 @@
         </div>
 
         {%- comment -%} 17. 特典情報を見る（bonus_info） {%- endcomment -%}
-        <details class="toei-accordion">
+        <details
+          class="toei-accordion"
+          data-toei-bonus-row
+          {% if selected_variant.metafields.variant.bonus_info == blank %}
+            style="display:none;"
+          {% endif %}
+        >
           <summary class="toei-accordion__summary">
             特典情報を見る
           </summary>
@@ -829,10 +849,10 @@
 
   .toei-badge {
     font-size: 10px;
-    padding: 4px 10px;
+    padding: 6px 8px;
     border-radius: 0;
     border: none;
-    font-weight: 600;
+    font-weight: 700;
   }
 
   .toei-badge--new {
@@ -1317,6 +1337,12 @@
     .product__info-wrapper {
       max-width: 420px !important;
     }
+
+    .product-information.section.section--page-width {
+      max-width: 1500px; /* 好みで数値調整OK */
+      margin-inline: auto;
+      padding-inline: var(--page-margin, 40px);
+    }
   }
 
   /* カートフォーム内のボタン文字サイズ */
@@ -1427,6 +1453,10 @@
     content: 'ログインで';
     font-size: inherit; /* ポイント表示と同じサイズ */
     font-weight: inherit; /* 太さも合わせる（変えたければここで調整） */
+  }
+
+  .csh-price {
+    margin-top: 6px;
   }
 {% endstylesheet %}
 
@@ -1713,6 +1743,7 @@
     var cutoffNoteEl = root.querySelector('[data-toei-cutoff-note]');
     var notesBody = root.querySelector('[data-toei-notes-body]');
     var bonusBody = root.querySelector('[data-toei-bonus-body]');
+    var bonusRow  = root.querySelector('[data-toei-bonus-row]');
     var descBody = root.querySelector('[data-toei-description-body]');
     var badgesRoot = root.querySelector('[data-toei-badges]');
     var baseBadgesHTML = badgesRoot ? badgesRoot.innerHTML : '';
@@ -1780,14 +1811,22 @@
         }
       }
 
+      // ★ 予約締切メッセージ（予約 && 文言あり のときだけ表示）
       if (cutoffNoteEl) {
-        var t3 = v.metafields && v.metafields.variant && v.metafields.variant.initial_preorder_cutoff_note;
+        var t3 =
+          v.metafields &&
+          v.metafields.variant &&
+          v.metafields.variant.initial_preorder_cutoff_note;
+
         var suffix = 'までに予約頂いた場合は発売日にお届け予定です。';
         var isPreorderVariant2 = !!(v.badges && v.badges.preorder);
-        if (t3 && isPreorderVariant2) {
+
+        if (isPreorderVariant2 && t3) {
+          // 予約 & 文言あり → 表示
           cutoffNoteEl.textContent = t3 + suffix;
           if (cutoffRow) cutoffRow.style.display = '';
         } else {
+          // それ以外 → 非表示
           cutoffNoteEl.textContent = '';
           if (cutoffRow) cutoffRow.style.display = 'none';
         }
@@ -1798,9 +1837,16 @@
         notesBody.innerHTML = html || '';
       }
 
-      if (bonusBody) {
+      if (bonusBody && bonusRow) {
         var html2 = v.metafields && v.metafields.variant && v.metafields.variant.bonus_info_html;
-        bonusBody.innerHTML = html2 || '';
+
+        if (html2) {
+          bonusBody.innerHTML = html2;
+          bonusRow.style.display = '';      // DOMを表示
+        } else {
+          bonusBody.innerHTML = '';
+          bonusRow.style.display = 'none';  // DOMごと非表示
+        }
       }
 
       if (descBody) {

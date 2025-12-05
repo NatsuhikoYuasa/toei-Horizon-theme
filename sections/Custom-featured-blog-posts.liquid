@@ -8,6 +8,18 @@
 
 {% assign the_blog_handle = section.settings.blog %}
 
+{%- comment -%}
+  the_blog に記事がある場合のみストアフロントでセクションを出力
+  カスタマイズ画面(request.design_mode)のときだけは
+  ブログ未選択・記事0件でも注意テキスト付きで表示
+{%- endcomment -%}
+{% assign the_blog = nil %}
+{% if the_blog_handle != blank %}
+  {% assign the_blog = blogs[the_blog_handle] %}
+{% endif %}
+
+{% if the_blog and the_blog.articles_count > 0 or request.design_mode %}
+
 <section
   id="csh-{{ section.id }}"
   class="csh section page-width color-{{ section.settings.color_scheme }}"
@@ -22,79 +34,95 @@
     {% if section.settings.bg_color != blank %}background: {{ section.settings.bg_color }};{% endif %}
   "
 >
-  {% if the_blog_handle != blank %}
-    {% assign the_blog = blogs[the_blog_handle] %}
+  {% if the_blog and the_blog.articles_count > 0 %}
+    {%- comment -%} ★ 通常表示（記事あり） {%- endcomment -%}
 
-    {% if the_blog %}
-      {%- comment -%} 見出し・もっと見る文言（自動） {%- endcomment -%}
-      {%- assign heading_text = the_blog.title | default: 'キャンペーン・イベント情報' -%}
-      {%- assign more_label = heading_text | append: 'をもっと見る' -%}
+    {%- assign heading_text = the_blog.title | default: 'キャンペーン・イベント情報' -%}
+    {%- assign more_label = heading_text | append: 'をもっと見る' -%}
 
-      <div class="csh-head">
-        <h2 class="csh-title">{{ heading_text }}</h2>
+    <div class="csh-head">
+      <h2 class="csh-title">{{ heading_text }}</h2>
+
+      <a
+        class="csh-more"
+        href="{{ the_blog.url }}"
+        aria-label="{{ more_label }}"
+      >
+        <span class="csh-more-text">{{ more_label }}</span>
+        <span class="csh-more-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+            <path d="M8 5l7 7-7 7" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </a>
+    </div>
+
+    <div class="csh-grid">
+      {% for article in the_blog.articles limit: section.settings.limit %}
+        {%- liquid
+          # 外部URLメタフィールド（custom.external_url）を取得
+          assign ext_obj = article.metafields.custom.external_url
+          assign link_url = article.url
+          assign is_external = false
+
+          if ext_obj and ext_obj.value != blank and ext_obj.value != '-' and ext_obj.value != '#'
+            assign link_url = ext_obj.value
+            assign is_external = true
+          endif
+        -%}
 
         <a
-          class="csh-more"
-          href="{{ the_blog.url }}"
-          aria-label="{{ more_label }}"
+          class="csh-card"
+          href="{{ link_url }}"
+          {% if is_external %}
+            target="_blank" rel="noopener noreferrer"
+          {% endif %}
         >
-          <span class="csh-more-text">{{ more_label }}</span>
-          <span class="csh-more-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-              <path d="M8 5l7 7-7 7" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </span>
+          <div class="csh-thumb">
+            {% if article.image %}
+              {{ article.image | image_url: width: 700 | image_tag: loading: 'lazy', alt: article.title }}
+            {% endif %}
+          </div>
+
+          <div class="csh-body">
+            <div class="csh-name">{{ article.title }}</div>
+
+            {% if section.settings.show_excerpt %}
+              <div class="csh-price">
+                {{ article.excerpt_or_content | strip_html | truncate: 80 }}
+              </div>
+            {% endif %}
+          </div>
         </a>
-      </div>
+      {% endfor %}
+    </div>
 
-      {% if the_blog.articles_count > 0 %}
-        <div class="csh-grid">
-          {% for article in the_blog.articles limit: section.settings.limit %}
-            {%- liquid
-              # 外部URLメタフィールド（custom.external_url）を取得
-              assign ext_obj = article.metafields.custom.external_url
-              assign link_url = article.url
-              assign is_external = false
+  {% elsif request.design_mode %}
+    {%- comment -%}
+      ★ カスタマイズ画面のみ：
+      - ブログ未選択 or 記事0件のときの注意テキスト
+      - ストアフロントではこのセクション自体が出力されない
+    {%- endcomment -%}
+    <div class="csh-head">
+      <h2 class="csh-title">ブログ記事（Custom）</h2>
+    </div>
 
-              if ext_obj and ext_obj.value != blank and ext_obj.value != '-' and ext_obj.value != '#'
-                assign link_url = ext_obj.value
-                assign is_external = true
-              endif
-            -%}
-
-            <a
-              class="csh-card"
-              href="{{ link_url }}"
-              {% if is_external %}
-                target="_blank" rel="noopener noreferrer"
-              {% endif %}
-            >
-              <div class="csh-thumb">
-                {% if article.image %}
-                  {{ article.image | image_url: width: 700 | image_tag: loading: 'lazy', alt: article.title }}
-                {% endif %}
-              </div>
-
-              <div class="csh-body">
-                <div class="csh-name">{{ article.title }}</div>
-
-                {% if section.settings.show_excerpt %}
-                  <div class="csh-price">
-                    {{ article.excerpt_or_content | strip_html | truncate: 80 }}
-                  </div>
-                {% endif %}
-              </div>
-            </a>
-          {% endfor %}
-        </div>
-      {% else %}
-        <p class="csh-empty">このブログに記事がありません。</p>
-      {% endif %}
-    {% else %}
-      <p class="csh-empty">ブログが見つかりません。</p>
+    {% if the_blog_handle == blank %}
+      <p class="csh-empty">
+        セクション設定でブログを選択してください。<br>
+        ブログに記事が登録されていない場合は、ストアフロントではセクションごと非表示になります。
+      </p>
+    {% elsif the_blog == nil %}
+      <p class="csh-empty">
+        選択されたブログが見つかりません。<br>
+        ブログに記事が登録されていない場合は、ストアフロントではセクションごと非表示になります。
+      </p>
+    {% elsif the_blog.articles_count == 0 %}
+      <p class="csh-empty">
+        「{{ the_blog.title }}」には現在記事が登録されていません。<br>
+        ストアフロントでは、このセクション自体が表示されません。
+      </p>
     {% endif %}
-  {% else %}
-    <p class="csh-empty">セクション設定でブログを選択してください。</p>
   {% endif %}
 
   <style>
@@ -251,12 +279,17 @@
     }
   </style>
 </section>
+{% endif %}
 
 {% schema %}
 {
   "name": "ブログ記事（Custom）",
   "settings": [
     { "type": "blog", "id": "blog", "label": "ブログを選択" },
+    {
+      "type": "paragraph",
+      "content": "ブログに記事が登録されていない場合はセクションごと表示されません"
+    },
 
     { "type": "range", "id": "limit", "label": "最大表示件数", "min": 1, "max": 12, "step": 1, "default": 4 },
 

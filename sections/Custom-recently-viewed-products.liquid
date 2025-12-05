@@ -87,6 +87,9 @@
 
     #custom-rv-{{ section.id }}{ background: {{ section.settings.bg_color | default: '#F5F6F9' }}; }
 
+    #custom-rv-{{ section.id }} .rv-price-tax{
+      font-size:10px;
+    }
     /* ====== SP：横スクロール ====== */
     @media (max-width: 768px){
       #custom-rv-{{ section.id }}{ position:relative; overflow:visible; }
@@ -259,25 +262,31 @@
       }
 
             // 2) カード描画
-      picked.forEach(function(p){
+            picked.forEach(function(p){
         if (!p || !p.title) return;
 
         // ---- バッジ用フラグを統一して計算 ----
-        // NEW は毎回 JS 側で計算（公開から60日以内）
-        var bNew = false;
-        try {
-          var pub = p.published_at;
-          if (pub) {
-            var pub_ts    = Date.parse(pub);
-            var now_ts    = Date.now();
-            var cutoff_ts = now_ts - 60 * 86400000; // 60日
-            if (!isNaN(pub_ts) && pub_ts >= cutoff_ts && pub_ts <= now_ts) {
-              bNew = true;
+        // NEW：まず recorder で保存した is_new を使う
+        var bNew;
+        if (typeof p.is_new !== 'undefined') {
+          bNew = !!p.is_new;
+        } else {
+          // 旧データ用フォールバック（published_at ＋ NEW_DAYS）
+          bNew = false;
+          try {
+            var pub = p.published_at;
+            if (pub) {
+              var pubTs  = Date.parse(pub);
+              var cutoff = Date.now() - NEW_DAYS * 86400000;
+              if (!isNaN(pubTs) && pubTs >= cutoff && pubTs <= Date.now()) {
+                bNew = true;
+              }
             }
-          }
-        } catch(e) {}
+          } catch(e) {}
+        }
 
-        // 初回特典：新形式(first_bonus_low) があればそれを優先、なければ first_bonus_total>0 を見る
+        // 初回特典：新形式(first_bonus_low) があればそれを優先、
+        // なければ first_bonus_total>0 を見る（将来用のフォールバック）
         var bFirst;
         if (typeof p.first_bonus_low !== 'undefined') {
           bFirst = !!p.first_bonus_low;
@@ -285,7 +294,7 @@
           bFirst = !!(p.first_bonus_total && Number(p.first_bonus_total) > 0);
         }
 
-        // 早期予約特典 / 締切間近 はそのまま
+        // 早期予約特典 / 締切間近
         var bEarly   = !!p.early_bonus;
         var bClosing = !!p.closing_soon;
 
@@ -312,6 +321,8 @@
             + '</div>';
         }
 
+        // （この下の el の生成〜 appendChild までは現状のまま使ってOK）
+
         var el = document.createElement('a');
         el.className = 'rv-card';
 
@@ -333,9 +344,37 @@
               : '<span class="rv-thumb__placeholder">NO IMAGE</span>')
           + '</div>';
 
+        // ---- 価格表示（セール価格・範囲・税込 の表記を他セクションと合わせる）----
         var priceHtml = '';
-        if (SHOW_PRICE){
-          priceHtml = '<span class="rv-price">'+ formatMoney(p.price_min || 0) +'</span>';
+        if (SHOW_PRICE) {
+          var priceMin   = Number(p && p.price_min || 0);
+          var priceMax   = Number(p && p.price_max || 0);
+          var compareMax = Number(p && p.compare_at_price_max || 0);
+          var hasSale    = compareMax > priceMin && priceMin > 0;
+
+          if (hasSale) {
+            // セール中：現在価格＋取り消し線付きの元値
+            priceHtml =
+              '<div class="rv-price">'
+              +   '<span class="rv-price-current">' + formatMoney(priceMin) + '</span>'
+              +   '<span class="rv-price-compare"><s>' + formatMoney(compareMax) + '</s></span>'
+              +   '<span class="rv-price-tax">（税込）</span>'
+              + '</div>';
+          } else {
+            // 通常価格：バリアントで価格差があれば「〜」表記
+            var mainPrice;
+            if (priceMin > 0 && priceMax > 0 && priceMin !== priceMax) {
+              mainPrice = formatMoney(priceMin) + ' — ' + formatMoney(priceMax);
+            } else {
+              mainPrice = formatMoney(priceMin || priceMax || 0);
+            }
+
+            priceHtml =
+              '<div class="rv-price">'
+              +   '<span class="rv-price-current">' + mainPrice + '</span>'
+              +   '<span class="rv-price-tax">（税込）</span>'
+              + '</div>';
+          }
         }
 
         el.innerHTML =

@@ -7,6 +7,11 @@
 {% liquid
   assign coll = section.settings.fallback_collection
   assign initial_pairs = ''
+
+  assign current_pid = nil
+  if product and product.id
+    assign current_pid = product.id
+  endif
 %}
 
 <section
@@ -14,6 +19,7 @@
   class="csh section page-width color-{{ section.settings.color_scheme }}"
   data-limit="{{ section.settings.max_products | default: 8 }}"
   data-intent="{{ section.settings.recommendation_type | default: 'related' }}"
+  data-current-pid="{{ current_pid }}" 
   style="
     {% render 'spacing-style', settings: section.settings %}
     --csh-gap-pc: {{ section.settings.gap_pc | default: 16 }}px;
@@ -155,6 +161,7 @@
           {% capture pair %}
             {{ product.handle | json }}: {
               "display_locked": {{ display_locked | json }},
+              "display_start_at": {{ product.metafields.product.display_start_at | json }},
               "is_new": {{ is_new | json }},
               "pre_ok": {{ pre_ok | json }},
               "first_bonus_low": {{ first_bonus_low | json }},
@@ -162,6 +169,7 @@
               "closing_soon": {{ closing_soon | json }}
             }
           {% endcapture %}
+
           {% if forloop.first %}
             {% assign initial_pairs = pair %}
           {% else %}
@@ -335,14 +343,20 @@
     }
   </style>
 
-  <script>
+    <script>
     (function(){
       console.log('[home recos] init');
 
       var sec  = document.getElementById('csh-{{ section.id }}');
-      if (!sec) return;
+      if (!sec) {
+        console.warn('[home recos] section not found');
+        return;
+      }
       var grid = sec.querySelector('.js-home-recos-grid');
-      if (!grid) return;
+      if (!grid) {
+        console.warn('[home recos] grid not found');
+        return;
+      }
 
       var LIMIT      = Number(sec.dataset.limit || {{ section.settings.max_products | default: 8 }});
       var INTENT     = (sec.dataset.intent || '{{ section.settings.recommendation_type | default: "related" }}');
@@ -357,71 +371,27 @@
           return Shopify.formatMoney(cents, moneyFormat);
         }
         try{
-          return (cents/100).toLocaleString('ja-JP', {
+          return (cents / 100).toLocaleString('ja-JP', {
             style:'currency',
             currency:'JPY',
             minimumFractionDigits:0,
             maximumFractionDigits:0
           });
         }catch(e){
-          return '¥' + Math.round(cents/100);
+          return '¥' + Math.round(cents / 100);
         }
       }
 
       function toCents(x){
         if (x == null) return null;
-        if (typeof x === 'number' && Number.isFinite(x)) return Math.round(x);
+        if (typeof x === 'number' && isFinite(x)) return Math.round(x);
         if (typeof x === 'string'){
-          var s = x.replace(/[^\d.]/g,'').trim();
+          var s = x.replace(/[^\d.]/g, '').trim();
           if (!s) return null;
           var f = parseFloat(s);
-          return Number.isFinite(f) ? Math.round(f*100) : null;
+          return isFinite(f) ? Math.round(f * 100) : null;
         }
         return null;
-      }
-
-            function priceHTMLFromProduct(p){
-        if (!SHOW_PRICE) return '';
-
-        // 現在価格（最小）・最大価格・元値
-        var priceMinC = toCents(
-          p.price_min != null ? p.price_min :
-          (p.price != null ? p.price :
-           (p.variants && p.variants[0] && p.variants[0].price))
-        );
-        var priceMaxC     = toCents(p.price_max);
-        var compareMaxC   = toCents(p.compare_at_price_max);
-
-        var hasSale = compareMaxC != null && priceMinC != null && compareMaxC > priceMinC;
-
-        var taxHtml = '<span class="csh-price-tax">（税込）</span>';
-
-        // セール時：現在価格 + 斜線付き元値
-        if (hasSale){
-          var currentHtml = formatMoney(priceMinC);
-          var compareHtml = formatMoney(compareMaxC);
-
-          return (
-            '<span class="csh-price-current">' + currentHtml + '</span>'
-            + '<span class="csh-price-compare"><s>' + compareHtml + '</s></span>'
-            + taxHtml
-          );
-        }
-
-        // 通常時：バリアントレンジ or 単価
-        var priceText;
-        if (p.price_varies && priceMinC != null && priceMaxC != null && priceMaxC !== priceMinC){
-          priceText = formatMoney(priceMinC) + ' — ' + formatMoney(priceMaxC);
-        } else if (priceMinC != null){
-          priceText = formatMoney(priceMinC);
-        } else {
-          return '';
-        }
-
-        return (
-          '<span class="csh-price-current">' + priceText + '</span>'
-          + taxHtml
-        );
       }
 
       function productHref(p){
@@ -445,71 +415,85 @@
       try{
         var exArr = JSON.parse(localStorage.getItem('recentlyViewedEx')) || [];
         if (Array.isArray(exArr)){
-          exArr.forEach(function(item){
-            if (!item || !item.handle) return;
+          for (var i = 0; i < exArr.length; i++){
+            var item = exArr[i];
+            if (!item || !item.handle) continue;
             exMap[item.handle] = item;
-          });
+          }
         }
       }catch(e){
         console.warn('[home recos] exMap error', e);
       }
 
-          function normalize(p){
-            var handle = p.handle || null;
+      function normalize(p){
+        var handle = p.handle || null;
 
-            var init = handle && initialEx[handle] ? initialEx[handle] : {};
-            var exFromStorage = handle && exMap[handle] ? exMap[handle] : {};
+        // Liquid 初期データ（initialEx）＋ recentlyViewedEx の情報をマージ
+        var init          = (handle && initialEx[handle]) ? initialEx[handle] : {};
+        var exFromStorage = (handle && exMap[handle])     ? exMap[handle]     : {};
+        var ex            = {};
+        for (var k in init){ ex[k] = init[k]; }
+        for (var k2 in exFromStorage){ ex[k2] = exFromStorage[k2]; }
 
-            var ex = Object.assign({}, init, exFromStorage);
+        // 初回特典フラグ：first_bonus_low があればそれを優先
+        var firstBonusFlag;
+        if (typeof ex.first_bonus_low !== 'undefined'){
+          firstBonusFlag = !!ex.first_bonus_low;
+        } else {
+          firstBonusFlag = !!(ex.first_bonus_total && Number(ex.first_bonus_total) > 0);
+        }
 
-            return {
-              id: p.id,
-              title: p.title,
-              handle: handle,
-              url: p.url || p.online_store_url || null,
-              featured_image: primaryImage(p),
-              price: p.price,
-              price_min: p.price_min,
-              price_max: p.price_max,
-              price_varies: p.price_varies,
-              compare_at_price_max: p.compare_at_price_max,
-              variants: p.variants || null,
+        return {
+          id: p.id,
+          title: p.title,
+          handle: handle,
+          url: p.url || p.online_store_url || null,
+          featured_image: primaryImage(p),
+          price: p.price,
+          price_min: p.price_min,
+          price_max: p.price_max,
+          price_varies: p.price_varies,
+          compare_at_price_max: p.compare_at_price_max,
+          variants: p.variants || null,
 
-              display_locked: !!(p.display_locked || ex.display_locked),
+          display_locked: !!(p.display_locked || ex.display_locked),
 
-              // ★ 追加
-              display_start_at: ex.display_start_at || p.display_start_at || null,
+          // display_start_at は Liquid / recentlyViewedEx のどちらかにあれば拾う
+          display_start_at: ex.display_start_at || p.display_start_at || null,
 
-              // バッジフラグ
-              is_new: !!ex.is_new,
-              pre_ok: !!ex.pre_ok,
-              first_bonus_low: 
-                typeof ex.first_bonus_low !== 'undefined'
-                  ? !!ex.first_bonus_low
-                  : !!(ex.first_bonus_total && Number(ex.first_bonus_total) > 0),
-              early_bonus: !!ex.early_bonus,
-              closing_soon: !!ex.closing_soon
-            };
-          }
+          // バッジフラグ
+          is_new: !!ex.is_new,
+          pre_ok: !!ex.pre_ok,
+          first_bonus_low: firstBonusFlag,
+          early_bonus: !!ex.early_bonus,
+          closing_soon: !!ex.closing_soon
+        };
+      }
 
       function keyOf(p){
         return p.id || p.handle || p.url || (p.title + ':' + (p.price || ''));
       }
 
       function dedupe(list){
-        var s = new Set();
-        return list.filter(function(p){
+        var s = {};
+        var out = [];
+        for (var i = 0; i < list.length; i++){
+          var p = list[i];
           var k = keyOf(p);
-          if (s.has(k)) return false;
-          s.add(k);
-          return true;
-        });
+          if (s[k]) continue;
+          s[k] = true;
+          out.push(p);
+        }
+        return out;
       }
 
       function render(list){
         console.log('[home recos] render', list.length);
         var html = '';
-        list.slice(0, LIMIT).forEach(function(p){
+        var max = Math.min(list.length, LIMIT);
+
+        for (var i = 0; i < max; i++){
+          var p = list[i];
           var img       = primaryImage(p);
           var priceHtml = priceHTMLFromProduct(p);
           var locked    = !!p.display_locked;
@@ -517,44 +501,46 @@
           var lockedCls = locked ? ' csh-card--locked' : '';
           var lockedAttr= locked ? ' aria-disabled="true"' : '';
 
-          // バッジ
-          var is_new   = !!p.is_new;
-          var pre_ok   = !!p.pre_ok;
-          var first_low;
-          if (typeof p.first_bonus_low !== 'undefined') {
-            first_low = !!p.first_bonus_low;
-          } else {
-            first_low = !!(p.first_bonus_total && p.first_bonus_total > 0);
-          }
-          var early   = !!p.early_bonus;
-          var closing = !!p.closing_soon;
+          // NEW 判定（display_start_at から60日以内）
+          var is_new = false;
+          try {
+            var ds = p.display_start_at;
+            if (ds) {
+              var dsTs   = Date.parse(ds);
+              var nowTs  = Date.now();
+              var cutoff = nowTs - 60 * 86400000; // 60日
 
-          // Liquid と同じ順番でバッジを生成
+              if (!isNaN(dsTs) && dsTs >= cutoff && dsTs <= nowTs) {
+                is_new = true;
+              }
+            }
+          } catch(e) {}
+
+          if (!is_new && p.is_new) {
+            is_new = !!p.is_new;
+          }
+
+          var pre_ok    = !!p.pre_ok;
+          var early     = !!p.early_bonus;
+          var closing   = !!p.closing_soon;
+          var first_low = !!p.first_bonus_low;
+
           var badges = '';
           if (is_new || pre_ok || early || first_low || closing){
             badges += '<div class="csh-badges csh-badges--below">';
 
-            // ① NEW（常に表示）
             if (is_new){
               badges += '<span class="csh-badge csh-badge--new">NEW</span>';
             }
-
-            // ② 予約受付中
             if (pre_ok){
               badges += '<span class="csh-badge csh-badge--pre">予約受付中</span>';
             }
-
-            // ③ 早期予約特典あり
             if (early){
               badges += '<span class="csh-badge csh-badge--early">早期予約特典あり</span>';
             }
-
-            // ④ 初回特典残りわずか
             if (first_low){
               badges += '<span class="csh-badge csh-badge--first">初回特典残りわずか</span>';
             }
-
-            // ⑤ 締切間近
             if (closing){
               badges += '<span class="csh-badge csh-badge--closing">締切間近</span>';
             }
@@ -576,8 +562,44 @@
           }
           html +=   '</div>';
           html += '</a>';
-        });
+        }
         grid.innerHTML = html;
+      }
+
+      function priceHTMLFromProduct(p){
+        if (!SHOW_PRICE) return '';
+
+        var priceMinC = toCents(
+          p.price_min != null ? p.price_min :
+          (p.price != null ? p.price :
+           (p.variants && p.variants[0] && p.variants[0].price))
+        );
+        var priceMaxC   = toCents(p.price_max);
+        var compareMaxC = toCents(p.compare_at_price_max);
+
+        var hasSale = (compareMaxC != null && priceMinC != null && compareMaxC > priceMinC);
+        var taxHtml = '<span class="csh-price-tax">（税込）</span>';
+
+        if (hasSale){
+          var currentHtml = formatMoney(priceMinC);
+          var compareHtml = formatMoney(compareMaxC);
+          return (
+            '<span class="csh-price-current">' + currentHtml + '</span>' +
+            '<span class="csh-price-compare"><s>' + compareHtml + '</s></span>' +
+            taxHtml
+          );
+        }
+
+        var priceText;
+        if (p.price_varies && priceMinC != null && priceMaxC != null && priceMaxC !== priceMinC){
+          priceText = formatMoney(priceMinC) + ' — ' + formatMoney(priceMaxC);
+        } else if (priceMinC != null){
+          priceText = formatMoney(priceMinC);
+        } else {
+          return '';
+        }
+
+        return '<span class="csh-price-current">' + priceText + '</span>' + taxHtml;
       }
 
       async function fetchRecommendations(pid){
@@ -589,7 +611,12 @@
         if (!r.ok) throw new Error('recos failed');
         var data = await r.json();
         console.log('[home recos] recos raw', data);
-        return Array.isArray(data.products) ? data.products.map(normalize) : [];
+        var list = Array.isArray(data.products) ? data.products : [];
+        var out = [];
+        for (var i = 0; i < list.length; i++){
+          out.push(normalize(list[i]));
+        }
+        return out;
       }
 
       async function fetchCollection(handle, take){
@@ -598,73 +625,99 @@
         if (!r.ok) throw new Error('collection failed');
         var json = await r.json();
         var products = json.products || [];
-        return products.map(normalize);
+        var out = [];
+        for (var i = 0; i < products.length; i++){
+          out.push(normalize(products[i]));
+        }
+        return out;
+      }
+
+      async function renderFallback(){
+        var fallbackHandle = {{ coll.handle | json }};
+        if (!fallbackHandle){
+          console.warn('[home recos] no fallback handle');
+          return;
+        }
+        console.log('[home recos] renderFallback from collection', fallbackHandle);
+        var fallback = await fetchCollection(fallbackHandle, LIMIT);
+        fallback = dedupe(fallback);
+        var filtered = [];
+        for (var i = 0; i < fallback.length; i++){
+          if (!fallback[i].display_locked) filtered.push(fallback[i]);
+        }
+        render(filtered);
       }
 
       async function run(){
         var lastPid = null;
+
+        // 1. localStorage から取得
         try{
           lastPid = localStorage.getItem('wb_last_pid');
         }catch(e){
-          console.warn('[home recos] wb_last_pid error', e);
+          console.warn('[home recos] wb_last_pid read error', e);
         }
 
-        console.log('[home recos] lastPid=', lastPid);
+        // 2. 無ければ data-current-pid からセット
+        if (!lastPid){
+          var currentPidAttr = sec.getAttribute('data-current-pid');
+          if (currentPidAttr){
+            lastPid = String(currentPidAttr);
+            try {
+              localStorage.setItem('wb_last_pid', lastPid);
+            } catch(e) {
+              console.warn('[home recos] wb_last_pid write error', e);
+            }
+          }
+        }
+
+        console.log('[home recos] lastPid =', lastPid);
 
         if (!lastPid){
-          // 初回は Liquid の描画そのまま（コレクション表示）
+          console.log('[home recos] no pid → 初回コレクションのまま');
           return;
         }
 
-                try{
+        try{
           var recos = await fetchRecommendations(lastPid);
           recos = dedupe(recos);
 
-          // 足りない分は fallback コレクションから補充
-          if (recos.length < LIMIT && {{ coll | json }}){
-            var fbHandle = {{ coll.handle | json }};
-            if (fbHandle){
-              var pool = await fetchCollection(fbHandle, LIMIT * 3);
-              var keys = new Set(recos.map(keyOf));
-              pool.forEach(function(p){
-                var k = keyOf(p);
-                if (keys.has(k)) return;
-                recos.push(p);
-                keys.add(k);
-              });
-            }
+          // display_locked 除外
+          var filtered = [];
+          for (var i = 0; i < recos.length; i++){
+            if (!recos[i].display_locked) filtered.push(recos[i]);
           }
 
-          // ★ display_locked は JS 側でも表示対象から除外
-          recos = recos.filter(function(p){
-            return !p.display_locked;
-          });
-
-          if (!recos.length){
-            // 0件ならコレクション表示のまま
-            return;
-          }
-
-          // 見出し差し替え
+          // 見出しはここで必ず差し替え
           var titleEl = sec.querySelector('.csh-title');
           if (titleEl){
             titleEl.textContent = {{ section.settings.title_personal | json }};
           }
 
-          render(recos);
+          if (!filtered.length){
+            console.log('[home recos] 0件 → fallback レンダリング');
+            await renderFallback();
+            return;
+          }
 
-        }catch(e){
-          console.warn('[home recos] error', e);
+          render(filtered);
+          return;
+
+        } catch(e){
+          console.warn('[home recos] error in run()', e);
+          await renderFallback();
+          return;
         }
       }
 
       if (document.readyState === 'loading'){
-        document.addEventListener('DOMContentLoaded', run, {once:true});
-      }else{
+        document.addEventListener('DOMContentLoaded', function(){ run(); }, {once:true});
+      } else {
         run();
       }
     })();
   </script>
+
 </section>
 
 {% schema %}

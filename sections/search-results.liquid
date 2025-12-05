@@ -26,18 +26,101 @@
     {% endif %}
 
     {% paginate search.results by products_per_page %}
-      {% if search.results_count > 0 %}
-        {% content_for 'block', type: 'filters', id: 'filters', results: search, results_size: search.results_count %}
-        {% assign products = search.results | where: 'object_type', 'product' %}
-      {% else %}
+
+      {%- if search.results_count > 0 -%}
+        {%- comment -%}
+          「1〜10件（全10件）」用のテキストを作成
+          ※ collection と同じ考え方
+        {%- endcomment -%}
+        {%- liquid
+          assign start_index = paginate.current_offset | plus: 1
+          assign end_index   = paginate.current_offset | plus: search.results.size
+        -%}
+        {%- capture results_label -%}
+          <span class="wb-collection-count__current">{{ start_index }}〜{{ end_index }}</span>件（全<span class="wb-collection-count__total">{{ paginate.items }}</span>件）
+        {%- endcapture -%}
+        {%- assign results_label = results_label | strip -%}
+
+        {%- comment -%}
+          filters ブロックに
+          - results_size  … 総件数
+          - results_label … 「1〜10件（全10件）」HTML
+          を渡す
+        {%- endcomment -%}
+        {% content_for 'block',
+          type: 'filters',
+          id: 'filters',
+          results: search,
+          results_size: paginate.items,
+          results_label: results_label
+        %}
+
+        {%- assign products = search.results | where: 'object_type', 'product' -%}
+
+      {%- else -%}
+        {%- comment -%}
+          ヒットなし時：今まで通り empty_state_collection を使う。
+          （件数ラベルは 3個のアイテム → 0件 など別で調整したければここで）
+        {%- endcomment -%}
         {% assign collection = settings.empty_state_collection | default: collections.all %}
         {% assign default_title = 'content.search_results_resource_products' | t %}
         {% assign title = settings.empty_state_collection.title | default: default_title %}
         {% assign products = collection.products %}
-      {% endif %}
+
+        {% content_for 'block',
+          type: 'filters',
+          id: 'filters',
+          results: collection,
+          results_size: products.size
+        %}
+      {%- endif -%}
 
       {% capture children %}
         {% for product in products %}
+          {% liquid
+            # ===== 表示制御：display_start_at / display_end_at ===== wb03 =====
+            assign disabled = false
+
+            assign display_start_raw = product.metafields.product.display_start_at
+            assign display_end_raw   = product.metafields.product.display_end_at
+
+            if display_start_raw != blank or display_end_raw != blank
+              assign now_ts = 'now' | date: '%s'
+
+              if display_start_raw != blank
+                assign start_ts = display_start_raw | date: '%s'
+              endif
+
+              if display_end_raw != blank
+                assign end_ts = display_end_raw | date: '%s'
+              endif
+
+              if display_start_raw != blank and display_end_raw == blank
+                # start のみ → その日時より前をNG
+                if now_ts < start_ts
+                  assign disabled = true
+                endif
+
+              elsif display_start_raw == blank and display_end_raw != blank
+                # end のみ → その日時より後をNG
+                if now_ts > end_ts
+                  assign disabled = true
+                endif
+
+              elsif display_start_raw != blank and display_end_raw != blank
+                # start & end → 期間外をNG
+                if now_ts < start_ts or now_ts > end_ts
+                  assign disabled = true
+                endif
+              endif
+            endif
+
+            # 期間外の商品はカードごとスキップ
+            if disabled
+              continue
+            endif
+          %}
+
           <li
             id="{{ section.id }}-{{ product.id }}"
             class="product-grid__item product-grid__item--{{ forloop.index0 }}"
