@@ -101,6 +101,30 @@
       text-align: center;
     }
   }
+
+  /* ================================
+  * カート上部「お買い物を続ける」ボタンのデザインを
+  * 下のアウトラインボタンと揃える
+  * ================================ */
+  .cart-title__inner .cart-title__continue.button--secondary {
+    background-color: #fff;
+    color: #d92331;
+    border: 1px solid #d92331;
+    border-radius: 4px;
+    padding: 10px 24px;
+    min-width: 180px;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* SP のときは下ボタンと同じく幅100%に */
+  @media screen and (max-width: 749px) {
+    .cart-title__inner .cart-title__continue.button--secondary {
+      width: 100%;
+    }
+  }
 {% endstylesheet %}
 
 {% schema %}

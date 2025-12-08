@@ -3,7 +3,8 @@
   メタオブジェクトを使った商品ページ用パンくず
 {% endcomment %}
 
-{%- liquid
+{% comment %} wb03
+ {%- liquid
   assign p = product
 
   assign genre_obj = p.metafields.custom.product_genre_object.value
@@ -68,6 +69,128 @@
       {{ p.title }}
     </li>
   </ol>
+</nav> {% endcomment %}
+
+
+{% comment %}
+  Custom-product-breadcrumbs.liquid
+  メタオブジェクトを使った商品ページ用新パンくず
+{% endcomment %}
+
+{%- liquid
+  assign p = product
+
+  # 1) 商品カテゴリオブジェクト
+  assign category_obj = nil
+  if p.metafields.product.product_category_object != blank
+    assign category_obj = p.metafields.product.product_category_object.value
+  elsif p.metafields.custom.product_product_category_object != blank
+    assign category_obj = p.metafields.custom.product_product_category_object.value
+  endif
+
+  # 2) 索引用オブジェクト
+  assign index_obj = nil
+  if p.metafields.product.kana_index_object != blank
+    assign index_obj = p.metafields.product.kana_index_object.value
+  elsif p.metafields.custom.product_index_object != blank
+    assign index_obj = p.metafields.custom.product_index_object.value
+  endif
+
+  # 3) 商品ジャンルオブジェクト
+  assign genre_obj = nil
+  if p.metafields.product.product_genre_object != blank
+    assign genre_obj = p.metafields.product.product_genre_object.value
+  elsif p.metafields.custom.product_genre_object != blank
+    assign genre_obj = p.metafields.custom.product_genre_object.value
+  endif
+
+  # 4) 作品オブジェクト
+  assign series_obj = nil
+  if p.metafields.product.product_series_object != blank
+    assign series_obj = p.metafields.product.product_series_object.value
+  elsif p.metafields.custom.product_type_the_work != blank
+    assign series_obj = p.metafields.custom.product_type_the_work.value
+  elsif p.metafields.custom.product_the_work != blank
+    assign series_obj = p.metafields.custom.product_the_work.value
+  endif
+-%}
+
+<nav class="wb-breadcrumb" aria-label="パンくずリスト">
+  <ol class="wb-breadcrumb__list">
+    {%- comment -%} トップ {%- endcomment -%}
+    <li class="wb-breadcrumb__item">
+      <a href="{{ routes.root_url }}">トップ</a>
+    </li>
+
+    {%- comment -%} ① 商品_商品カテゴリー {%- endcomment -%}
+    {%- if category_obj -%}
+      {%- assign category_title = category_obj.product_category_name
+        | default: category_obj.product_category_title
+      -%}
+      {%- assign category_collection = category_obj.product_category_collection.value
+        | default: category_obj.category_collection.value
+      -%}
+      {%- assign category_href = category_collection.url | default: '#' -%}
+      <li class="wb-breadcrumb__item">
+        <a href="{{ category_href }}">
+          {{ category_title }}
+        </a>
+      </li>
+    {%- endif -%}
+
+    {%- comment -%} ② 商品_索引（タ行 など） {%- endcomment -%}
+    {%- if index_obj -%}
+      {%- assign index_title = index_obj.kana_index_name
+        | default: index_obj.index_title
+      -%}
+      {%- assign index_collection = index_obj.kana_index_collection.value
+        | default: index_obj.index_collection.value
+      -%}
+      {%- assign index_href = index_collection.url | default: '#' -%}
+      <li class="wb-breadcrumb__item">
+        <a href="{{ index_href }}">
+          {{ index_title }}
+        </a>
+      </li>
+    {%- endif -%}
+
+    {%- comment -%} ③ 商品_ジャンル（DVD/Blu-ray など） {%- endcomment -%}
+    {%- if genre_obj -%}
+      {%- assign genre_title = genre_obj.product_genre_name
+        | default: genre_obj.genre_title
+      -%}
+      {%- assign genre_collection = genre_obj.product_genre_collection.value
+        | default: genre_obj.genre_collection.value
+      -%}
+      {%- assign genre_href = genre_collection.url | default: '#' -%}
+      <li class="wb-breadcrumb__item">
+        <a href="{{ genre_href }}">
+          {{ genre_title }}
+        </a>
+      </li>
+    {%- endif -%}
+
+    {%- comment -%} ④ 商品_作品（銀河鉄道999 など） {%- endcomment -%}
+    {%- if series_obj -%}
+      {%- assign series_title = series_obj.product_series_name
+        | default: series_obj.the_work_title
+      -%}
+      {%- assign series_collection = series_obj.product_series_collection.value
+        | default: series_obj.the_work_collection.value
+      -%}
+      {%- assign series_href = series_collection.url | default: '#' -%}
+      <li class="wb-breadcrumb__item">
+        <a href="{{ series_href }}">
+          {{ series_title }}
+        </a>
+      </li>
+    {%- endif -%}
+
+    {%- comment -%} ⑤ 最後：商品タイトル {%- endcomment -%}
+    <li class="wb-breadcrumb__item wb-breadcrumb__item--current" aria-current="page">
+      {{ p.title }}
+    </li>
+  </ol>
 </nav>
 
 <style>
@@ -99,7 +222,7 @@
   .wb-breadcrumb__item a:hover {
     text-decoration: underline;
   }
-  .wb-breadcrumb__item--current {
+  .wb-breadcrumb__item {
     color: #777;
   }
 </style>

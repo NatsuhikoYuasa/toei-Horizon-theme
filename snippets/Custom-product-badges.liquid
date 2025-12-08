@@ -40,15 +40,19 @@
   else
     assign now_ts = 'now' | date: '%s' | plus: 0
 
-    ##### --- NEW（公開日から60日以内：商品単位） ---
-    assign new_days  = 60 | plus: 0
-    assign days_sec  = new_days | times: 86400
-    assign cutoff_ts = now_ts | minus: days_sec
-
+    ##### --- NEW（product.display_start_at から60日以内：商品単位） ---
     assign is_new = false
-    if p.published_at != blank
-      assign pub_ts = p.published_at | date: '%s' | plus: 0
-      if pub_ts >= cutoff_ts and pub_ts <= now_ts
+
+    assign display_start_raw = p.metafields.product.display_start_at
+
+    if display_start_raw != blank
+      assign new_days  = 60 | plus: 0
+      assign days_sec  = new_days | times: 86400
+      assign cutoff_ts = now_ts | minus: days_sec
+
+      assign start_ts = display_start_raw | date: '%s' | plus: 0
+
+      if start_ts >= cutoff_ts and start_ts <= now_ts
         assign is_new = true
       endif
     endif
@@ -89,7 +93,7 @@
       endif
 
     else
-      ##### ▼▼ 一覧・最近見たなど：商品全体で判定（元のロジック） ▼▼ #####
+      ##### ▼▼ 一覧・最近見たなど：商品全体で判定 ▼▼ #####
 
       # 予約受付中（いずれかのバリアント is_preorder=true）
       assign pre_ok = false

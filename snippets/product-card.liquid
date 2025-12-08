@@ -1,3 +1,4 @@
+{% unless hide_card %}
 {%- doc -%}
   This snippet is used to render a product card.
   It is used in the product block, featured product block, and the product card block.
@@ -124,6 +125,20 @@
 %}
 {% comment %} wb03 blocked&add end  {% endcomment %}
 
+{%- liquid
+  assign hide_card = false
+
+  comment
+    コレクションページでは表示期間外の商品カード自体を出さない
+    ※他の場所（おすすめ商品など）では、今まで通り disabled の見た目だけにしたい場合は
+    page_type 条件を増やして制御
+  endcomment
+
+  if disabled and request.page_type == 'collection'
+    assign hide_card = true
+  endif
+-%}
+
 {%- if settings.transition_to_main_product -%}
   <product-card-link
     data-product-id="{{ product.id }}"
@@ -134,10 +149,9 @@
     {% endif %}
   >
 {%- endif -%}
+
 <product-card
-  {% comment %} wb03 blocked&add start {% endcomment %}
-   class="product-card{% if disabled %} product-card--disabled{% endif %}"
-  {% comment %} wb03 blocked&add end {% endcomment %}
+  class="product-card{% if disabled %} product-card--disabled{% endif %}"
   data-product-id="{{ product.id }}"
   data-product-variants-size="{{ product.variants.size }}"
   id="product-card-{{ block.id }}"
@@ -150,16 +164,14 @@
     data-placeholder="true"
   {% endif %}
 >
-  {% comment %} wb03 blocked&add start {% endcomment %}
   <a
     id="{{ product_card_id | md5 }}"
     {% unless onboarding or disabled %}
-      href="{{ variant_to_link.url }}
+      href="{{ variant_to_link.url }}"
     {% endunless %}
     class="product-card__link"
     ref="productCardLink"
   >
-  {% comment %} wb03 blocked&add end {% endcomment %}
     <span class="visually-hidden">
       {{ product.title }}
     </span>
@@ -201,12 +213,14 @@
         </div>
       {% endif %}
     {% endunless %}
-
   </div>
 </product-card>
+
 {%- if settings.transition_to_main_product -%}
   </product-card-link>
 {%- endif -%}
+
+{% endunless %}
 
 {% stylesheet %}
   product-card-link,
@@ -244,33 +258,6 @@
     margin-top: 8px;
   }
 
-  
-  /* ===== wb03: 画像 → バッジ → タイトル・価格 の順に並び替え ===== */
-
-  /* 1) product-card__content を縦並びフレックスに */
-  .product-card__content {
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* 2) ひとまず直下の子は全部「2番目」扱い */
-  .product-card__content > * {
-    order: 2;
-  }
-
-  /* 3) 画像＋クイック追加が入っている .card-gallery を 0番目（一番上）に */
-  .product-card__content > .card-gallery {
-    order: 0;
-  }
-
-  /* 4) 自作バッジ（.csh-badges--collection）を 1番目 → 画像のすぐ下に */  .csh-badges--collection {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 6px 6px;
-    margin-top: 8px;
-  }
-
-  /* ここは「形・余白・フォントサイズ」だけ担当。色は .badge--xxx に任せる */
   .csh-badge {
     font-size: 10px;
     font-weight: 700;
@@ -283,23 +270,63 @@
     min-width: max-content;
   }
 
-  .product-card__content > .csh-badges--collection {
-    order: 1;
+  /* ===== wb03: 画像 → バッジ → タイトル・価格 の順に並び替え（検索・コレクション共通） ===== */
+  .product-card__content {
+    display: flex;
+    flex-direction: column;
   }
 
-  .main-collection-grid .product-card .text-block--align-left.rte {
-      order: 2;
+  /* デフォルトは「その他の要素」を 2 番目に */
+  .product-card__content > * {
+    order: 2 !important;
   }
-  
+
+  /* 画像ブロック(card-gallery) を一番上に */
+  .product-card__content > .card-gallery {
+    order: 0 !important;
+  }
+
+  /* 自作バッジを 1 番目（画像のすぐ下）に */
+  .product-card__content > .csh-badges--collection {
+    order: 1 !important;
+  }
+
+  /* コレクションページ専用の微調整があればここで */
+  .main-collection-grid .product-card .text-block--align-left.rte {
+    order: 2 !important;
+  }
+
   /* ===== wb03: コレクション一覧では product-card の grid を無効化 ===== */
   .main-collection-grid .product-grid__item > .product-card {
     display: block !important;
     height: auto !important;
   }
 
-    /* ===== wb03: デフォルトの SALE / SOLD OUT バッジを非表示（コレクション一覧のみ） ===== */
+  /* ===== wb03: デフォルトの SALE / SOLD OUT バッジを非表示（コレクション一覧のみ） ===== */
   .main-collection-grid .product-badges__badge {
     display: none !important;
   }
 
+    /* =========================================
+   * template-search：画像 → バッジ → タイトル・価格 の順に並べ替え
+   * （サーチページ専用）
+   * ========================================= */
+  /* product-card 内のタイトルテキストだけ order を変える */
+  a[ref="productTitleLink"] .spacing-style.text-block.rte {
+    order: 2;
+    font-size: 13px;
+    padding-top: 8px;
+  }
+
+  .product-card__content.layout-panel-flex.layout-panel-flex--column.product-grid__card.spacing-style.border-style.gap-style {
+    --product-card-gap: 0 !important;
+  }
+
+  .price-row {
+    margin-top: 6px !important;
+  }
+
+  .product-card__content.layout-panel-flex.layout-panel-flex--column.product-grid__card.spacing-style.border-style.gap-style {
+    padding: 0;
+  }
 {% endstylesheet %}

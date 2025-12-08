@@ -420,7 +420,7 @@
 
 /* ドロップダウン中身に左右20pxの余白 → ヘッダーとツラを揃える */
 .header-menu .mega-menu__grid {
-  padding-inline: 20px;
+  padding-inline: 20px 50px;
   padding-bottom: 20px;
 }
 
@@ -444,21 +444,20 @@
 }
 
 .mega-menu__second-level-item {
-  flex: 0 0 auto;
+  flex: 0 0 20%;
 }
 
 .mega-menu__second-level-link {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 9px 28px;      /* ← ひと回り大きく */
+  padding: 24px 28px;
   border-radius: 8px;     /* ← 角丸 8px */
   border: 1px solid rgb(var(--color-foreground-rgb) / 0.16);
   background-color: #fff;
   font-size: 13px;        /* 少しだけ大きめに */
   line-height: 1;
   text-decoration: none;
-  color: rgb(var(--color-foreground-rgb) / 0.7);
   white-space: nowrap;
 }
 

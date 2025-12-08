@@ -40,7 +40,7 @@
   </div>
 </div>
 
-{% stylesheet %}
+{% comment %} {% stylesheet %}
   .blog-post-card {
     display: flex;
     flex-direction: column;
@@ -103,6 +103,216 @@
   .blog-post-card__content a:hover [style*='--color: var(--color-foreground)'] {
     color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text));
   }
+{% endstylesheet %} {% endcomment %}
+{% comment %} wb03 add 上記stylesheetはデフォ。とりあえず均等に並べておくため修正 {% endcomment %}
+{% stylesheet %}
+  /* カード本体の基本レイアウト */
+  .blog-post-card {
+    display: flex;
+    flex-direction: column;
+    text-align: var(--text-align);
+  }
+
+  /* ==============================
+   * ブログ一覧全体のグリッド
+   * PC 4列 / タブレット 2列 / SP 1列
+   * ============================== */
+  .blog-posts .blog-posts-container {
+    display: grid;
+    column-gap: var(--columns-gap, 24px);
+    row-gap: 32px;
+  }
+
+  @media screen and (min-width: 1240px) {
+    .blog-posts .blog-posts-container {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  @media screen and (min-width: 750px) and (max-width: 1239px) {
+    .blog-posts .blog-posts-container {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .blog-posts .blog-posts-container {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ==============================
+   * カード高さを揃える
+   * ============================== */
+  .blog-posts .blog-post-item {
+    display: flex;
+    height: 100%;
+  }
+
+  .blog-posts .blog-post-card {
+    height: 100%;
+    text-align: left;
+  }
+
+  /* ==============================
+   * 画像：比率固定＋中央トリミング
+   * ============================== */
+  .blog-posts .blog-post-card__image-container {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    display: flex;
+    align-items: center;   /* 縦中央 */
+    justify-content: center; /* 横中央 */
+    overflow: hidden;
+  }
+
+  /* a とその内側の block も箱いっぱいに広げる */
+  .blog-posts .blog-post-card__image-container > a {
+    display: flex;
+    width: 100%;
+    height: 100%;
+  }
+
+  .blog-posts .blog-post-card__image-container > a > * {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .blog-posts .blog-post-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;   /* ← 追加：常に中央を基準にトリミング */
+    display: block;
+  }
+
+  /* ==============================
+   * タイトル・日付・テキストの余白調整
+   * ============================== */
+  .blog-posts .blog-post-card__content {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    padding-block-start: 0.5rem;  /* 上の余白を少しだけに */
+  }
+
+  /* 要素同士の間隔を少し狭く */
+  .blog-posts .blog-post-card__content > * + * {
+    margin-top: 0.25rem;
+  }
+
+  /* タイトルリンク：上の余白を消して高さを揃える */
+  .blog-posts .blog-post-card__content > a {
+    padding-block-start: 0;       /* ここでデフォルト 0.75rem を打ち消す */
+  }
+
+  /* 本文：カード下側にそろえつつ高さを揃える */
+  .blog-posts .blog-post-card__content-text {
+    margin-top: auto;             /* 下寄せ */
+    min-height: 3rem;             /* 本文 2 行くらい（お好みで調整） */
+    overflow: hidden;
+  }
+
+  /* ==============================
+   * ホバー時の色（元の挙動を維持）
+   * ============================== */
+  .blog-posts .blog-post-card__content a {
+    display: block;
+    text-wrap: pretty;
+    text-decoration: none;
+  }
+
+  .blog-posts .blog-post-card__content a:hover,
+  .blog-posts .blog-post-card__content a:hover [style*='--color: var(--color-primary)'] {
+    color: var(--color-primary-hover);
+  }
+
+  .blog-posts .blog-post-card__content a:hover [style*='--color: var(--color-foreground-heading)'] {
+    color: rgb(var(--color-foreground-heading-rgb) / var(--opacity-subdued-text));
+  }
+
+  .blog-posts .blog-post-card__content a:hover [style*='--color: var(--color-foreground)'] {
+    color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text));
+  }
+
+  /* ==============================
+   * 1件目専用レイアウトの打ち消し
+   * ============================== */
+  .blog-posts .blog-post-item:first-child .blog-post-card {
+    flex-direction: column !important;
+  }
+
+  .blog-posts .blog-post-item:first-child .blog-post-card__image-container,
+  .blog-posts .blog-post-item:first-child .blog-post-card__content {
+    width: 100% !important;
+    padding-inline-start: 0 !important;
+  }
+
+  /* ▼ 1件目だけ横に広げるテーマ標準のレイアウトを打ち消す */
+.blog-posts .blog-post-item {
+  grid-column: auto !important;
+  grid-row: auto !important;
+}
+
+/* 念のため、1件目専用の指定も上書き */
+.blog-posts .blog-post-item:first-child {
+  grid-column: auto !important;
+  grid-row: auto !important;
+}
+
+/* ▼ タイトル・日付・本文の余白を少し詰める */
+.blog-posts .blog-post-card__content {
+  padding-block-start: 0.5rem;   /* 0.75rem → 少しだけ狭く */
+}
+
+/* 各要素の間のマージンを詰める */
+.blog-posts .blog-post-card__content > * + * {
+  margin-top: 0.25rem;           /* 0.4rem → 0.25rem に */
+}
+
+/* ==============================
+ * ブログカード：画像はトリミングせず全体表示
+ * ============================== */
+
+/* PC / タブレット：高さは揃えつつ、画像は全部見せる */
+@media screen and (min-width: 750px) {
+  .blog-posts .blog-post-card__image-container {
+    flex: 0 0 auto;
+    aspect-ratio: 4 / 3;          /* カード高さを揃える箱 */
+    display: flex;
+    align-items: center;          /* 縦中央 */
+    justify-content: center;      /* 横中央 */
+  }
+
+  .blog-posts .blog-post-card__image {
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 100%;
+    object-fit: contain;          /* ← cover ではなく全体表示 */
+    object-position: center;
+    display: block;
+  }
+}
+
+/* SP：テーマ標準に近い動きに戻す（縦横比そのまま） */
+@media screen and (max-width: 749px) {
+  .blog-posts .blog-post-card__image-container {
+    aspect-ratio: auto;           /* 比率固定を解除 */
+    display: block;
+  }
+
+  .blog-posts .blog-post-card__image {
+    width: 100%;
+    height: auto;
+    object-fit: contain;          /* 念のため指定（ほぼ影響なし） */
+    object-position: center;
+  }
+}
+
 {% endstylesheet %}
 
 {% schema %}

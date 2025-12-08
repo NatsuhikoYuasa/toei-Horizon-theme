@@ -1,5 +1,14 @@
 {% assign the_collection = section.settings.collection %}
 
+{%- comment -%}
+  the_collection が存在 & 商品数 > 0 のときだけ
+  ストアフロントでセクションを出力する
+  カスタマイズ画面(request.design_mode)のときだけは
+  コレクション未選択・商品0件でも注意テキスト付きで表示
+{%- endcomment -%}
+
+{% if the_collection and the_collection.products_count > 0 or request.design_mode %}
+
 <section
   id="csh-{{ section.id }}"
   class="csh section page-width color-{{ section.settings.color_scheme }}"
@@ -14,7 +23,8 @@
     {% if section.settings.bg_color != blank %}background: {{ section.settings.bg_color }};{% endif %}
   "
 >
-  {% if the_collection %}
+  {% if the_collection and the_collection.products_count > 0 %}
+    {%- comment -%} ★ 通常表示（商品あり） {%- endcomment -%}
     <div class="csh-head">
       <h2 class="csh-title">{{ the_collection.title }}</h2>
       <a class="csh-more" href="{{ the_collection.url }}" aria-label="{{ the_collection.title }}をもっと見る">
@@ -27,94 +37,129 @@
       </a>
     </div>
 
-        {% if the_collection.products_count > 0 %}
-        <div class="csh-grid">
-          {% assign shown_count = 0 %}
-          {% for product in the_collection.products %}
-            {% if shown_count >= section.settings.limit %}
-              {% break %}
+    <div class="csh-grid">
+      {% assign shown_count = 0 %}
+      {% for product in the_collection.products %}
+        {% if shown_count >= section.settings.limit %}
+          {% break %}
+        {% endif %}
+        {%- comment -%} display_start_at / display_end_at による表示ロック判定 {%- endcomment -%}
+
+        {% liquid
+          assign display_locked = false
+          assign display_start_raw = product.metafields.product.display_start_at
+          assign display_end_raw = product.metafields.product.display_end_at
+
+          if display_start_raw != blank or display_end_raw != blank
+            assign now_ts = 'now' | date: '%s'
+
+            if display_start_raw != blank
+              assign start_ts = display_start_raw | date: '%s'
+            endif
+
+            if display_end_raw != blank
+              assign end_ts = display_end_raw | date: '%s'
+            endif
+
+            if display_start_raw != blank and display_end_raw == blank
+              # start のみ → その日時より前は NG
+              if now_ts < start_ts
+                assign display_locked = true
+              endif
+
+            elsif display_start_raw == blank and display_end_raw != blank
+              # end のみ → その日時より後は NG
+              if now_ts > end_ts
+                assign display_locked = true
+              endif
+
+            elsif display_start_raw != blank and display_end_raw != blank
+              # start & end → 期間外は NG（期間内のみ表示）
+              if now_ts < start_ts or now_ts > end_ts
+                assign display_locked = true
+              endif
+            endif
+          endif
+
+          if display_locked
+            continue
+          endif
+        %}
+
+        <a
+          class="csh-card"
+          href="{{ product.url | within: the_collection }}"
+        >
+          <div class="csh-thumb">
+            {% if product.featured_image %}
+              {{ product.featured_image | image_url: width: 700 | image_tag: loading: 'lazy', alt: product.title }}
             {% endif %}
-            {%- comment -%} display_start_at / display_end_at による表示ロック判定 {%- endcomment -%}
+          </div>
 
-                    {% liquid
-            assign display_locked = false
-            assign display_start_raw = product.metafields.product.display_start_at
-            assign display_end_raw = product.metafields.product.display_end_at
+          {% if section.settings.show_badges %}
+            {%- capture csh_badges -%}
+              {% render 'Custom-product-badges', badge_product: product, badge_class: 'csh-badge' %}
+            {%- endcapture -%}
 
-            if display_start_raw != blank or display_end_raw != blank
-              assign now_ts = 'now' | date: '%s'
-
-              if display_start_raw != blank
-                assign start_ts = display_start_raw | date: '%s'
-              endif
-
-              if display_end_raw != blank
-                assign end_ts = display_end_raw | date: '%s'
-              endif
-
-              if display_start_raw != blank and display_end_raw == blank
-                # start のみ → その日時より前は NG
-                if now_ts < start_ts
-                  assign display_locked = true
-                endif
-
-              elsif display_start_raw == blank and display_end_raw != blank
-                # end のみ → その日時より後は NG
-                if now_ts > end_ts
-                  assign display_locked = true
-                endif
-
-              elsif display_start_raw != blank and display_end_raw != blank
-                # start & end → 期間外は NG（期間内のみ表示）
-                if now_ts < start_ts or now_ts > end_ts
-                  assign display_locked = true
-                endif
-              endif
-            endif
-
-            if display_locked
-              continue
-            endif
-          %}
-
-
-          <a
-            class="csh-card"
-            href="{{ product.url | within: the_collection }}"
-          >
-            <div class="csh-thumb">
-              {% if product.featured_image %}
-                {{ product.featured_image | image_url: width: 700 | image_tag: loading: 'lazy', alt: product.title }}
-              {% endif %}
-            </div>
-
-            {% if section.settings.show_badges %}
+            {%- unless csh_badges == blank -%}
               <div class="csh-badges csh-badges--below">
-                {% render 'Custom-product-badges', badge_product: product, badge_class: 'csh-badge' %}
+                {{ csh_badges }}
+              </div>
+            {%- endunless -%}
+          {% endif %}
+
+          <div class="csh-body">
+            <div class="csh-name">{{ product.title }}</div>
+            {% if section.settings.show_price %}
+              <div class="csh-price">
+                {%- assign has_sale = false -%}
+                {%- if product.compare_at_price_max > product.price -%}
+                  {%- assign has_sale = true -%}
+                {%- endif -%}
+
+                {%- if has_sale -%}
+                  <span class="csh-price-current">{{ product.price | money }}</span>
+                  <span class="csh-price-compare"
+                    ><s>{{ product.compare_at_price_max | money }}</s></span
+                  >
+                {%- else -%}
+                  <span class="csh-price-current">
+                    {%- if product.price_varies -%}
+                      {{ product.price_min | money }} — {{ product.price_max | money }}
+                    {%- else -%}
+                      {{ product.price | money }}
+                    {%- endif -%}
+                  </span>
+                {%- endif -%}
+                <span class="csh-price-tax">（税込）</span>
               </div>
             {% endif %}
+          </div>
+        </a>
+        {% assign shown_count = shown_count | plus: 1 %}
+      {% endfor %}
+    </div>
 
-            <div class="csh-body">
-              <div class="csh-name">{{ product.title }}</div>
-              {% if section.settings.show_price %}
-                <div class="csh-price">
-                  {% if product.price_varies %}
-                    {{ product.price_min | money }} — {{ product.price_max | money }}
-                  {% else %}
-                    {{ product.price | money }}
-                  {% endif %}
-                </div>
-              {% endif %}
-            </div>
-          </a>
-          {% assign shown_count = shown_count | plus: 1 %}
-        {% endfor %}
-      </div>
+  {% elsif request.design_mode %}
+    {%- comment -%}
+      ★ カスタマイズ画面のみ：
+      - コレクション未選択 or 商品0件の場合の注意テキスト
+      - ストアフロントではこのセクションごと出力されない
+    {%- endcomment -%}
+    <div class="csh-head">
+      <h2 class="csh-title">汎用コレクション（Custom）</h2>
+    </div>
+    {% if the_collection %}
+      <p class="csh-empty">
+        「{{ the_collection.title }}」には現在商品が登録されていません。<br>
+        ストアフロントでは、このセクション自体が表示されません。
+      </p>
     {% else %}
-      <p class="csh-empty">このコレクションに商品がありません。</p>
+      <p class="csh-empty">
+        セクション設定でコレクションを選択してください。<br>
+        コレクションに商品が登録されていない場合は、ストアフロントではセクションごと非表示になります。
+      </p>
     {% endif %}
-  {% else %}
-    <p class="csh-empty">セクション設定でコレクションを選択してください。</p>
   {% endif %}
 
   <style>
@@ -145,6 +190,9 @@
       flex-wrap:wrap !important;
       gap:6px 6px;
       margin-top:8px;
+
+      min-height: 40px;
+      align-content: flex-start;  
     }
 
     /* セクション固有の形・サイズなど */
@@ -161,7 +209,7 @@
       min-width:max-content;
     }
 
-    #csh-{{ section.id }} .csh-body{ padding:8px 12px 10px 0; display:grid; gap:6px; }
+    #csh-{{ section.id }} .csh-body{ padding:8px 12px 10px 0; display:grid; gap:6px;}
     #csh-{{ section.id }} .csh-name{ font-size:13px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
     #csh-{{ section.id }} .csh-price{ font-size:12px; opacity:.9; }
 
@@ -187,14 +235,25 @@
       pointer-events: none;
       cursor: default;
     }
+
+    #csh-{{ section.id }} .csh-price-tax{
+      font-size:10px;
+    }
   </style>
 </section>
+
+{% endif %}
+
 
 {% schema %}
 {
   "name": "汎用コレクション（Custom）",
   "settings": [
     { "type": "collection", "id": "collection", "label": "コレクションを選択" },
+    {
+      "type": "paragraph",
+      "content": "コレクションに商品が登録されていない場合はセクションごと表示されません"
+    },
     { "type": "range", "id": "limit", "label": "最大表示数", "min": 1, "max": 50, "step": 1, "default": 12 },
     { "type": "checkbox", "id": "show_price", "label": "価格を表示", "default": true },
     {

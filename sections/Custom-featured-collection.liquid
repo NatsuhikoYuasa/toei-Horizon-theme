@@ -31,10 +31,10 @@
 
         {% if the_collection.products_count > 0 %}
           <div class="cfc-grid">
-          {% assign shown_count = 0 %}
+            {% assign shown_count = 0 %}
             {% for product in the_collection.products %}
               {%- comment -%} display_start_at / display_end_at による表示ロック判定 {%- endcomment -%}
-                            {% liquid
+              {% liquid
                 assign display_locked = false
                 assign display_start_raw = product.metafields.product.display_start_at
                 assign display_end_raw = product.metafields.product.display_end_at
@@ -66,16 +66,15 @@
                 endif
               %}
 
-             {% comment %} ロック商品はカード自体を表示しない {% endcomment %}
-             {% if display_locked %}
-               {% continue %}
-             {% endif %}
+              {% comment %} ロック商品はカード自体を表示しない {% endcomment %}
+              {% if display_locked %}
+                {% continue %}
+              {% endif %}
 
-               <a
-                 class="cfc-card"
-                 href="{{ product.url | within: the_collection }}"
-               >
-
+              <a
+                class="cfc-card"
+                href="{{ product.url | within: the_collection }}"
+              >
                 <div class="cfc-card-media">
                   {% if product.featured_image %}
                     {{
@@ -97,11 +96,26 @@
                 <div class="cfc-card-body">
                   <div class="cfc-card-title">{{ product.title }}</div>
                   <div class="cfc-card-price">
-                    {% if product.price_varies %}
-                      {{ product.price_min | money }} — {{ product.price_max | money }}
-                    {% else %}
-                      {{ product.price | money }}
-                    {% endif %}
+                    {%- assign has_sale = false -%}
+                    {%- if product.compare_at_price_max > product.price -%}
+                      {%- assign has_sale = true -%}
+                    {%- endif -%}
+
+                    {%- if has_sale -%}
+                      <span class="cfc-card-price-current">{{ product.price | money }}</span>
+                      <span class="cfc-card-price-compare"
+                        ><s>{{ product.compare_at_price_max | money }}</s></span
+                      >
+                    {%- else -%}
+                      <span class="cfc-card-price-current">
+                        {%- if product.price_varies -%}
+                          {{ product.price_min | money }} — {{ product.price_max | money }}
+                        {%- else -%}
+                          {{ product.price | money }}
+                        {%- endif -%}
+                      </span>
+                    {%- endif -%}
+                    <span class="cfc-card-price-tax">（税込）</span>
                   </div>
                 </div>
               </a>
@@ -109,7 +123,6 @@
               {% if shown_count >= 4 %}
                 {% break %}
               {% endif %}
-
             {% endfor %}
           </div>
         {% else %}
@@ -121,7 +134,7 @@
     </div>
   </div>
 
-  <style>
+    <style>
     /* ===== Theme tokens（既存のまま） ===== */
     #section-{{ section.id }}.cfc-collection-feature {
       --bg:#060816; --fg:#e6edf3; --muted:#9aa4b2;
@@ -132,47 +145,90 @@
     /* Section：上下の余白のみ（既存を維持） */
     #section-{{ section.id }}.cfc-collection-feature {
       background:var(--bg); color:var(--fg);
-      padding-block: clamp(64px,10vw,120px); padding-inline: 0; overflow-x:hidden;
+      padding-block: clamp(64px,10vw,120px);
+      padding-inline: 0;
+      overflow-x:hidden;
     }
 
-    /* 中央カラム（既存を維持） */
+    /* 中央カラム（デフォルト：1 カラム） */
     #section-{{ section.id }} .cfc-container {
-      display:grid; grid-template-columns:1fr; gap:clamp(44px,6vw,96px); align-items:start;
+      display:grid;
+      grid-template-columns:1fr;
+      gap:clamp(44px,6vw,96px);
+      align-items:start;
     }
 
-    /* LEFT（既存） */
+    /* LEFT */
     #section-{{ section.id }} .cfc-left { position:relative; }
-    #section-{{ section.id }} .cfc-left-img { display:block; width:100%; height:auto; border-radius:5px; }
+    #section-{{ section.id }} .cfc-left-img {
+      display:block;
+      width:100%;
+      height:auto;
+      border-radius:5px;
+    }
     #section-{{ section.id }} .cfc-placeholder {
-      background:var(--card); border:1px solid var(--cardBorder);
-      display:flex; align-items:center; justify-content:center; color:var(--muted);
+      background:var(--card);
+      border:1px solid var(--cardBorder);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--muted);
     }
 
-    /* CTA（既存） */
+    /* CTA */
     #section-{{ section.id }} .cfc-cta {
-      margin-top:16px; display:inline-flex; align-items:center; gap:10px;
-      background:var(--cta); color:var(--ctaFg);
-      padding:12px 18px; border-radius:5px; font-weight:600; text-decoration:none;
+      margin-top:16px;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      background:var(--cta);
+      color:var(--ctaFg);
+      padding:12px 18px;
+      border-radius:5px;
+      font-weight:600;
+      text-decoration:none;
     }
     #section-{{ section.id }} .cfc-cta:hover { opacity:.9; }
     #section-{{ section.id }} .cfc-cta-text { flex:0 1 auto; }
 
-    /* RIGHT（既存） */
+    /* RIGHT */
     #section-{{ section.id }} .cfc-title {
-      font-size:22px; line-height:1.35; margin:0 0 16px 0; font-weight:700;
-      border-bottom:1px solid var(--cardBorder); padding-bottom:10px;
+      font-size:22px;
+      line-height:1.35;
+      margin:0 0 16px 0;
+      font-weight:700;
+      border-bottom:1px solid var(--cardBorder);
+      padding-bottom:10px;
     }
 
-    /* Products（既存） */
-    #section-{{ section.id }} .cfc-grid { display:flex; gap: {{ section.settings.card_gap | default: 16 }}px; padding:0; }
+    /* Products（デフォルト：フレックス。PC では後で上書き） */
+    #section-{{ section.id }} .cfc-grid {
+      display:flex;
+      gap: {{ section.settings.card_gap | default: 16 }}px;
+      padding:0;
+    }
     #section-{{ section.id }} .cfc-grid > * { flex:0 0 auto; }
-    #section-{{ section.id }} .cfc-card { overflow:visible; text-decoration:none; color:var(--fg); display:flex; flex-direction:column; }
+
+    #section-{{ section.id }} .cfc-card {
+      overflow:visible;
+      text-decoration:none;
+      color:var(--fg);
+      display:flex;
+      flex-direction:column;
+    }
 
     #section-{{ section.id }} .cfc-card-media {
-      display:flex; align-items:center; justify-content:center;
-      border-radius: 5px; overflow: hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius: 5px;
+      overflow: hidden;
     }
-    #section-{{ section.id }} .cfc-card-media img { width:100%; height:100%; border-radius:5px; }
+    #section-{{ section.id }} .cfc-card-media img {
+      width:100%;
+      height:100%;
+      border-radius:5px;
+    }
 
     /* ▼ バッジ（画像の下） */
     #section-{{ section.id }} .cfc-badges.cfc-badges--below{
@@ -196,52 +252,115 @@
       min-width:max-content;
     }
 
-    #section-{{ section.id }} .cfc-card-body { padding:8px 12px 10px 0; display:grid; gap:6px; }
-    #section-{{ section.id }} .cfc-card-title { font-size:13px; line-height:1.4; }
-    #section-{{ section.id }} .cfc-card-price { font-size:12px; color:var(--muted); }
+    #section-{{ section.id }} .cfc-card-body {
+      padding:8px 12px 10px 0;
+      display:grid;
+      gap:6px;
+    }
+    #section-{{ section.id }} .cfc-card-title {
+      font-size:13px;
+      line-height:1.4;
+    }
+    #section-{{ section.id }} .cfc-card-price {
+      font-size:12px;
+      color:var(--muted);
+    }
     #section-{{ section.id }} .cfc-empty { color:var(--muted); }
 
-    /* ===== display_start_at / display_end_at でロックされたカード ===== */
+    /* display_start_at / display_end_at でロックされたカード */
     #section-{{ section.id }} .cfc-card.cfc-card--locked{
       opacity: 0.4;
       pointer-events: none;
       cursor: default;
     }
 
-    /* ===== Desktop（>=769px）横2カラム＋商品4列 ===== */
+    .cfc-card-price-tax {
+      font-size: 10px;
+    }
+
+    /* ===== Desktop（>=769px） 左 2 カラム + 右 4 カラム ===== */
     @media (min-width: 769px) {
-      #section-{{ section.id }} .cfc-container { grid-template-columns: clamp(240px, 28vw, 360px) 1fr; }
+      /* 全体を 6 カラムに分割 */
+      #section-{{ section.id }} .cfc-container {
+        display:grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: {{ section.settings.card_gap | default: 16 }}px;
+        align-items:flex-start;
+      }
+
+      /* 左の大きいカードは 2 カラム分 */
+      #section-{{ section.id }} .cfc-left {
+        grid-column: 1 / span 2;
+      }
+
+      /* 右側ブロックは残り 4 カラム */
+      #section-{{ section.id }} .cfc-right {
+        grid-column: 3 / span 4;
+      }
+
+      /* 右側 4 枚をきれいに 4 カラムに */
       #section-{{ section.id }} .cfc-grid {
         display:grid !important;
-        grid-template-columns: repeat(4, minmax(0,1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: {{ section.settings.card_gap | default: 16 }}px !important;
-        overflow: visible;
+        overflow:visible;
       }
-      #section-{{ section.id }} .cfc-card { min-width:0; }
+
+      #section-{{ section.id }} .cfc-card {
+        min-width:0;
+      }
+
+      #section-{{ section.id }} .cfc-left-img {
+        width: 90%;
+      }
     }
 
     /* ===== Smartphone（<=768px） ===== */
     @media (max-width: 768px){
-      #section-{{ section.id }} .cfc-container{ display: block !important; }
-      #section-{{ section.id }}.cfc-collection-feature{ overflow: visible; }
+      #section-{{ section.id }} .cfc-container{
+        display: block !important;
+      }
+      #section-{{ section.id }}.cfc-collection-feature{
+        overflow: visible;
+      }
 
-      #section-{{ section.id }} .cfc-left .cfc-cta{ display: flex; }
-      #section-{{ section.id }} .cfc-cta-text { flex:1 1 auto; text-align:left; }
-      #section-{{ section.id }} .cfc-cta svg { flex:0 0 auto; margin-left:auto; }
+      #section-{{ section.id }} .cfc-left .cfc-cta{
+        display: flex;
+      }
+      #section-{{ section.id }} .cfc-cta-text {
+        flex:1 1 auto;
+        text-align:left;
+      }
+      #section-{{ section.id }} .cfc-cta svg {
+        flex:0 0 auto;
+        margin-left:auto;
+      }
 
-      #section-{{ section.id }} .cfc-right { overflow: visible; }
+      #section-{{ section.id }} .cfc-right {
+        overflow: visible;
+      }
       #section-{{ section.id }} .cfc-right > .cfc-grid {
         display: flex;
         gap: var(--cfc-gap-sp);
-        overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch; touch-action: auto;
-        scroll-snap-type: x proximity; scroll-snap-stop: normal; scrollbar-gutter: stable;
+        overflow-x: auto;
+        overflow-y: visible;
+        -webkit-overflow-scrolling: touch;
+        touch-action: auto;
+        scroll-snap-type: x proximity;
+        scroll-snap-stop: normal;
+        scrollbar-gutter: stable;
         width: calc(100vw - var(--cfc-safe-inline));
-        margin-left: 0; padding-left: 0;
-        margin-right: calc(50% - 50vw - var(--cfc-gap-sp)); padding-right: 0;
+        margin-left: 0;
+        padding-left: 0;
+        margin-right: calc(50% - 50vw - var(--cfc-gap-sp));
+        padding-right: 0;
         scroll-padding-right: var(--cfc-safe-inline);
         overscroll-behavior-x: contain;
       }
-      #section-{{ section.id }} .cfc-right > .cfc-grid::after{ content:""; flex: 0 0 calc(max(0px, var(--cfc-safe-inline) - var(--cfc-gap-sp))); }
+      #section-{{ section.id }} .cfc-right > .cfc-grid::after{
+        content:"";
+        flex: 0 0 calc(max(0px, var(--cfc-safe-inline) - var(--cfc-gap-sp)));
+      }
 
       #section-{{ section.id }} {
         --cfc-safe-inline: var(--full-page-grid-margin-inline-offset, var(--page-margin-inline-offset, 16px));
@@ -254,9 +373,12 @@
         scroll-snap-align: start;
       }
 
-      #section-{{ section.id }} .cfc-title { margin-top: 40px; }
+      #section-{{ section.id }} .cfc-title {
+        margin-top: 40px;
+      }
     }
   </style>
+
 </section>
 
 {% schema %}

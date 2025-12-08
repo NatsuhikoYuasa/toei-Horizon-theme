@@ -44,6 +44,7 @@
 
     <h2 class="csh-title">{{ heading_text }}</h2>
 
+    {% comment %} wb03 blocked 不要のためコメントアウト
     {% if more_href != '' %}
       <a class="csh-more" href="{{ more_href }}" aria-label="{{ more_label }}">
         <span class="csh-more-text">{{ more_label }}</span>
@@ -53,7 +54,7 @@
           </svg>
         </span>
       </a>
-    {% endif %}
+    {% endif %} {% endcomment %}
   </div>
 
   {% if section.blocks.size > 0 %}
@@ -145,7 +146,7 @@
         scroll-snap-type:x proximity; scroll-snap-stop:normal; scrollbar-gutter:stable;
         width: calc(100vw - var(--csh-safe));
         margin-right: calc(50% - 50vw - var(--csh-gap-sp));
-        padding-bottom: 72px;
+        padding-bottom: 36px;
       }
       #csh-{{ section.id }} .csh-card{ flex:0 0 clamp(140px, 38vw, 240px); width: clamp(140px, 38vw, 240px); scroll-snap-align:start; }
       #csh-{{ section.id }} .csh-grid::after{ content:""; flex: 0 0 calc(max(0px, var(--csh-safe) - var(--csh-gap-sp))); }
