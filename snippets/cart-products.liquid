@@ -755,7 +755,7 @@
   .cart-items__media-image {
     aspect-ratio: inherit;
     object-fit: cover;
-    object-position: center center;
+    object-position: top center;
     width: 100%;
     height: auto;
   }
@@ -1065,4 +1065,73 @@
   .cart-drawer .cart-items__empty-button::after {
     content: none;
   }
+
+  .cart-items__details.cart-primary-typography {
+    padding-top: 0;
+  }
+
+  /* ──────────────────────────────
+  商品詳細・バッジ・リリース日（カート）
+────────────────────────────── */
+
+/* 子要素どうしの縦の余白はここで統一管理 */
+.cart-items__details > * + *,
+.cart-items__bundle li {
+  margin-block-start: var(--margin-2xs);
+}
+
+.cart-items__details a {
+  text-decoration: none;
+}
+
+.cart-items__title {
+  font-size: var(--cart-font-size--md);
+  color: var(--color-foreground);
+  text-transform: var(--product-title-case);
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.cart-items__title a {
+  color: inherit;
+}
+
+/* バッジ行 */
+.cart-item__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 0;
+  margin-bottom: 0; /* ← デフォルトは余白ゼロにしておく */
+}
+
+/* バッジが1つでもあるときだけ下マージンを付ける */
+.cart-item__badges:has(.rv-badge) {
+  margin-bottom: var(--margin-2xs);
+}
+
+/* 完全に空なら行ごと消す（保険） */
+.cart-item__badges:empty {
+  display: none;
+}
+
+.cart-items__variant {
+  display: inline-block;
+}
+
+.cart-items__variants {
+  display: none;
+}
+
+.cart-items__release-date {
+  margin-top: 2px;
+  font-size: 11px;
+  color: #180600;
+}
+
+.cart-items__unit-price {
+  display: none;
+}
+
 {% endstylesheet %}

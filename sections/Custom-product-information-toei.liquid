@@ -835,8 +835,13 @@
   .toei-product-details {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 0;
     font-size: 1.2rem;
+  }
+
+  /* 2つ目以降の要素だけ上に 14px 余白を付ける */
+  .toei-product-details > * + * {
+    margin-top: 14px;
   }
 
   /* バッジ */
@@ -844,6 +849,11 @@
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
+    margin-bottom: 0;
+  }
+
+  /* バッジが1つでもあるときだけ下マージンを付ける */
+  .toei-product-badges:has(.toei-badge) {
     margin-bottom: 16px;
   }
 
@@ -1154,6 +1164,15 @@
     cursor: pointer;
     background: #d93231;
     color: #ffffff;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  @media screen and (min-width: 750px) and (max-width: 1199px) {
+    .product-information__grid.product-information--media-left:not(.product-information__grid--half):not(:has(.product-information__media:empty)) {
+      /* 左 1.3 : 右 1.7 くらいのバランス（値はお好みで調整OK） */
+      grid-template-columns: 1.3fr 1.7fr;
+    }
   }
 
   .toei-add-to-cart--disabled {
@@ -1458,6 +1477,12 @@
   .csh-price {
     margin-top: 6px;
   }
+
+  /* 商品ページのメイン画像を上揃えにする */
+  .product-information__media .product-media-container.media-fit-contain img {
+    object-position: top center;
+  }
+
 {% endstylesheet %}
 
 {%- liquid
