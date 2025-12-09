@@ -69,16 +69,6 @@
       var btn = e.target.closest('.shopify-payment-button__button');
       if (!btn) return;
 
-      // 既に処理中なら無視
-      if (btn.dataset.processingTime === 'true') return;
-
-      // イベントを止める
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-
-      btn.dataset.processingTime = 'true';
-
       // クライアント時刻を生成
       var now = new Date();
       var offset = -now.getTimezoneOffset();
@@ -95,19 +85,11 @@
       var sec = String(now.getSeconds()).padStart(2, '0');
 
       var clientTime = y + '-' + m + '-' + d + 'T' + h + ':' + min + ':' + sec + tz;
-      console.log('clientTime', clientTime);
 
-      // カート属性を更新してからボタンを再クリック
-      fetch('/cart/update.js', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ attributes: { client_current_time: clientTime } })
-      }).then(function() {
-        // 属性設定完了後、ボタンを再クリック
-        btn.click();
-      }).finally(function() {
-        btn.dataset.processingTime = 'false';
-      });
+      // navigator.sendBeacon を使って確実に送信
+      navigator.sendBeacon('/cart/update.js', JSON.stringify({
+        attributes: { client_current_time: clientTime }
+      }));
     }, true);
   })();
 </script>
