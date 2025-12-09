@@ -199,6 +199,7 @@
         disabled
       {% endif %}
       form="cart-form"
+      onclick="setClientCurrentTime()"
     >
       {{ 'content.checkout' | t }}
     </button>
@@ -227,6 +228,39 @@
   {%- endif -%}
 </div>
 {% comment %} wb03 blocked&add カートページとそれ以外でボタン動作を分ける end {% endcomment %}
+
+<script>
+  function setClientCurrentTime() {
+    var now = new Date();
+    var offset = -now.getTimezoneOffset();
+    var sign = offset >= 0 ? '+' : '-';
+    var hours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
+    var minutes = String(Math.abs(offset) % 60).padStart(2, '0');
+    var tz = sign + hours + ':' + minutes;
+
+    var y = now.getFullYear();
+    var m = String(now.getMonth() + 1).padStart(2, '0');
+    var d = String(now.getDate()).padStart(2, '0');
+    var h = String(now.getHours()).padStart(2, '0');
+    var min = String(now.getMinutes()).padStart(2, '0');
+    var sec = String(now.getSeconds()).padStart(2, '0');
+
+    var clientTime = y + '-' + m + '-' + d + 'T' + h + ':' + min + ':' + sec + tz;
+
+    // cart-form に hidden input を追加
+    var form = document.getElementById('cart-form');
+    if (form) {
+      var input = form.querySelector('input[name="attributes[client_current_time]"]');
+      if (!input) {
+        input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'attributes[client_current_time]';
+        form.appendChild(input);
+      }
+      input.value = clientTime;
+    }
+  }
+</script>
 
 {% stylesheet %}
   .cart-actions {
