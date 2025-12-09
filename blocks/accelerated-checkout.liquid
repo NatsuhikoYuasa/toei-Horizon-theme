@@ -68,7 +68,6 @@
     // 今すぐ購入ボタンのクリックをインターセプト
     document.addEventListener('click', function(e) {
       var btn = e.target.closest('.shopify-payment-button__button');
-      console.log('btn', btn)
       if (!btn) return;
 
       // クライアント時刻を生成
@@ -87,7 +86,7 @@
       var sec = String(now.getSeconds()).padStart(2, '0');
 
       var clientTime = y + '-' + m + '-' + d + 'T' + h + ':' + min + ':' + sec + tz;
-
+      console.log('clientTime', clientTime)
       // カート属性を更新（非同期で実行、チェックアウトは続行）
       fetch('/cart/update.js', {
         method: 'POST',
