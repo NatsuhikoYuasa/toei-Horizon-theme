@@ -62,3 +62,37 @@
   "tag": null
 }
 {% endschema %}
+
+<script>
+  (function() {
+    // 今すぐ購入ボタンのクリックをインターセプト
+    document.addEventListener('click', function(e) {
+      var btn = e.target.closest('.shopify-payment-button__button');
+      if (!btn) return;
+
+      // クライアント時刻を生成
+      var now = new Date();
+      var offset = -now.getTimezoneOffset();
+      var sign = offset >= 0 ? '+' : '-';
+      var hours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
+      var minutes = String(Math.abs(offset) % 60).padStart(2, '0');
+      var tz = sign + hours + ':' + minutes;
+
+      var y = now.getFullYear();
+      var m = String(now.getMonth() + 1).padStart(2, '0');
+      var d = String(now.getDate()).padStart(2, '0');
+      var h = String(now.getHours()).padStart(2, '0');
+      var min = String(now.getMinutes()).padStart(2, '0');
+      var sec = String(now.getSeconds()).padStart(2, '0');
+
+      var clientTime = y + '-' + m + '-' + d + 'T' + h + ':' + min + ':' + sec + tz;
+
+      // カート属性を更新（非同期で実行、チェックアウトは続行）
+      fetch('/cart/update.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ attributes: { client_current_time: clientTime } })
+      });
+    }, true);
+  })();
+</script>
