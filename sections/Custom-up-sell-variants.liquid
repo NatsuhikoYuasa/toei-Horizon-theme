@@ -153,47 +153,55 @@
                 href="{% if card_available %}{{ card_url }}{% else %}javascript:void(0){% endif %}"
                 {% unless card_available %}aria-disabled="true"{% endunless %}
               >
+                {%- comment %} 画像（共通構造：rv-thumb の中に img or プレースホルダ） {% endcomment -%}
                 <div class="rv-thumb">
                   {%- if cv.image -%}
-                    {{ cv.image
+                    {{
+                      cv.image
                       | image_url: width: 400
-                      | image_tag:
-                        loading: 'lazy',
-                        class: 'rv-img',
-                        alt: cv_product.title
+                      | image_tag: loading: 'lazy', class: 'rv-img', alt: cv_product.title
+                    }}
+                  {%- elsif cv_product.featured_image -%}
+                    {{
+                      cv_product.featured_image
+                      | image_url: width: 400
+                      | image_tag: loading: 'lazy', class: 'rv-img', alt: cv_product.title
                     }}
                   {%- else -%}
                     <span class="rv-thumb__placeholder">NO IMAGE</span>
                   {%- endif -%}
                 </div>
 
-                <div class="rv-meta">
-                  <div class="rv-badges">
-                    {%- if xs_badge_new -%}
-                      <span class="rv-badge rv-badge--new">NEW</span>
-                    {%- endif -%}
-                    {%- if xs_badge_pre -%}
-                      <span class="rv-badge rv-badge--pre">予約受付中</span>
-                    {%- endif -%}
-                    {%- if xs_badge_early -%}
-                      <span class="rv-badge rv-badge--early">早期予約特典あり</span>
-                    {%- endif -%}
-                    {%- if xs_badge_first -%}
-                      <span class="rv-badge rv-badge--first">初回特典残りわずか</span>
-                    {%- endif -%}
-                    {%- if xs_badge_closing -%}
-                      <span class="rv-badge rv-badge--closing">締切間近</span>
-                    {%- endif -%}
-                  </div>
+                {%- comment %} バッジ（画像の直下・共通クラス rv-badges / rv-badge） {% endcomment -%}
+                <div class="rv-badges">
+                  {%- if xs_badge_new -%}
+                    <span class="rv-badge rv-badge--new">NEW</span>
+                  {%- endif -%}
+                  {%- if xs_badge_pre -%}
+                    <span class="rv-badge rv-badge--pre">予約受付中</span>
+                  {%- endif -%}
+                  {%- if xs_badge_early -%}
+                    <span class="rv-badge rv-badge--early">早期予約特典あり</span>
+                  {%- endif -%}
+                  {%- if xs_badge_first -%}
+                    <span class="rv-badge rv-badge--first">初回特典残りわずか</span>
+                  {%- endif -%}
+                  {%- if xs_badge_closing -%}
+                    <span class="rv-badge rv-badge--closing">締切間近</span>
+                  {%- endif -%}
+                </div>
 
+                {%- comment %} 本文（タイトル＋価格）：構造を RV / CFC / CSH と揃える {% endcomment -%}
+                <div class="rv-meta">
                   <span class="rv-title-link">
                     {{ cv_product.title }}
                   </span>
 
                   {%- if section.settings.show_price -%}
-                    <span class="rv-price">
-                      {{ cv.price | money }}<span class="rv-price__tax">（税込）</span>
-                    </span>
+                    <div class="rv-price">
+                      <span class="rv-price-current">{{ cv.price | money }}</span>
+                      <span class="rv-price-tax">（税込）</span>
+                    </div>
                   {%- endif -%}
                 </div>
               </a>

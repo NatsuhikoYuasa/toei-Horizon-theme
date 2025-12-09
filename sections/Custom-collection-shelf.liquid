@@ -8,242 +8,250 @@
 {%- endcomment -%}
 
 {% if the_collection and the_collection.products_count > 0 or request.design_mode %}
+  <section
+    id="csh-{{ section.id }}"
+    class="csh section page-width color-{{ section.settings.color_scheme }}"
+    style="
+      {% render 'spacing-style', settings: section.settings %}
+      --csh-gap-pc: {{ section.settings.gap_pc | default: 16 }}px;
+      --csh-gap-sp: {{ section.settings.gap_sp | default: 12 }}px;
+      --csh-safe: var(--full-page-grid-margin-inline-offset, var(--page-margin-inline-offset, 16px));
+      --csh-accent: {{ section.settings.accent_color | default: '#E63946' }};
+      padding-block-start: {{ section.settings['padding-block-start'] | default: 36 }}px;
+      padding-block-end:   {{ section.settings['padding-block-end']   | default: 36 }}px;
+      {% if section.settings.bg_color != blank %}background: {{ section.settings.bg_color }};{% endif %}
+    "
+  >
+    {% if the_collection and the_collection.products_count > 0 %}
+      {%- comment -%} ★ 通常表示（商品あり） {%- endcomment -%}
+      <div class="csh-head">
+        <h2 class="csh-title">{{ the_collection.title }}</h2>
+        <a class="csh-more" href="{{ the_collection.url }}" aria-label="{{ the_collection.title }}をもっと見る">
+          <span class="csh-more-text">{{ the_collection.title }}をもっと見る</span>
+          <span class="csh-more-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path d="M8 5l7 7-7 7" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </a>
+      </div>
 
-<section
-  id="csh-{{ section.id }}"
-  class="csh section page-width color-{{ section.settings.color_scheme }}"
-  style="
-    {% render 'spacing-style', settings: section.settings %}
-    --csh-gap-pc: {{ section.settings.gap_pc | default: 16 }}px;
-    --csh-gap-sp: {{ section.settings.gap_sp | default: 12 }}px;
-    --csh-safe: var(--full-page-grid-margin-inline-offset, var(--page-margin-inline-offset, 16px));
-    --csh-accent: {{ section.settings.accent_color | default: '#E63946' }};
-    padding-block-start: {{ section.settings['padding-block-start'] | default: 36 }}px;
-    padding-block-end:   {{ section.settings['padding-block-end']   | default: 36 }}px;
-    {% if section.settings.bg_color != blank %}background: {{ section.settings.bg_color }};{% endif %}
-  "
->
-  {% if the_collection and the_collection.products_count > 0 %}
-    {%- comment -%} ★ 通常表示（商品あり） {%- endcomment -%}
-    <div class="csh-head">
-      <h2 class="csh-title">{{ the_collection.title }}</h2>
-      <a class="csh-more" href="{{ the_collection.url }}" aria-label="{{ the_collection.title }}をもっと見る">
-        <span class="csh-more-text">{{ the_collection.title }}をもっと見る</span>
-        <span class="csh-more-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-            <path d="M8 5l7 7-7 7" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </span>
-      </a>
-    </div>
+      <div class="csh-grid">
+        {% assign shown_count = 0 %}
+        {% for product in the_collection.products %}
+          {% if shown_count >= section.settings.limit %}
+            {% break %}
+          {% endif %}
 
-    <div class="csh-grid">
-      {% assign shown_count = 0 %}
-      {% for product in the_collection.products %}
-        {% if shown_count >= section.settings.limit %}
-          {% break %}
-        {% endif %}
-        {%- comment -%} display_start_at / display_end_at による表示ロック判定 {%- endcomment -%}
+          {%- comment -%} display_start_at / display_end_at による表示ロック判定 {%- endcomment -%}
+          {% liquid
+            assign display_locked = false
+            assign display_start_raw = product.metafields.product.display_start_at
+            assign display_end_raw = product.metafields.product.display_end_at
 
-        {% liquid
-          assign display_locked = false
-          assign display_start_raw = product.metafields.product.display_start_at
-          assign display_end_raw = product.metafields.product.display_end_at
+            if display_start_raw != blank or display_end_raw != blank
+              assign now_ts = 'now' | date: '%s'
 
-          if display_start_raw != blank or display_end_raw != blank
-            assign now_ts = 'now' | date: '%s'
-
-            if display_start_raw != blank
-              assign start_ts = display_start_raw | date: '%s'
-            endif
-
-            if display_end_raw != blank
-              assign end_ts = display_end_raw | date: '%s'
-            endif
-
-            if display_start_raw != blank and display_end_raw == blank
-              # start のみ → その日時より前は NG
-              if now_ts < start_ts
-                assign display_locked = true
+              if display_start_raw != blank
+                assign start_ts = display_start_raw | date: '%s'
               endif
 
-            elsif display_start_raw == blank and display_end_raw != blank
-              # end のみ → その日時より後は NG
-              if now_ts > end_ts
-                assign display_locked = true
+              if display_end_raw != blank
+                assign end_ts = display_end_raw | date: '%s'
               endif
 
-            elsif display_start_raw != blank and display_end_raw != blank
-              # start & end → 期間外は NG（期間内のみ表示）
-              if now_ts < start_ts or now_ts > end_ts
-                assign display_locked = true
+              if display_start_raw != blank and display_end_raw == blank
+                if now_ts < start_ts
+                  assign display_locked = true
+                endif
+              elsif display_start_raw == blank and display_end_raw != blank
+                if now_ts > end_ts
+                  assign display_locked = true
+                endif
+              elsif display_start_raw != blank and display_end_raw != blank
+                if now_ts < start_ts or now_ts > end_ts
+                  assign display_locked = true
+                endif
               endif
             endif
-          endif
 
-          if display_locked
-            continue
-          endif
-        %}
+            if display_locked
+              continue
+            endif
+          %}
 
-        <a
-          class="csh-card"
-          href="{{ product.url | within: the_collection }}"
-        >
-          <div class="csh-thumb">
-            {% if product.featured_image %}
-              {{ product.featured_image | image_url: width: 700 | image_tag: loading: 'lazy', alt: product.title }}
-            {% endif %}
-          </div>
+          <a
+            class="csh-card"
+            href="{{ product.url | within: the_collection }}"
+          >
+            <div class="csh-thumb">
+              {% if product.featured_image %}
+                {{ product.featured_image | image_url: width: 700 | image_tag: loading: 'lazy', alt: product.title }}
+              {% endif %}
+            </div>
 
-          {% if section.settings.show_badges %}
-            {%- capture csh_badges -%}
+            {% if section.settings.show_badges %}
+              {%- capture csh_badges -%}
               {% render 'Custom-product-badges', badge_product: product, badge_class: 'csh-badge' %}
             {%- endcapture -%}
 
-            {%- unless csh_badges == blank -%}
-              <div class="csh-badges csh-badges--below">
-                {{ csh_badges }}
-              </div>
-            {%- endunless -%}
-          {% endif %}
-
-          <div class="csh-body">
-            <div class="csh-name">{{ product.title }}</div>
-            {% if section.settings.show_price %}
-              <div class="csh-price">
-                {%- assign has_sale = false -%}
-                {%- if product.compare_at_price_max > product.price -%}
-                  {%- assign has_sale = true -%}
-                {%- endif -%}
-
-                {%- if has_sale -%}
-                  <span class="csh-price-current">{{ product.price | money }}</span>
-                  <span class="csh-price-compare"
-                    ><s>{{ product.compare_at_price_max | money }}</s></span
-                  >
-                {%- else -%}
-                  <span class="csh-price-current">
-                    {%- if product.price_varies -%}
-                      {{ product.price_min | money }} — {{ product.price_max | money }}
-                    {%- else -%}
-                      {{ product.price | money }}
-                    {%- endif -%}
-                  </span>
-                {%- endif -%}
-                <span class="csh-price-tax">（税込）</span>
-              </div>
+              {%- unless csh_badges == blank -%}
+                <div class="csh-badges csh-badges--below">
+                  {{ csh_badges }}
+                </div>
+              {%- endunless -%}
             {% endif %}
-          </div>
-        </a>
-        {% assign shown_count = shown_count | plus: 1 %}
-      {% endfor %}
-    </div>
 
-  {% elsif request.design_mode %}
-    {%- comment -%}
-      ★ カスタマイズ画面のみ：
-      - コレクション未選択 or 商品0件の場合の注意テキスト
-      - ストアフロントではこのセクションごと出力されない
-    {%- endcomment -%}
-    <div class="csh-head">
-      <h2 class="csh-title">汎用コレクション（Custom）</h2>
-    </div>
-    {% if the_collection %}
-      <p class="csh-empty">
-        「{{ the_collection.title }}」には現在商品が登録されていません。<br>
-        ストアフロントでは、このセクション自体が表示されません。
-      </p>
-    {% else %}
-      <p class="csh-empty">
-        セクション設定でコレクションを選択してください。<br>
-        コレクションに商品が登録されていない場合は、ストアフロントではセクションごと非表示になります。
-      </p>
+            <div class="csh-body">
+              <div class="csh-name">{{ product.title }}</div>
+              {% if section.settings.show_price %}
+                <div class="csh-price">
+                  {%- assign has_sale = false -%}
+                  {%- if product.compare_at_price_max > product.price -%}
+                    {%- assign has_sale = true -%}
+                  {%- endif -%}
+
+                  {%- if has_sale -%}
+                    <span class="csh-price-current">{{ product.price | money }}</span>
+                    <span class="csh-price-compare"
+                      ><s>{{ product.compare_at_price_max | money }}</s></span
+                    >
+                  {%- else -%}
+                    <span class="csh-price-current">
+                      {%- if product.price_varies -%}
+                        {{ product.price_min | money }} — {{ product.price_max | money }}
+                      {%- else -%}
+                        {{ product.price | money }}
+                      {%- endif -%}
+                    </span>
+                  {%- endif -%}
+                  <span class="csh-price-tax">（税込）</span>
+                </div>
+              {% endif %}
+            </div>
+          </a>
+          {% assign shown_count = shown_count | plus: 1 %}
+        {% endfor %}
+      </div>
+
+    {% elsif request.design_mode %}
+      {%- comment -%} ★ カスタマイズ画面のみ {%- endcomment -%}
+      <div class="csh-head">
+        <h2 class="csh-title">汎用コレクション（Custom）</h2>
+      </div>
+      {% if the_collection %}
+        <p class="csh-empty">
+          「{{ the_collection.title }}」には現在商品が登録されていません。<br>
+          ストアフロントでは、このセクション自体が表示されません。
+        </p>
+      {% else %}
+        <p class="csh-empty">
+          セクション設定でコレクションを選択してください。<br>
+          コレクションに商品が登録されていない場合は、ストアフロントではセクションごと非表示になります。
+        </p>
+      {% endif %}
     {% endif %}
-  {% endif %}
 
-  <style>
-    /* ===== 見出し行 ===== */
-    #csh-{{ section.id }} .csh-head{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:16px; }
-    #csh-{{ section.id }} .csh-title{ position:relative; margin:0; font-size:18px; font-weight:700; padding-left:14px; }
-    #csh-{{ section.id }} .csh-title::before{ content:""; position:absolute; left:0; top:0; width:3px; height:1.1em; background: var(--csh-accent, #e63946); border-radius:2px; }
-
-    /* “もっと見る” */
-    #csh-{{ section.id }} .csh-more{ display:inline-flex; align-items:center; gap:10px; text-decoration:none; color: inherit; font-size:14px; font-weight:600; }
-    #csh-{{ section.id }} .csh-more-icon{ display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; min-width:32px; border-radius:999px; background: var(--csh-accent, #e63946); }
-    #csh-{{ section.id }} .csh-more-icon svg{ width:18px; height:18px; stroke:#fff; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
-
-    /* ===== グリッド ===== */
-    #csh-{{ section.id }} .csh-grid{ display:grid; grid-template-columns: repeat({{ section.settings.columns_desktop | default: 6 }}, minmax(0,1fr)); gap: var(--csh-gap-pc); }
-
-    /* ===== カード ===== */
-    #csh-{{ section.id }} .csh-card{ display:flex; flex-direction:column; color:inherit; text-decoration:none; }
-
-    /* ===== サムネイル ===== */
-    #csh-{{ section.id }} .csh-thumb{ border-radius:5px; overflow:hidden;}
-    #csh-{{ section.id }} .csh-thumb img{ width:100%; height:auto; display:block; border-radius:5px; }
-    #csh-{{ section.id }} .csh-thumb::before{ content:none !important; }
-
-    /* バッジ（画像の下） */
-    #csh-{{ section.id }} .csh-badges--below{
-      display:flex !important;
-      flex-wrap:wrap !important;
-      gap:6px 6px;
-      margin-top:8px;
-
-      min-height: 40px;
-      align-content: flex-start;  
-    }
-
-    /* セクション固有の形・サイズなど */
-    #csh-{{ section.id }} .csh-badge{
-      font-size:10px;
-      font-weight:700;
-      line-height:1;
-      padding:6px 8px;
-      box-shadow:0 1px 2px rgba(0,0,0,.15);
-      border-radius:0;
-      display:inline-flex;
-      align-items:center;
-      white-space:nowrap;
-      min-width:max-content;
-    }
-
-    #csh-{{ section.id }} .csh-body{ padding:8px 12px 10px 0; display:grid; gap:6px;}
-    #csh-{{ section.id }} .csh-name{ font-size:13px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-    #csh-{{ section.id }} .csh-price{ font-size:12px; opacity:.9; }
-
-    /* ===== SP ===== */
-    @media (max-width: 768px){
-      #csh-{{ section.id }}{ position:relative; }
-      #csh-{{ section.id }} .csh-grid{
-        display:flex !important; gap: var(--csh-gap-sp);
-        overflow-x:auto; overflow-y:visible; -webkit-overflow-scrolling:touch;
-        scroll-snap-type:x proximity; scroll-snap-stop:normal; scrollbar-gutter:stable;
-        width: calc(100vw - var(--csh-safe));
-        margin-right: calc(50% - 50vw - var(--csh-gap-sp));
-        padding-bottom: 72px;
+    <style>
+      /* ===== 見出し行 ===== */
+      #csh-{{ section.id }} .csh-head{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:16px;
+        margin-bottom:16px;
       }
-      #csh-{{ section.id }} .csh-card{ flex:0 0 clamp(140px, 38vw, 240px); width: clamp(140px, 38vw, 240px); scroll-snap-align:start; }
-      #csh-{{ section.id }} .csh-grid::after{ content:""; flex: 0 0 calc(max(0px, var(--csh-safe) - var(--csh-gap-sp))); }
-      #csh-{{ section.id }} .csh-more{ position:absolute; right: var(--csh-safe); bottom: 60px; }
-    }
+      #csh-{{ section.id }} .csh-title{
+        position:relative;
+        margin:0;
+        font-size:18px;
+        font-weight:700;
+        padding-left:14px;
+      }
+      #csh-{{ section.id }} .csh-title::before{
+        content:"";
+        position:absolute;
+        left:0;
+        top:0;
+        width:3px;
+        height:1.1em;
+        background: var(--csh-accent, #e63946);
+        border-radius:2px;
+      }
 
-    /* ===== display_start_at / display_end_at でロックされたカード ===== */
-    #csh-{{ section.id }} .csh-card.csh-card--locked{
-      opacity: 0.4;
-      pointer-events: none;
-      cursor: default;
-    }
+      /* “もっと見る” ボタン */
+      #csh-{{ section.id }} .csh-more{
+        display:inline-flex;
+        align-items:center;
+        gap:10px;
+        text-decoration:none;
+        color: inherit;
+        font-size:14px;
+        font-weight:600;
+      }
+      #csh-{{ section.id }} .csh-more-icon{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        width:32px;
+        height:32px;
+        min-width:32px;
+        border-radius:999px;
+        background: var(--csh-accent, #e63946);
+      }
+      #csh-{{ section.id }} .csh-more-icon svg{
+        width:18px;
+        height:18px;
+        stroke:#fff;
+        fill:none;
+        stroke-width:2;
+        stroke-linecap:round;
+        stroke-linejoin:round;
+      }
 
-    #csh-{{ section.id }} .csh-price-tax{
-      font-size:10px;
-    }
-  </style>
-</section>
+      /* ===== グリッド（PC） ===== */
+      #csh-{{ section.id }} .csh-grid{
+        display:grid;
+        grid-template-columns: repeat({{ section.settings.columns_desktop | default: 6 }}, minmax(0,1fr));
+        gap: var(--csh-gap-pc);
+      }
 
+      /* ===== SP レイアウト ===== */
+      @media (max-width: 768px){
+        #csh-{{ section.id }}{
+          position:relative;
+        }
+        #csh-{{ section.id }} .csh-grid{
+          display:flex !important;
+          gap: var(--csh-gap-sp);
+          overflow-x:auto;
+          overflow-y:visible;
+          -webkit-overflow-scrolling:touch;
+          scroll-snap-type:x proximity;
+          scroll-snap-stop:normal;
+          scrollbar-gutter:stable;
+          width: calc(100vw - var(--csh-safe));
+          margin-right: calc(50% - 50vw - var(--csh-gap-sp));
+          padding-bottom: 72px;
+        }
+        #csh-{{ section.id }} .csh-card{
+          flex:0 0 clamp(140px, 38vw, 240px);
+          width: clamp(140px, 38vw, 240px);
+          scroll-snap-align:start;
+        }
+        #csh-{{ section.id }} .csh-grid::after{
+          content:"";
+          flex: 0 0 calc(max(0px, var(--csh-safe) - var(--csh-gap-sp)));
+        }
+        #csh-{{ section.id }} .csh-more{
+          position:absolute;
+          right: var(--csh-safe);
+          bottom: 60px;
+        }
+      }
+    </style>
+  </section>
 {% endif %}
-
 
 {% schema %}
 {

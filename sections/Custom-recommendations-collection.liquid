@@ -50,11 +50,10 @@
             {% break %}
           {% endif %}
 
-
           {%- comment -%}
             display_start_at / display_end_at による表示ロック判定
           {%- endcomment -%}
-                    {% liquid
+          {% liquid
             assign display_locked = false
             assign display_start_raw = product.metafields.product.display_start_at
             assign display_end_raw = product.metafields.product.display_end_at
@@ -181,7 +180,6 @@
             {% continue %}
           {% endif %}
 
-
           {%- comment -%}
             ▼ 実際に表示するカードは max_products 件まで
           {%- endcomment -%}
@@ -189,7 +187,6 @@
             class="csh-card{% if display_locked %} csh-card--locked{% endif %}"
             href="{{ product.url | within: coll }}"
           >
-
             <div class="csh-thumb">
               {% if product.featured_image %}
                 {{ product.featured_image | image_url: width: 700 | image_tag: loading: 'lazy', alt: product.title }}
@@ -245,84 +242,56 @@
   {% endcapture %}
 
   <style>
-    /* ===== 見出し行 ===== */
+    /* ===== 見出し行（このセクション固有） ===== */
     #csh-{{ section.id }} .csh-head{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:16px; margin-bottom:16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:16px;
     }
     #csh-{{ section.id }} .csh-title{
-      position:relative; margin:0; font-size:18px; font-weight:700; padding-left:14px;
+      position:relative;
+      margin:0;
+      font-size:18px;
+      font-weight:700;
+      padding-left:14px;
     }
     #csh-{{ section.id }} .csh-title::before{
-      content:""; position:absolute; left:0; top:0; width:3px; height:1.1em;
-      background: var(--csh-accent, #e63946); border-radius:2px;
+      content:"";
+      position:absolute;
+      left:0;
+      top:0;
+      width:3px;
+      height:1.1em;
+      background: var(--csh-accent, #e63946);
+      border-radius:2px;
     }
 
-    /* ===== グリッド ===== */
+    /* ===== PC グリッドレイアウト ===== */
     #csh-{{ section.id }} .csh-grid{
       display:grid;
       grid-template-columns: repeat({{ section.settings.columns_desktop | default: 6 }}, minmax(0,1fr));
       gap: var(--csh-gap-pc);
     }
 
-    /* ===== カード ===== */
-    #csh-{{ section.id }} .csh-card{
-      display:flex; flex-direction:column;
-      color:inherit; text-decoration:none;
-    }
-
-    /* ===== サムネイル ===== */
-    #csh-{{ section.id }} .csh-thumb{
-      border-radius:5px; overflow:hidden;
-    }
-    #csh-{{ section.id }} .csh-thumb img{
-      width:100%; height:auto; display:block; border-radius:5px;
-    }
-    #csh-{{ section.id }} .csh-thumb::before{ content:none !important; }
-
-    /* バッジ（画像の下） */
-    #csh-{{ section.id }} .csh-badges--below{
-      display:flex; gap:6px; margin-top:8px;
-    }
-    #csh-{{ section.id }} .csh-badge{
-      font-size:10px; font-weight:700; line-height:1;
-      padding:6px 8px;
-      box-shadow:0 1px 2px rgba(0,0,0,.15);
-    }
-
-    #csh-{{ section.id }} .csh-body{
-      padding:8px 12px 10px 0; display:grid; gap:6px;
-    }
-    #csh-{{ section.id }} .csh-name{
-      font-size:13px; line-height:1.4;
-      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
-      overflow:hidden;
-    }
-    #csh-{{ section.id }} .csh-price{ font-size:12px; opacity:.9; }
-
-    /* バッジ折り返し制御 */
-    #csh-{{ section.id }} .csh-badges.csh-badges--below{
-      display:flex !important;
-      flex-wrap:wrap !important;
-      gap:6px 6px;
-    }
-    #csh-{{ section.id }} .csh-badges.csh-badges--below .csh-badge{
-      display:inline-flex !important;
-      align-items:center;
-      white-space:nowrap !important;
-      min-width:max-content;
-    }
-
-    /* ===== SP ===== */
+    /* ===== SP：横スクロール ===== */
     @media (max-width:768px){
-      #csh-{{ section.id }}{ position:relative; }
+      #csh-{{ section.id }}{
+        position:relative;
+      }
       #csh-{{ section.id }} .csh-grid{
-        display:flex !important; gap: var(--csh-gap-sp);
-        overflow-x:auto; overflow-y:visible; -webkit-overflow-scrolling:touch;
-        scroll-snap-type:x proximity; scroll-snap-stop:normal; scrollbar-gutter:stable;
+        display:flex !important;
+        gap: var(--csh-gap-sp);
+        overflow-x:auto;
+        overflow-y:visible;
+        -webkit-overflow-scrolling:touch;
+        scroll-snap-type:x proximity;
+        scroll-snap-stop:normal;
+        scrollbar-gutter:stable;
         width: calc(100vw - var(--csh-safe));
         margin-right: calc(50% - 50vw - var(--csh-gap-sp));
-        padding-bottom: 0px;
+        padding-bottom: 0;
       }
       #csh-{{ section.id }} .csh-card{
         flex:0 0 clamp(140px, 38vw, 240px);
@@ -335,7 +304,7 @@
       }
     }
 
-    /* display_start_at / display_end_at でロックされたカード */
+    /* display_start_at / display_end_at でロックされたカード（半透明＋クリック不可） */
     #csh-{{ section.id }} .csh-card.csh-card--locked{
       opacity:0.4;
       pointer-events:none;
@@ -343,7 +312,7 @@
     }
   </style>
 
-    <script>
+  <script>
     (function(){
       console.log('[home recos] init');
 
@@ -648,7 +617,7 @@
         render(filtered);
       }
 
-      async function run(){
+        async function run(){
         var lastPid = null;
 
         // 1. localStorage から取得
@@ -679,6 +648,7 @@
         }
 
         try{
+          // ① レコメンド取得
           var recos = await fetchRecommendations(lastPid);
           recos = dedupe(recos);
 
@@ -694,13 +664,40 @@
             titleEl.textContent = {{ section.settings.title_personal | json }};
           }
 
-          if (!filtered.length){
+          // 最終的にレンダリングに使うリスト
+          var list = filtered;
+
+          // ② レコメンドが 0 件 → まるごと fallback
+          if (!list.length){
             console.log('[home recos] 0件 → fallback レンダリング');
             await renderFallback();
             return;
           }
 
-          render(filtered);
+          // ③ 件数が LIMIT 未満なら、fallback コレクションで穴埋め
+          if (list.length < LIMIT){
+            var fallbackHandle = {{ coll.handle | json }};
+            if (fallbackHandle){
+              try{
+                var fallback = await fetchCollection(fallbackHandle, LIMIT);
+                fallback = dedupe(fallback);
+
+                // ロック商品を除外
+                var fallbackFiltered = [];
+                for (var j = 0; j < fallback.length; j++){
+                  if (!fallback[j].display_locked) fallbackFiltered.push(fallback[j]);
+                }
+
+                // 既存リスト + fallback をマージして重複除去
+                list = dedupe(list.concat(fallbackFiltered));
+              }catch(err){
+                console.warn('[home recos] fallback merge error', err);
+              }
+            }
+          }
+
+          // ④ 最終リストを描画（render 内で LIMIT までに絞られる）
+          render(list);
           return;
 
         } catch(e){
