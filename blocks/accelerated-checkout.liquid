@@ -64,11 +64,11 @@
 {% endschema %}
 
 <script>
-  console.log('iiiii')
   (function() {
     // 今すぐ購入ボタンのクリックをインターセプト
     document.addEventListener('click', function(e) {
       var btn = e.target.closest('.shopify-payment-button__button');
+      console.log('btn', btn)
       if (!btn) return;
 
       // クライアント時刻を生成
