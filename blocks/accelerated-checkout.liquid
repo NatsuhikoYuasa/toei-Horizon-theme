@@ -87,6 +87,7 @@
 
       var clientTime = y + '-' + m + '-' + d + 'T' + h + ':' + min + ':' + sec + tz;
       console.log('clientTime', clientTime)
+      return
       // カート属性を更新（非同期で実行、チェックアウトは続行）
       fetch('/cart/update.js', {
         method: 'POST',
