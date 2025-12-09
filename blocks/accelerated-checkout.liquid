@@ -65,11 +65,7 @@
 
 <script>
   (function() {
-    document.addEventListener('click', function(e) {
-      var btn = e.target.closest('.shopify-payment-button__button');
-      if (!btn) return;
-
-      // クライアント時刻を生成
+    function updateClientTime() {
       var now = new Date();
       var offset = -now.getTimezoneOffset();
       var sign = offset >= 0 ? '+' : '-';
@@ -86,10 +82,17 @@
 
       var clientTime = y + '-' + m + '-' + d + 'T' + h + ':' + min + ':' + sec + tz;
 
-      // navigator.sendBeacon を使って確実に送信
-      navigator.sendBeacon('/cart/update.js', JSON.stringify({
-        attributes: { client_current_time: clientTime }
-      }));
-    }, true);
+      fetch('/cart/update.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ attributes: { client_current_time: clientTime } })
+      });
+    }
+
+    // ページ読み込み時に更新
+    updateClientTime();
+
+    // 30秒ごとに更新（長時間ページを開いている場合に対応）
+    setInterval(updateClientTime, 30000);
   })();
 </script>
