@@ -66,33 +66,44 @@
 <script>
   (function() {
     function updateClientTime() {
-      var now = new Date();
-      var offset = -now.getTimezoneOffset();
-      var sign = offset >= 0 ? '+' : '-';
-      var hours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
-      var minutes = String(Math.abs(offset) % 60).padStart(2, '0');
-      var tz = sign + hours + ':' + minutes;
+      // まずカートの状態を確認
+      fetch('/cart.js')
+        .then(function(r) { return r.json(); })
+        .then(function(cart) {
+          // カートに商品がある場合のみ更新
+          if (cart.item_count === 0) return;
 
-      var y = now.getFullYear();
-      var m = String(now.getMonth() + 1).padStart(2, '0');
-      var d = String(now.getDate()).padStart(2, '0');
-      var h = String(now.getHours()).padStart(2, '0');
-      var min = String(now.getMinutes()).padStart(2, '0');
-      var sec = String(now.getSeconds()).padStart(2, '0');
+          var now = new Date();
+          var offset = -now.getTimezoneOffset();
+          var sign = offset >= 0 ? '+' : '-';
+          var hours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
+          var minutes = String(Math.abs(offset) % 60).padStart(2, '0');
+          var tz = sign + hours + ':' + minutes;
 
-      var clientTime = y + '-' + m + '-' + d + 'T' + h + ':' + min + ':' + sec + tz;
+          var y = now.getFullYear();
+          var m = String(now.getMonth() + 1).padStart(2, '0');
+          var d = String(now.getDate()).padStart(2, '0');
+          var h = String(now.getHours()).padStart(2, '0');
+          var min = String(now.getMinutes()).padStart(2, '0');
+          var sec = String(now.getSeconds()).padStart(2, '0');
 
-      fetch('/cart/update.js', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ attributes: { client_current_time: clientTime } })
-      });
+          var clientTime = y + '-' + m + '-' + d + 'T' + h + ':' + min + ':' + sec + tz;
+
+          fetch('/cart/update.js', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ attributes: { client_current_time: clientTime } })
+          });
+        });
     }
 
     // ページ読み込み時に更新
     updateClientTime();
 
-    // 30秒ごとに更新（長時間ページを開いている場合に対応）
+    // 30秒ごとに更新
     setInterval(updateClientTime, 30000);
+
+    // カートに追加された時も更新
+    document.addEventListener('cart:updated', updateClientTime);
   })();
 </script>
