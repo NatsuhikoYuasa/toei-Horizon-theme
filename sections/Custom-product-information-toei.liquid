@@ -194,7 +194,7 @@
         </div>
 
         {%- comment -%} 7. バリエーション選択（ラジオボタン） {%- endcomment -%}
-        {% if product.variants.size > 1 %}
+        {% if product.variants.size > 0 %}
           <div class="toei-variant-selector toei-variant-selector--loading">
             <div class="toei-variant-radios">
               {% for variant in product.variants %}
@@ -386,8 +386,9 @@
         <div class="toei-share">
           <p class="toei-share__title">この商品をシェアする</p>
           <div class="toei-share__icons">
-            {%- assign share_url = product.url | absolute_url | url_encode -%}
-            {%- assign share_text = product.title | url_encode -%}
+            {%- capture share_url_raw -%}{{ shop.url }}{{ product.url }}{%- endcapture -%}
+            {%- assign share_url = share_url_raw | url_encode -%}
+            {%- assign share_text = product.title | strip | url_encode -%}
 
             <a
               class="toei-share-icon toei-share-icon--x"
@@ -419,7 +420,7 @@
               >
             </a>
 
-            <a
+            {% comment %} <a
               class="toei-share-icon toei-share-icon--instagram"
               href="https://www.instagram.com/ここにアカウント名/"
               target="_blank"
@@ -432,7 +433,7 @@
                 alt="Instagramで見る"
                 loading="lazy"
               >
-            </a>
+            </a> {% endcomment %}
 
             <a
               class="toei-share-icon toei-share-icon--line"

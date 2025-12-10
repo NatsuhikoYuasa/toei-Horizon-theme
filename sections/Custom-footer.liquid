@@ -216,7 +216,7 @@
 
 <style>
   #footer-{{ section.id }} {
-    padding: 60px 0 40px;
+    padding: 80px 0 24px;
     font-size: 14px;
   }
 
@@ -253,7 +253,7 @@
     display: block;
     max-width: {{ section.settings.logo_width }}px;
     height: auto;
-    margin: 0 0 20px;
+    margin: 0 0 40px;
   }
 
   #footer-{{ section.id }} .wb-footer__shop-name {
@@ -325,7 +325,7 @@
     display: flex;
     flex-direction: row;
     gap: 8px;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
   }
 
   #footer-{{ section.id }} .wb-footer__external-link-card {
@@ -333,12 +333,12 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 18px;
+    padding: 24px;
     background: #ffffff;
-    border-radius: 4px;
+    border-radius: 8px;
     border: 1px solid rgba(0, 0, 0, 0.08);
     text-decoration: none;
-    font-size: 13px;
+    font-size: 16px;
     font-weight: 600;
     letter-spacing: 0.02em;
     color: inherit;
@@ -380,23 +380,24 @@
 
   /* メルマガカード ============================== */
   #footer-{{ section.id }} .wb-footer__newsletter-card {
-    margin-top: 16px;
+    margin-top: 8px;
     padding: 20px 18px 18px;
     background: #ffffff;
-    border-radius: 4px;
+    border-radius: 8px;
     border: 1px solid rgba(0, 0, 0, 0.06);
   }
 
   #footer-{{ section.id }} .wb-footer__newsletter-title {
-    font-size: 13px;
+    font-size: 16px;
     font-weight: 700;
     margin: 0 0 10px;
   }
 
   #footer-{{ section.id }} .wb-footer__newsletter-text {
-    font-size: 12px;
+    font-size: 16px;
     line-height: 1.6;
     margin: 0 0 14px;
+    color: #18060066;
   }
 
   #footer-{{ section.id }} .wb-footer__newsletter-form {
@@ -412,7 +413,7 @@
     width: 100%;
     font-size: 12px;
     padding: 10px 12px;
-    border-radius: 3px;
+    border-radius: 4px;
     border: 1px solid rgba(0, 0, 0, 0.12);
     background: #f8f8f8;
   }
@@ -420,7 +421,7 @@
   #footer-{{ section.id }} .wb-footer__newsletter-button {
     flex: 0 0 80px;
     border: none;
-    border-radius: 3px;
+    border-radius: 4px;
     padding: 10px 0;
     font-size: 12px;
     font-weight: 700;
@@ -474,7 +475,7 @@
 
   /* コピーライト ================================ */
   #footer-{{ section.id }} .wb-footer__copyright {
-    margin-top: 40px;
+    margin-top: 80px;
     text-align: center;
     font-size: 10px;
     opacity: .7;
@@ -483,15 +484,12 @@
 
   /* SP レイアウト（～749px） ==================== */
   @media (max-width: 749px) {
-    #footer-{{ section.id }} {
-      padding: 40px 0 30px;
-    }
 
     /* 左右カラムは縦並び＆横いっぱい */
     #footer-{{ section.id }} .wb-footer__inner {
       flex-direction: column;
       align-items: flex-start;
-      gap: 24px;
+      gap: 56px;
     }
 
     #footer-{{ section.id }} .wb-footer__left,
