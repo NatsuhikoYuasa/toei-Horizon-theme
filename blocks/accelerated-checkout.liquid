@@ -73,8 +73,6 @@
   (function() {
     var sellStartAt = {{ sell_start_at | json }};
     var sellEndAt = {{ sell_end_at | json }};
-    console.log('sellStartAt', sellStartAt)
-    console.log('sellEndAt', sellEndAt)
 
     if (!sellStartAt && !sellEndAt) return; // 制限なし
 
@@ -85,15 +83,38 @@
     var isBeforeStart = startTime && now < startTime;
     var isAfterEnd = endTime && now >= endTime;
 
-    if (isBeforeStart || isAfterEnd) {
-      // 今すぐ購入ボタンを無効化
-      var buyNowBtn = document.querySelector('.shopify-payment-button__button');
-      console.log('buyNowBtn', buyNowBtn)
-      if (buyNowBtn) {
-        buyNowBtn.disabled = true;
-        buyNowBtn.style.opacity = '0.5';
-        buyNowBtn.style.cursor = 'not-allowed';
-      }
+    if (!isBeforeStart && !isAfterEnd) return; // 期間内なら何もしない
+
+    function disableBuyNowButton() {
+      var buttons = document.querySelectorAll('.shopify-payment-button__button, .shopify-payment-button button');
+      buttons.forEach(function(btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+        btn.style.pointerEvents = 'none';
+      });
     }
+
+    // 初回実行
+    disableBuyNowButton();
+
+    // DOMの変更を監視して、ボタンが追加されたら無効化
+    var observer = new MutationObserver(function(mutations) {
+      disableBuyNowButton();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    // 念のため一定間隔でも実行
+    var interval = setInterval(disableBuyNowButton, 500);
+
+    // 10秒後に監視を停止
+    setTimeout(function() {
+      observer.disconnect();
+      clearInterval(interval);
+    }, 10000);
   })();
 </script>
