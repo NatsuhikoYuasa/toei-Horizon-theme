@@ -73,12 +73,9 @@
   (function() {
     var sellStartAt = {{ sell_start_at | json }};
     var sellEndAt = {{ sell_end_at | json }};
-    console.log('sellStartAt', sellStartAt)
-    console.log('sellEndAt', sellEndAt)
     if (!sellStartAt && !sellEndAt) return; // 制限なし
 
     var now = new Date();
-    console.log('now', now)
     var startTime = sellStartAt ? new Date(sellStartAt) : null;
     var endTime = sellEndAt ? new Date(sellEndAt) : null;
 
@@ -86,6 +83,10 @@
     var isAfterEnd = endTime && now >= endTime;
 
     if (!isBeforeStart && !isAfterEnd) return; // 期間内なら何もしない
+
+    console.log('now:', now.toISOString(), '(local:', now.toString(), ')');
+    console.log('startTime:', startTime ? startTime.toISOString() : null);
+    console.log('endTime:', endTime ? endTime.toISOString() : null);
 
     function disableBuyNowButton() {
       var buttons = document.querySelectorAll('.shopify-payment-button__button, .shopify-payment-button button');
