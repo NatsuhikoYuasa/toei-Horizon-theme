@@ -86,9 +86,9 @@
     var isAfterEnd = endTime && now >= endTime;
 
     if (isBeforeStart || isAfterEnd) {
-      console.log('aaaa')
       // 今すぐ購入ボタンを無効化
       var buyNowBtn = document.querySelector('.shopify-payment-button__button');
+      console.log('buyNowBtn', buyNowBtn)
       if (buyNowBtn) {
         buyNowBtn.disabled = true;
         buyNowBtn.style.opacity = '0.5';
