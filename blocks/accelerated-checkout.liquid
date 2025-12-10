@@ -82,11 +82,11 @@
     var isBeforeStart = startTime && now < startTime;
     var isAfterEnd = endTime && now >= endTime;
 
-    if (!isBeforeStart && !isAfterEnd) return; // 期間内なら何もしない
-
     console.log('now:', now.toISOString(), '(local:', now.toString(), ')');
     console.log('startTime:', startTime ? startTime.toISOString() : null);
     console.log('endTime:', endTime ? endTime.toISOString() : null);
+
+    if (!isBeforeStart && !isAfterEnd) return; // 期間内なら何もしない
 
     function disableBuyNowButton() {
       var buttons = document.querySelectorAll('.shopify-payment-button__button, .shopify-payment-button button');
