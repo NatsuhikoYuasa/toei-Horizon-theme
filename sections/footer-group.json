@@ -147,7 +147,7 @@
           "type": "sns",
           "settings": {
             "label": "X",
-            "url": "#",
+            "url": "https://x.com/toeivideo",
             "icon": "shopify://shop_images/twitter-new-2023-x-logo-white-background-vector_1017-45422.avif"
           }
         },
@@ -155,7 +155,7 @@
           "type": "sns",
           "settings": {
             "label": "LINE",
-            "url": "#",
+            "url": "https://lin.ee/P3JTLiR",
             "icon": "shopify://shop_images/art-illustration_1166422-334.avif"
           }
         },
@@ -163,7 +163,7 @@
           "type": "sns",
           "settings": {
             "label": "YouTube",
-            "url": "#",
+            "url": "https://www.youtube.com/c/toeivideo",
             "icon": "shopify://shop_images/red-youtube-logo-social-media-logo_197792-1803.avif"
           }
         }
