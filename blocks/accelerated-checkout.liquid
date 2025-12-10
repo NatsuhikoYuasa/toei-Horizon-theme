@@ -63,41 +63,34 @@
 }
 {% endschema %}
 
+{% liquid
+  assign variant = product.selected_or_first_available_variant
+  assign sell_start_at = variant.metafields.variant.sell_start_at.value
+  assign sell_end_at = variant.metafields.variant.sell_end_at.value
+%}
+
 <script>
   (function() {
-    function updateClientTime() {
-      var now = new Date();
-      var offset = -now.getTimezoneOffset();
-      var sign = offset >= 0 ? '+' : '-';
-      var hours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
-      var minutes = String(Math.abs(offset) % 60).padStart(2, '0');
-      var tz = sign + hours + ':' + minutes;
+    var sellStartAt = {{ sell_start_at | json }};
+    var sellEndAt = {{ sell_end_at | json }};
 
-      var y = now.getFullYear();
-      var m = String(now.getMonth() + 1).padStart(2, '0');
-      var d = String(now.getDate()).padStart(2, '0');
-      var h = String(now.getHours()).padStart(2, '0');
-      var min = String(now.getMinutes()).padStart(2, '0');
-      var sec = String(now.getSeconds()).padStart(2, '0');
+    if (!sellStartAt && !sellEndAt) return; // 制限なし
 
-      var clientTime = y + '-' + m + '-' + d + 'T' + h + ':' + min + ':' + sec + tz;
+    var now = new Date();
+    var startTime = sellStartAt ? new Date(sellStartAt) : null;
+    var endTime = sellEndAt ? new Date(sellEndAt) : null;
 
-      fetch('/cart/update.js', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ attributes: { client_current_time: clientTime } })
-      }).catch(function() {
-        // エラーは無視
-      });
+    var isBeforeStart = startTime && now < startTime;
+    var isAfterEnd = endTime && now >= endTime;
+
+    if (isBeforeStart || isAfterEnd) {
+      // 今すぐ購入ボタンを無効化
+      var buyNowBtn = document.querySelector('.shopify-payment-button__button');
+      if (buyNowBtn) {
+        buyNowBtn.disabled = true;
+        buyNowBtn.style.opacity = '0.5';
+        buyNowBtn.style.cursor = 'not-allowed';
+      }
     }
-
-    // ページ読み込み時に更新
-    updateClientTime();
-
-    // 30秒ごとに更新
-    setInterval(updateClientTime, 30000);
-
-    // カートに追加された時も更新
-    document.addEventListener('cart:updated', updateClientTime);
   })();
 </script>
