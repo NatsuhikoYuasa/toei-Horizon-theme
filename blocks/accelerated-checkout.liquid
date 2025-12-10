@@ -78,6 +78,7 @@
     if (!sellStartAt && !sellEndAt) return; // 制限なし
 
     var now = new Date();
+    console.log('now', now)
     var startTime = sellStartAt ? new Date(sellStartAt) : null;
     var endTime = sellEndAt ? new Date(sellEndAt) : null;
 
