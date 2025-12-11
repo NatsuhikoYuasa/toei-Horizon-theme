@@ -4265,23 +4265,23 @@ text-component {
 
 
 /**********************************************
- * wb03 custom styles  （TOEI Horizon theme）
+ * wb03 add custom styles  （TOEI Horizon theme）
  **********************************************/
 
-/* ================================
- * 1. 商品カード：表示期間外のグレーアウト
- *    - display_start_at / display_end_at 用
- * ================================ */
+/* =======================================================
+ * 1. 共通：商品カード（表示期間外のグレーアウト）
+ *    - 使用箇所：商品グリッド全般（コレクション / 検索 など）
+ * ======================================================= */
 .product-card.product-card--disabled {
   opacity: 0.4;
   pointer-events: none;
   cursor: default;
 }
 
-/* ================================
- * 2. 検索キーワードチップ（予測検索ドロップダウン）
- *    - /snippets/predictive-search で使用
- * ================================ */
+/* =======================================================
+ * 2. ヘッダー：予測検索ドロップダウンのキーワードチップ
+ *    - ファイル：/snippets/predictive-search
+ * ======================================================= */
 .predictive-search-keywords {
   padding: 1.2rem 1.6rem 0;
 }
@@ -4315,9 +4315,10 @@ text-component {
   color: #fff;
 }
 
-/* ==========================================
- * 4. ドロワーメニュー（SP）文字サイズ調整
- * ========================================== */
+/* =======================================================
+ * 3. ヘッダー：SP ドロワーメニューの文字サイズ調整
+ *    - ファイル：header / menu-drawer 関連
+ * ======================================================= */
 @media screen and (max-width: 1199px) {
 
   /* 親メニュー（仮面ライダー / スーパー戦隊 など） */
@@ -4342,9 +4343,10 @@ text-component {
   }
 }
 
-/* ==========================================
- * 5. コレクションページ全体レイアウト
- * ========================================== */
+/* =======================================================
+ * 4. コレクションページ：全体レイアウト＆商品グリッド
+ *    - テンプレ：collection
+ * ======================================================= */
 
 /* PC：左フィルター / 右商品グリッド（4列） */
 @media (min-width: 990px) {
@@ -4365,7 +4367,7 @@ text-component {
   }
 }
 
-/* フィルター外側ラッパ */
+/* フィルター外側ラッパ（PC/SP共通のベース） */
 .facets-block-wrapper--vertical {
   background: transparent;
   border: none;
@@ -4392,10 +4394,10 @@ text-component {
   overflow: visible;
 }
 
-/* ==========================================
- * 6. コレクションフィルター（共通：SP/PC）
- *    - デザイン共通で効かせたい部分
- * ========================================== */
+/* =======================================================
+ * 5. コレクションページ：フィルター共通（SP/PC）
+ *    - ファイル：sections/main-collection-filters など
+ * ======================================================= */
 
 /* 見出し＆ラベル文字 */
 .facets--vertical .facets__label,
@@ -4412,9 +4414,21 @@ facet-status-component.facets__status {
   display: none !important;
 }
 
-/* ==========================================
- * 7. コレクションフィルター（PC 詳細）
- * ========================================== */
+/* スマホ時：フィルターラッパ＆メイングリッドの余白調整 */
+@media screen and (max-width: 750px) {
+  .facets-block-wrapper.facets-block-wrapper--vertical {
+    background-color: unset !important;
+    border: unset;
+  }
+
+  .main-collection-grid {
+    padding: 0 !important;
+  }
+}
+
+/* =======================================================
+ * 6. コレクションページ：フィルター（PC 詳細）
+ * ======================================================= */
 @media screen and (min-width: 750px) {
 
   /* 上部の解除チップの周りの余白（「◯◯」× の並び） */
@@ -4512,20 +4526,10 @@ facet-status-component.facets__status {
   }
 }
 
-@media screen and (max-width: 750px) {
-  .facets-block-wrapper.facets-block-wrapper--vertical {
-    background-color: unset !important;
-    border: unset;
-  }
-
-  .main-collection-grid {
-    padding: 0 !important;
-  }
-}
-
-/* ==========================================
- * 8. 上部「件数＋並び替え＋表示件数」のバー関連
- * ========================================== */
+/* =======================================================
+ * 7. コレクションページ：上部「件数＋並び替え＋表示件数」のバー
+ *    - ファイル：sections/main-collection-filters（horz facets）
+ * ======================================================= */
 
 /* スペーシング変数を少しだけ広げる */
 .facets.facets--horizontal.facets-controls-wrapper.spacing-style {
@@ -4533,7 +4537,7 @@ facet-status-component.facets__status {
   --padding-block-end: 8px;
 }
 
-/* 件数表示＋並び替え＋表示件数を横並びにする調整 */
+/* 件数表示＋並び替え＋表示件数を横並びにする調整（PC） */
 @media screen and (min-width: 750px) {
   .facets.facets--horizontal.facets-controls-wrapper .facets__wrapper {
     display: flex;
@@ -4576,275 +4580,19 @@ facet-status-component.facets__status {
   line-height: 1.4;
 }
 
-
-/* === TOEI / CSH / RV / CFC バッジ共通 === */
-
-/* コンテナ（クラスがあればまとめておく） */
-.toei-product-badges,
-.toei-cart-badges,
-.toei-badges,
-.csh-product-badges,
-.csh-cart-badges,
-.csh-badges,
-.rv-badges,
-.cfc-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-/* 基本バッジ（共通） */
-.toei-badge,
-.csh-badge,
-.cfc-badge,
-.rv-badge {
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1;
-  padding: 6px 8px;
-  display: inline-flex;
-  align-items: center;
-  white-space: nowrap;
-  min-width: max-content;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, .15);
-  border-radius: 0;
-}
-
-/* NEW */
-.csh-badge--new,
-.cfc-badge--new,
-.rv-badge--new {
-  background: #e63946;
-  color: #fff;
-}
-
-/* 予約受付中 */
-.csh-badge--pre,
-.cfc-badge--pre,
-.rv-badge--pre {
-  background: #060816;
-  color: #fff;
-}
-
-/* 初回特典残りわずか */
-.csh-badge--first,
-.cfc-badge--first,
-.rv-badge--first {
-  background: #dde0e6;
-  color: #060816;
-}
-
-/* 早期予約特典あり */
-.csh-badge--early,
-.cfc-badge--early,
-.rv-badge--early {
-  background: #060816;
-  color: #fff;
-}
-
-/* 締切間近 */
-.csh-badge--closing,
-.cfc-badge--closing,
-.rv-badge--closing {
-  background: #dde0e6;
-  color: #060816;
-}
-
-
-/* カートページ：商品エリアを広く、サマリーは固定幅にする */
-@media screen and (min-width: 1080px) {
-  .cart-page {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
-
-  tr.cart-items__table-row {
-    max-width: 880px !important;
-    margin: auto;
-  }
-}
-
-/* ===== 商品画像ばらつき修正 ===== */
-.csh-thumb,
-.rv-thumb,
-.cfc-card-media {
-  position: relative;
-  border-radius: 5px;
-  overflow: hidden;
-
-  /* 背景を透過に */
-  background: transparent;
-
-  /* 枠の縦横比を固定（お好みで数字調整OK） */
-  aspect-ratio: 700 / 815;
-
-  /* 画像を中央寄せ */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.csh-thumb img,
-.rv-img,
-.cfc-card-media img {
-  /* 枠いっぱいの範囲内で収まるように */
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-
-  object-fit: contain;
-  /* 全体表示（トリミングなし） */
-  display: block;
-  border-radius: 5px;
-}
-
-/* 画像なし時のプレースホルダー（rv用） */
-.rv-thumb__placeholder {
-  font-size: 11px;
-  color: #999;
-  text-align: center;
-  padding: 4px;
-}
-
-/* テキスト太さ揃え */
-.rv-meta,
-.csh-name,
-.csh-price,
-.cfc-card-body {
-  font-weight: 500;
-}
-
-/* =========================================
-   コレクション一覧の画像サイズを統一
-   （Horizon product-card 用）
-   ========================================= */
-
-/* 枠の縦横比だけ固定（display は元のまま） */
-.product-grid__item .card-gallery,
-.product-grid__item .product-media-container,
-.product-grid__item .product-media {
-  aspect-ratio: 700 / 815 !important;
-  /* 比率はお好みで */
-}
-
-/* 画像を中央寄せ＆トリミング無しで収める */
-.product-grid__item .product-media__image {
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
-  object-fit: contain !important;
-  /* 全体表示 */
-  object-position: center center;
-  /* 縦横センター */
-}
-
-img.cart-items__media-image.border-style {
-  object-fit: contain;
-}
-
-/* サーチページ */
-@media screen and (max-width: 749px) {
-  results-list.section.product-grid-container.spacing-style {
-    padding: 32px 16px;
-  }
-}
-
-
-
-/* =========================================
- * wb03 add 最終調整
- * ========================================= */
-
-div#predictive-search-products {
-  display: none;
-}
-
-.rv-meta,
-.csh-body {
-  color: #060816;
-}
-
-/* =============================
- * 数量ボタン（− ＋）の色調整
- * ============================= */
-.toei-quantity-controls {
-  display: inline-flex;
-  align-items: stretch;
-}
-
-.toei-qty-btn {
-  -webkit-appearance: none;
-  appearance: none;
-  border: none;
-  background: transparent;
-  color: rgb(var(--color-foreground-rgb));
-  /* 通常の文字色（黒系） */
-  font-size: 20px;
-  line-height: 1;
-  padding: 0 10px;
-  cursor: pointer;
-}
-
-/* =============================
- * フィルター内チェックボックスの二重線対策
- * （通常のチェックボックス）
- * ============================= */
+/* =======================================================
+ * 8. フィルター：通常チェックボックスのフォーカス枠（共通）
+ * ======================================================= */
 .facets .checkbox__input:focus-visible+.checkbox__label,
 .facets .checkbox__input:focus-visible+.checkbox__label .icon-checkmark {
   outline: none;
   box-shadow: none;
 }
 
-
-/**********************************************
- * カート / フィルター ドロワーの × から丸枠を外す
- **********************************************/
-button.cart-drawer__close-button.close-button.button-unstyled:focus-visible,
-button.close-button:focus-visible,
-button.facets__close-button:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-/**********************************************
- * 検索結果の商品カードレイアウト調整
- * 画像 → バッジ → タイトル → 価格
- **********************************************/
-.template-search .product-card__content.layout-panel-flex {
-  display: flex;
-  flex-direction: column;
-}
-
-/* 標準のタイトル＋価格ブロックは非表示（重複防止） */
-.template-search .product-grid-view-zoom-out--details {
-  display: none;
-}
-
-/* 画像は order:1（デフォルトなので指定不要でもOK） */
-.template-search .product-card__content.layout-panel-flex>.card-gallery {
-  order: 1;
-}
-
-/* カスタムバッジを画像のすぐ下に */
-.template-search .product-card__content.layout-panel-flex>.csh-badges {
-  order: 2;
-}
-
-/* タイトル（リンク） */
-.template-search .product-card__content.layout-panel-flex>a.contents.user-select-text {
-  order: 3;
-}
-
-/* 価格 */
-.template-search .product-card__content.layout-panel-flex>product-price.text-block {
-  order: 4;
-}
-
-
-/**********************************************
- *  フィルター：メタオブジェクト系（開始前／映画／グッズなど）
- *  pill 型 → 通常チェックボックス風に統一
- **********************************************/
+/* =======================================================
+ * 9. フィルター：メタオブジェクト系（pill → チェックボックス風）
+ *    - 例：開始前／映画／グッズなど
+ * ======================================================= */
 
 /* pill リストを縦並びに */
 .facets .facets__inputs-list--grid {
@@ -4865,7 +4613,6 @@ button.facets__close-button:focus-visible {
 
 /* pill ラベルの基本スタイル（共通） */
 .facets .facets__inputs-list--grid .facets__pill-label {
-  /* 既存レイアウト用プロパティはそのまま残してOK */
   position: relative !important;
   display: flex !important;
   align-items: center !important;
@@ -4884,18 +4631,18 @@ button.facets__close-button:focus-visible {
   text-align: left !important;
   cursor: pointer !important;
 
-  /* 🔽 基本は薄めの文字色（チェックボックスと同じ雰囲気） */
+  /* ベースは薄めの文字色 */
   color: rgb(var(--color-foreground-rgb) / var(--opacity-60));
   transition: color 0.2s ease, font-weight 0.2s ease;
 }
 
-/* 通常チェックボックスのルールと同じノリで pill にも hover を付ける */
+/* hover 時：文字色を少し濃く */
 .facets .facets__inputs-list--grid .facets__pill-wrapper:hover .facets__pill-label,
 .facets .facets__inputs-list--grid .facets__pill-label:hover {
   color: rgb(var(--color-foreground-rgb) / var(--opacity-90));
 }
 
-/* 擬似要素を一旦クリア（念のため） */
+/* 既存の ::before / ::after はリセット */
 .facets .facets__inputs-list--grid .facets__pill-label::before,
 .facets .facets__inputs-list--grid .facets__pill-label::after {
   content: none !important;
@@ -4922,7 +4669,7 @@ button.facets__close-button:focus-visible {
   background-color: rgb(var(--color-foreground-rgb) / 0.04) !important;
 }
 
-/* チェック時の□の見た目だけ制御（文字色は触らない） */
+/* チェック時の□の見た目 */
 .facets .facets__inputs-list--grid .facets__pill-input:checked+.facets__pill-label::before {
   background-color: var(--color-foreground) !important;
   border-color: var(--color-foreground) !important;
@@ -4931,11 +4678,12 @@ button.facets__close-button:focus-visible {
   background-image: url("data:image/svg+xml,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M4.75439%2010.7485L7.68601%2014.5888C7.79288%2014.7288%207.84632%2014.7988%207.91174%2014.8242C7.96907%2014.8466%208.03262%2014.8469%208.09022%2014.8253C8.15596%2014.8007%208.21026%2014.7314%208.31886%2014.5927L15.2475%205.74658%22%20stroke%3D%22white%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E") !important;
 }
 
+/* チェック時も文字色はそのまま */
 .facets .facets__inputs-list--grid .facets__pill-input:checked+.facets__pill-label {
-  /* ここでは color を設定しないことがポイント */
   background: transparent !important;
 }
 
+/* PC 時はチェックアイコンのサイズを少し小さく */
 @media screen and (min-width: 750px) {
   .facets .facets__inputs-list--grid .facets__pill-input:checked+.facets__pill-label::before {
     background-size: 14px 14px !important;
@@ -4947,18 +4695,12 @@ button.facets__close-button:focus-visible {
   filter: brightness(1.05);
 }
 
-/* チェック時も文字色はそのまま */
-.facets .facets__inputs-list--grid .facets__pill-input:checked+.facets__pill-label {
-  background: transparent !important;
-}
-
-/* フォーカス時の二重線を消す */
+/* フォーカス時の枠を消す＆最後に操作したラベルだけ文字色濃く */
 .facets .facets__inputs-list--grid .facets__pill-input:focus-visible+.facets__pill-label {
   outline: none !important;
   box-shadow: none !important;
 }
 
-/* 最後に操作した（フォーカス中の）ラベルだけ文字色を濃くする */
 .facets .facets__inputs-list--grid .facets__pill-input:focus-visible+.facets__pill-label,
 .facets .facets__inputs-list--grid .facets__pill-label:focus-visible {
   color: rgb(var(--color-foreground-rgb)) !important;
@@ -4969,6 +4711,7 @@ button.facets__close-button:focus-visible {
   margin: 0;
 }
 
+/* SP 時のチェックボックスサイズ＆余白 */
 @media screen and (max-width: 749px) {
   .facets .facets__inputs-list--grid .facets__pill-label::before {
     width: 20px !important;
@@ -4976,28 +4719,373 @@ button.facets__close-button:focus-visible {
     border-radius: 7px !important;
   }
 
-  /* モバイル：未選択は薄めの色 */
   .facets .facets__inputs-list--grid .facets__pill-label {
     padding: 0 0 0 30px !important;
   }
-
 }
 
-/* ブログ記事ページ：アイキャッチ画像を中央寄せ */
+/* =======================================================
+ * 10. カートページ：レイアウト / 画像 / 数量ボタン / ×ボタン
+ *    - テンプレ：cart / sections/main-cart など
+ * ======================================================= */
+
+/* カートページ：商品エリアを広く、サマリーは固定幅にする */
+@media screen and (min-width: 1080px) {
+  .cart-page {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  tr.cart-items__table-row {
+    max-width: 880px !important;
+    margin: auto;
+  }
+}
+
+/* カート内の商品画像はトリミングしない */
+img.cart-items__media-image.border-style {
+  object-fit: contain;
+}
+
+/* 数量ボタン（− ＋）の色調整 */
+.toei-quantity-controls {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.toei-qty-btn {
+  -webkit-appearance: none;
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: rgb(var(--color-foreground-rgb));
+  /* 通常の文字色（黒系） */
+  font-size: 20px;
+  line-height: 1;
+  padding: 0 10px;
+  cursor: pointer;
+}
+
+/* カート / フィルタードロワーの × から丸枠を外す */
+button.cart-drawer__close-button.close-button.button-unstyled:focus-visible,
+button.close-button:focus-visible,
+button.facets__close-button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* =======================================================
+ * 11. 商品一覧：Horizon product-card の画像比率統一
+ *    - 使用箇所：コレクション一覧 / 検索結果の標準カード
+ * ======================================================= */
+
+/* 枠の縦横比だけ固定（display は元のまま） */
+.product-grid__item .card-gallery,
+.product-grid__item .product-media-container,
+.product-grid__item .product-media {
+  aspect-ratio: 700 / 815 !important;
+  /* 比率はお好みで */
+}
+
+/* 画像を中央寄せ＆トリミング無しで収める */
+.product-grid__item .product-media__image {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  object-fit: contain !important;
+  /* 全体表示 */
+  object-position: center center;
+  /* 縦横センター */
+}
+
+/* =======================================================
+ * 12. カスタムセクション共通商品カード
+ *     - 対象セクション：
+ *       Custom-featured-collection（CFC）
+ *       Custom-section-hanyou（CSH）
+ *       Recently-viewed（RV）
+ * ======================================================= */
+
+/* --- 12-1. バッジコンテナ（共通） --- */
+.toei-product-badges,
+.toei-cart-badges,
+.toei-badges,
+.csh-product-badges,
+.csh-cart-badges,
+.csh-badges,
+.rv-badges,
+.cfc-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* --- 12-2. バッジ共通形状 --- */
+.toei-badge,
+.csh-badge,
+.cfc-badge,
+.rv-badge {
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 6px 8px;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  min-width: max-content;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .15);
+  border-radius: 0;
+}
+
+/* バッジ色：NEW */
+.csh-badge--new,
+.cfc-badge--new,
+.rv-badge--new {
+  background: #e63946;
+  color: #fff;
+}
+
+/* バッジ色：予約受付中 */
+.csh-badge--pre,
+.cfc-badge--pre,
+.rv-badge--pre {
+  background: #060816;
+  color: #fff;
+}
+
+/* バッジ色：初回特典残りわずか */
+.csh-badge--first,
+.cfc-badge--first,
+.rv-badge--first {
+  background: #dde0e6;
+  color: #060816;
+}
+
+/* バッジ色：早期予約特典あり */
+.csh-badge--early,
+.cfc-badge--early,
+.rv-badge--early {
+  background: #060816;
+  color: #fff;
+}
+
+/* バッジ色：締切間近 */
+.csh-badge--closing,
+.cfc-badge--closing,
+.rv-badge--closing {
+  background: #dde0e6;
+  color: #060816;
+}
+
+/* --- 12-3. カード本体（CFC / CSH / RV共通） --- */
+.cfc-card,
+.csh-card,
+.rv-card {
+  display: flex;
+  flex-direction: column;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* サムネイル枠（共通） */
+.cfc-card-media,
+.csh-thumb,
+.rv-thumb {
+  position: relative;
+  border-radius: 5px;
+  overflow: hidden;
+  background: transparent;
+  aspect-ratio: 700 / 815;
+  /* 枠の比率 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 画像（共通） */
+.cfc-card-media img,
+.csh-thumb img,
+.rv-thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  /* トリミングなしで収める */
+  border-radius: 5px;
+}
+
+/* theme 側の ::before を無効化 */
+.csh-thumb::before,
+.rv-thumb::before {
+  content: none !important;
+}
+
+/* 画像なし時のプレースホルダー（rv 用） */
+.rv-thumb__placeholder {
+  font-size: 11px;
+  color: #999;
+  text-align: center;
+  padding: 4px;
+}
+
+/* --- 12-4. バッジ行（画像の下に並ぶエリア） --- */
+.cfc-badges--below,
+.csh-badges--below,
+.rv-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 6px;
+  margin-top: 8px;
+  /* 画像とバッジの余白 */
+  align-content: flex-start;
+  min-height: 40px;
+  /* 2行分くらいの高さを揃える */
+}
+
+/* バッジ要素（共通形） */
+.cfc-badge,
+.csh-badge,
+.rv-badge {
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 6px 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .15);
+  border-radius: 0;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  min-width: max-content;
+}
+
+/* ★バッジが 1 つもないカードは余白をなくす（CFC/CSH/RV共通） */
+.cfc-badges--below:not(:has(.cfc-badge)),
+.csh-badges--below:not(:has(.csh-badge)),
+.rv-badges:not(:has(.rv-badge)) {
+  min-height: 0;
+  margin-top: 0;
+}
+
+/* --- 12-5. 本文エリア（タイトル＋価格） --- */
+.cfc-card-body,
+.csh-body,
+.rv-meta {
+  padding: 8px 12px 10px 0;
+  display: grid;
+  gap: 6px;
+  font-weight: 500;
+}
+
+/* タイトル（2行で省略） */
+.cfc-card-title,
+.csh-name,
+.rv-title-link {
+  font-size: 13px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 価格 */
+.cfc-card-price,
+.csh-price,
+.rv-price {
+  font-size: 12px;
+  opacity: .9;
+  margin-top: 4px;
+}
+
+.cfc-card-price-tax,
+.csh-price-tax,
+.rv-price-tax {
+  font-size: 10px;
+}
+
+.cfc-card-price-compare s,
+.csh-price-compare s,
+.rv-price-compare s {
+  opacity: .7;
+}
+
+/* ロックカード（使うセクションのみ有効） */
+.csh-card.csh-card--locked,
+.rv-card.rv-card--locked {
+  opacity: .4;
+  pointer-events: none;
+  cursor: default;
+}
+
+/* テキストカラー微調整 */
+.rv-meta,
+.csh-body {
+  color: #060816;
+}
+
+/* =======================================================
+ * 13. 検索ページ：商品カードレイアウト＆余白
+ *    - テンプレ：search
+ * ======================================================= */
+
+/* SP の検索結果一覧セクション余白 */
+@media screen and (max-width: 749px) {
+  results-list.section.product-grid-container.spacing-style {
+    padding: 32px 16px;
+  }
+}
+
+/* 検索結果の商品カード
+   画像 → バッジ → タイトル → 価格 の順に縦並びにする */
+.template-search .product-card__content.layout-panel-flex {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 標準のタイトル＋価格ブロックは非表示（重複防止） */
+.template-search .product-grid-view-zoom-out--details {
+  display: none;
+}
+
+/* 画像は order:1（デフォルト） */
+.template-search .product-card__content.layout-panel-flex>.card-gallery {
+  order: 1;
+}
+
+/* カスタムバッジを画像のすぐ下に */
+.template-search .product-card__content.layout-panel-flex>.csh-badges {
+  order: 2;
+}
+
+/* タイトル（リンク） */
+.template-search .product-card__content.layout-panel-flex>a.contents.user-select-text {
+  order: 3;
+}
+
+/* 価格 */
+.template-search .product-card__content.layout-panel-flex>product-price.text-block {
+  order: 4;
+}
+
+/* 予測検索ドロップダウンの「商品」ブロックは非表示にする場合 */
+div#predictive-search-products {
+  display: none;
+}
+
+/* =======================================================
+ * 14. ブログ記事ページ：アイキャッチ画像の中央寄せ
+ *    - テンプレ：article
+ * ======================================================= */
 [id$="__blog-post-image"].shopify-block {
   display: flex;
-  /* 子要素（画像ブロック）を横方向フレックスに */
   justify-content: center;
-  /* 中央寄せ */
 }
 
-/* 念のため、内側ブロック側の調整も少しだけ */
 [id$="__blog-post-image"].shopify-block .blog-post-featured-image {
   margin: 0;
-  /* 変なマージンがあればリセット */
 }
 
-/* 画像自体も中央に寄せておく保険 */
 [id$="__blog-post-image"].shopify-block .blog-post-featured-image__image {
   display: block;
   margin-left: auto;

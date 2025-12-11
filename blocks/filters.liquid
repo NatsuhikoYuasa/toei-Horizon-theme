@@ -1325,14 +1325,43 @@
       cursor: default;
     }
 
-    /* フィルタードロワーだけアニメーションを少しゆっくりにする */
+    /* ▼ フィルタードロワーだけフェードイン／アウト */
     dialog-component#filters-drawer .dialog-drawer {
-      animation-duration: 0.35s !important; /* 開く速度 */
+      /* スライドさせず、常に所定位置に表示 */
+      transform: translateX(0) !important;
+
+      /* フェードイン */
+      animation-name: filtersDrawerFadeIn !important;
+      animation-duration: 0.25s !important;
+      animation-timing-function: var(--animation-easing);
+      animation-fill-mode: both;
     }
 
-    /* 閉じる時のアニメーションも同じくらいに */
     dialog-component#filters-drawer .dialog-drawer[closing] {
-      animation-duration: 0.35s !important;
+      /* フェードアウト */
+      animation-name: filtersDrawerFadeOut !important;
+      animation-duration: 0.2s !important;
+      animation-timing-function: var(--animation-easing);
+      animation-fill-mode: both;
+    }
+
+    /* ▼ フィルター用のフェードアニメーション */
+    @keyframes filtersDrawerFadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes filtersDrawerFadeOut {
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
+      }
     }
   }
 
@@ -1387,6 +1416,50 @@
     color: #e84141;
     justify-content: center;
   }
+}
+
+  .facets__pill-label svg line {
+      stroke: unset;
+  }
+
+  /* ▼ ピル型フィルタ（ジャンルなど）の「該当なし」スタイル */
+.facets__pill-input:disabled + .facets__pill-label,
+.facets__pill-input[disabled] + .facets__pill-label {
+  border-color: var(--input-disabled-border-color) !important;
+  color: rgb(var(--color-foreground-rgb)) !important;
+  cursor: default;
+  pointer-events: none; /* ラベル側のクリック・ホバーを無効化 */
+}
+
+/* □ の部分（擬似チェックボックス）も disabled のときだけグレーに */
+.facets__pill-input:disabled + .facets__pill-label::before,
+.facets__pill-input[disabled] + .facets__pill-label::before {
+  background-color: var(--input-disabled-background-color) !important;
+  border: 1px solid var(--input-disabled-border-color) !important;
+}
+
+/* ▼ disabled 時は斜線アイコンを非表示にする */
+.facets__pill-input:disabled + .facets__pill-label svg,
+.facets__pill-input[disabled] + .facets__pill-label svg {
+  display: none !important;
+}
+
+/* 念のため hover しても変わらないように固定（pointer-events none なので保険） */
+.facets__pill-input:disabled + .facets__pill-label:hover,
+.facets__pill-input[disabled] + .facets__pill-label:hover {
+  background-color: var(--input-disabled-background-color) !important;
+  border-color: var(--input-disabled-border-color) !important;
+  color: rgb(var(--color-foreground-rgb)) !important;
+}
+
+.facets__pill-input {
+    &:disabled + .facets__pill-label {
+        opacity: 1!important;
+    }
+}
+
+label.facets__pill-label {
+    color: #222222 !important;
 }
 
 {% endstylesheet %}

@@ -66,7 +66,6 @@
                 endif
               %}
 
-              {% comment %} ロック商品はカード自体を表示しない {% endcomment %}
               {% if display_locked %}
                 {% continue %}
               {% endif %}
@@ -103,9 +102,7 @@
 
                     {%- if has_sale -%}
                       <span class="cfc-card-price-current">{{ product.price | money }}</span>
-                      <span class="cfc-card-price-compare"
-                        ><s>{{ product.compare_at_price_max | money }}</s></span
-                      >
+                      <span class="cfc-card-price-compare"><s>{{ product.compare_at_price_max | money }}</s></span>
                     {%- else -%}
                       <span class="cfc-card-price-current">
                         {%- if product.price_varies -%}
@@ -134,15 +131,15 @@
     </div>
   </div>
 
-    <style>
-    /* ===== Theme tokens（既存のまま） ===== */
+  <style>
+    /* ===== Theme tokens ===== */
     #section-{{ section.id }}.cfc-collection-feature {
       --bg:#060816; --fg:#e6edf3; --muted:#9aa4b2;
       --card:#161b22; --cardBorder:#222833;
       --cta:#e63946; --ctaFg:#fff;
     }
 
-    /* Section：上下の余白のみ（既存を維持） */
+    /* Section：上下の余白 */
     #section-{{ section.id }}.cfc-collection-feature {
       background:var(--bg); color:var(--fg);
       padding-block: clamp(64px,10vw,120px);
@@ -150,7 +147,7 @@
       overflow-x:hidden;
     }
 
-    /* 中央カラム（デフォルト：1 カラム） */
+    /* レイアウト（共通） */
     #section-{{ section.id }} .cfc-container {
       display:grid;
       grid-template-columns:1fr;
@@ -191,7 +188,7 @@
     #section-{{ section.id }} .cfc-cta:hover { opacity:.9; }
     #section-{{ section.id }} .cfc-cta-text { flex:0 1 auto; }
 
-    /* RIGHT */
+    /* RIGHT タイトル */
     #section-{{ section.id }} .cfc-title {
       font-size:22px;
       line-height:1.35;
@@ -201,7 +198,7 @@
       padding-bottom:10px;
     }
 
-    /* Products（デフォルト：フレックス。PC では後で上書き） */
+    /* Products コンテナ（デフォルト: flex） */
     #section-{{ section.id }} .cfc-grid {
       display:flex;
       gap: {{ section.settings.card_gap | default: 16 }}px;
@@ -209,78 +206,11 @@
     }
     #section-{{ section.id }} .cfc-grid > * { flex:0 0 auto; }
 
-    #section-{{ section.id }} .cfc-card {
-      overflow:visible;
-      text-decoration:none;
-      color:var(--fg);
-      display:flex;
-      flex-direction:column;
-    }
-
-    #section-{{ section.id }} .cfc-card-media {
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      border-radius: 5px;
-      overflow: hidden;
-    }
-    #section-{{ section.id }} .cfc-card-media img {
-      width:100%;
-      height:100%;
-      border-radius:5px;
-    }
-
-    /* ▼ バッジ（画像の下） */
-    #section-{{ section.id }} .cfc-badges.cfc-badges--below{
-      display:flex;
-      flex-wrap:wrap;
-      gap:6px 6px;
-      margin-top:8px;
-    }
-
-    /* 形・サイズのみ。色は .badge--xxx に委譲 */
-    #section-{{ section.id }} .cfc-badge{
-      font-size:10px;
-      font-weight:700;
-      line-height:1;
-      padding:6px 8px;
-      border-radius:0;
-      box-shadow:0 1px 2px rgba(0,0,0,.15);
-      display:inline-flex;
-      align-items:center;
-      white-space:nowrap;
-      min-width:max-content;
-    }
-
-    #section-{{ section.id }} .cfc-card-body {
-      padding:8px 12px 10px 0;
-      display:grid;
-      gap:6px;
-    }
-    #section-{{ section.id }} .cfc-card-title {
-      font-size:13px;
-      line-height:1.4;
-    }
-    #section-{{ section.id }} .cfc-card-price {
-      font-size:12px;
-      color:var(--muted);
-    }
+    /* 空状態メッセージ */
     #section-{{ section.id }} .cfc-empty { color:var(--muted); }
-
-    /* display_start_at / display_end_at でロックされたカード */
-    #section-{{ section.id }} .cfc-card.cfc-card--locked{
-      opacity: 0.4;
-      pointer-events: none;
-      cursor: default;
-    }
-
-    .cfc-card-price-tax {
-      font-size: 10px;
-    }
 
     /* ===== Desktop（>=769px） 左 2 カラム + 右 4 カラム ===== */
     @media (min-width: 769px) {
-      /* 全体を 6 カラムに分割 */
       #section-{{ section.id }} .cfc-container {
         display:grid;
         grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -288,17 +218,14 @@
         align-items:flex-start;
       }
 
-      /* 左の大きいカードは 2 カラム分 */
       #section-{{ section.id }} .cfc-left {
         grid-column: 1 / span 2;
       }
 
-      /* 右側ブロックは残り 4 カラム */
       #section-{{ section.id }} .cfc-right {
         grid-column: 3 / span 4;
       }
 
-      /* 右側 4 枚をきれいに 4 カラムに */
       #section-{{ section.id }} .cfc-grid {
         display:grid !important;
         grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -307,7 +234,7 @@
       }
 
       #section-{{ section.id }} .cfc-card {
-        min-width:0;
+        min-width:0; /* グリッド内でのはみ出し防止だけ残す */
       }
 
       #section-{{ section.id }} .cfc-left-img {
@@ -317,6 +244,11 @@
 
     /* ===== Smartphone（<=768px） ===== */
     @media (max-width: 768px){
+      #section-{{ section.id }} {
+        --cfc-safe-inline: var(--full-page-grid-margin-inline-offset, var(--page-margin-inline-offset, 16px));
+        --cfc-gap-sp: {{ section.settings.card_gap_mobile | default: 12 }}px;
+      }
+
       #section-{{ section.id }} .cfc-container{
         display: block !important;
       }
@@ -360,11 +292,6 @@
       #section-{{ section.id }} .cfc-right > .cfc-grid::after{
         content:"";
         flex: 0 0 calc(max(0px, var(--cfc-safe-inline) - var(--cfc-gap-sp)));
-      }
-
-      #section-{{ section.id }} {
-        --cfc-safe-inline: var(--full-page-grid-margin-inline-offset, var(--page-margin-inline-offset, 16px));
-        --cfc-gap-sp: {{ section.settings.card_gap_mobile | default: 12 }}px;
       }
 
       #section-{{ section.id }} .cfc-right > .cfc-grid .cfc-card {

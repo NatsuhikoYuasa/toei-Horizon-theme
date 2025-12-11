@@ -144,9 +144,28 @@
         {%- comment -%} 4. 価格（税込） {%- endcomment -%}
         <div class="toei-product-price-row">
           <p class="toei-product-price">
-            <span class="toei-product-price__amount" data-toei-price>
+            {%- assign has_sale = false -%}
+            {%- if selected_variant.compare_at_price > selected_variant.price -%}
+              {%- assign has_sale = true -%}
+            {%- endif -%}
+
+            <span
+              class="toei-product-price__amount"
+              data-toei-price-current
+            >
               {{ selected_variant.price | money }}
             </span>
+
+            <span
+              class="toei-product-price__compare"
+              data-toei-price-compare
+              {% unless has_sale %}style="display:none;"{% endunless %}
+            >
+              {% if has_sale %}
+                {{ selected_variant.compare_at_price | money }}
+              {% endif %}
+            </span>
+
             <span class="toei-product-price__tax">（税込）</span>
           </p>
         </div>
@@ -175,7 +194,7 @@
         </div>
 
         {%- comment -%} 7. バリエーション選択（ラジオボタン） {%- endcomment -%}
-        {% if product.variants.size > 1 %}
+        {% if product.variants.size > 0 %}
           <div class="toei-variant-selector toei-variant-selector--loading">
             <div class="toei-variant-radios">
               {% for variant in product.variants %}
@@ -367,8 +386,9 @@
         <div class="toei-share">
           <p class="toei-share__title">この商品をシェアする</p>
           <div class="toei-share__icons">
-            {%- assign share_url = product.url | absolute_url | url_encode -%}
-            {%- assign share_text = product.title | url_encode -%}
+            {%- capture share_url_raw -%}{{ shop.url }}{{ product.url }}{%- endcapture -%}
+            {%- assign share_url = share_url_raw | url_encode -%}
+            {%- assign share_text = product.title | strip | url_encode -%}
 
             <a
               class="toei-share-icon toei-share-icon--x"
@@ -400,7 +420,7 @@
               >
             </a>
 
-            <a
+            {% comment %} <a
               class="toei-share-icon toei-share-icon--instagram"
               href="https://www.instagram.com/ここにアカウント名/"
               target="_blank"
@@ -413,7 +433,7 @@
                 alt="Instagramで見る"
                 loading="lazy"
               >
-            </a>
+            </a> {% endcomment %}
 
             <a
               class="toei-share-icon toei-share-icon--line"
@@ -497,26 +517,57 @@
   </div>
 </div>
 
-{%- comment -%} wb03 add start 最近見た：拡張保存 {%- endcomment -%}
+{%- comment -%} wb03 add start 最近見た：拡張保存（NEW／初回特典／予約／締切フラグ付き） {%- endcomment -%}
 {%- liquid
   assign now_ts = 'now' | date: '%s' | plus: 0
 
-  # ▼ 初回特典 / 早期予約特典 / 締切間近 用の集計
+  # ================================
+  # NEW 判定（display_start_at ベース／60日以内）
+  # ================================
+  assign is_new = false
+  assign new_days  = 60 | plus: 0
+  assign days_sec  = new_days | times: 86400
+  assign cutoff_ts = now_ts | minus: days_sec
+
+  assign ds_new = product.metafields.product.display_start_at
+  if ds_new != blank
+    assign ds_new_ts = ds_new | date: '%s' | plus: 0
+    if ds_new_ts >= cutoff_ts and ds_new_ts <= now_ts
+      assign is_new = true
+    endif
+  endif
+
+  # ================================
+  # 初回特典 / 早期予約特典 / 締切間近 / 予約受付中
+  # ================================
   assign first_bonus_total = 0
-  assign early_bonus = false
-  assign min_end_ts = 0
-  assign ten_days_sec = 864000 | plus: 0
+  assign first_bonus_flag  = false
+  assign first_bonus_low   = false
+  assign early_bonus       = false
+  assign pre_ok            = false
+  assign min_end_ts        = 0
+  assign ten_days_sec      = 10 | times: 86400
 
   for v in product.variants
     assign v_inv = v.inventory_quantity | default: 0 | plus: 0
-    if v.metafields.custom.is_first_bonus and v_inv > 0
+
+    # 予約商品か
+    if v.metafields.variant.is_preorder.value
+      assign pre_ok = true
+    endif
+
+    # 初回特典フラグ（在庫有無に関わらずフラグは true）
+    if v.metafields.custom.is_first_bonus
+      assign first_bonus_flag = true
       assign first_bonus_total = first_bonus_total | plus: v_inv
     endif
 
+    # 早期予約特典あり
     if v.metafields.custom.is_early_bonus
       assign early_bonus = true
     endif
 
+    # 締切間近用：最も近い sell_end_at
     assign v_end_raw = v.metafields.variant.sell_end_at
     if v_end_raw != blank
       assign v_end_ts = v_end_raw | date: '%s' | plus: 0
@@ -526,6 +577,14 @@
     endif
   endfor
 
+  # 「初回特典残りわずか」フラグ
+  # - is_first_bonus が一つでも付いていれば true（在庫数は見ない）
+  assign first_bonus_low = false
+  if first_bonus_flag
+    assign first_bonus_low = true
+  endif
+
+  # 締切間近
   assign closing_soon = false
   if min_end_ts != 0
     assign closing_from_ts = min_end_ts | minus: ten_days_sec
@@ -534,7 +593,9 @@
     endif
   endif
 
-  # ▼ display_start_at / display_end_at によるロック判定
+  # ================================
+  # display_start_at / display_end_at によるロック判定
+  # ================================
   assign ds_raw = product.metafields.product.display_start_at
   assign de_raw = product.metafields.product.display_end_at
   assign ds_ts = 0
@@ -566,34 +627,32 @@
 <script>
   (function () {
     try {
-      var exKey = 'recentlyViewedEx';
-      var key = 'recentlyViewed';
-      var exArr = [];
+      var exKey  = 'recentlyViewedEx';
+      var key    = 'recentlyViewed';
+      var exArr  = [];
       var simple = [];
 
-      try {
-        exArr = JSON.parse(localStorage.getItem(exKey)) || [];
-      } catch (e) {}
-      try {
-        simple = JSON.parse(localStorage.getItem(key)) || [];
-      } catch (e) {}
+      try { exArr  = JSON.parse(localStorage.getItem(exKey)) || []; } catch (e) {}
+      try { simple = JSON.parse(localStorage.getItem(key))   || []; } catch (e) {}
 
       var handle = {{ product.handle | json }};
       if (!handle) return;
 
-      exArr = exArr.filter(function (x) {
-        return !x || x.handle !== handle;
-      });
-      simple = simple.filter(function (h) {
-        return h !== handle;
-      });
+      // 同じ handle を一旦削除
+      exArr  = exArr.filter(function (x) { return !x || x.handle !== handle; });
+      simple = simple.filter(function (h) { return h !== handle; });
 
-      var locked = {{ display_lock | json }};
-      var firstTotal = {{ first_bonus_total | json }};
-      var earlyBonus = {{ early_bonus | json }};
-      var closingSoon = {{ closing_soon | json }};
+      // Liquid で計算した各フラグ
+      var locked      = {{ display_lock      | json }};
+      var isNew       = {{ is_new            | json }};
+      var preOk       = {{ pre_ok            | json }};
+      var firstTotal  = {{ first_bonus_total | json }};
+      var firstLow    = {{ first_bonus_low   | json }};
+      var earlyBonus  = {{ early_bonus       | json }};
+      var closingSoon = {{ closing_soon      | json }};
 
       var entry = {
+        rv_version: 2,
         handle: {{ product.handle | json }},
         url: {{ product.url | json }},
         title: {{ product.title | json }},
@@ -605,7 +664,7 @@
         available: {{ product.available | json }},
         metafields: {
           custom: {
-            preorder: {{ product.metafields.custom.preorder | default: blank | json }},
+            preorder:   {{ product.metafields.custom.preorder   | default: blank | json }},
             comingsoon: {{ product.metafields.custom.comingsoon | default: blank | json }}
           }
         },
@@ -614,32 +673,35 @@
         {% else %}
           null
         {% endif %},
-        display_locked: locked,
-        first_bonus_total: firstTotal,
-        early_bonus: earlyBonus,
-        closing_soon: closingSoon
+        display_locked:     locked,
+        is_new:             isNew,
+        pre_ok:             preOk,
+        first_bonus_total:  firstTotal,
+        first_bonus_low:    firstLow,
+        early_bonus:        earlyBonus,
+        closing_soon:       closingSoon
       };
 
       exArr.push(entry);
       simple.push(handle);
 
-      if (exArr.length > 40) exArr = exArr.slice(-40);
+      // 上限 40 件
+      if (exArr.length  > 40) exArr  = exArr.slice(-40);
       if (simple.length > 40) simple = simple.slice(-40);
 
       localStorage.setItem(exKey, JSON.stringify(exArr));
-      localStorage.setItem(key, JSON.stringify(simple));
+      localStorage.setItem(key,  JSON.stringify(simple));
 
       console.log(
         '[rv] saved',
         entry.handle,
-        'locked=',
-        entry.display_locked,
-        'first=',
-        entry.first_bonus_total,
-        'early=',
-        entry.early_bonus,
-        'closing=',
-        entry.closing_soon
+        'locked=',      entry.display_locked,
+        'is_new=',      entry.is_new,
+        'pre=',         entry.pre_ok,
+        'first_low=',   entry.first_bonus_low,
+        'first_total=', entry.first_bonus_total,
+        'early=',       entry.early_bonus,
+        'closing=',     entry.closing_soon
       );
     } catch (e) {
       console.warn('[rv] save error', e);
@@ -1474,13 +1536,33 @@
     font-weight: inherit; /* 太さも合わせる（変えたければここで調整） */
   }
 
-  .csh-price {
-    margin-top: 6px;
-  }
-
   /* 商品ページのメイン画像を上揃えにする */
   .product-information__media .product-media-container.media-fit-contain img {
     object-position: top center;
+  }
+
+  .toei-product-price__compare {
+    margin-left: 8px;
+    font-size: 1.3rem;
+    color: rgba(6, 8, 22, 0.4);
+    text-decoration: line-through;
+  }
+
+  /* 特典情報の中 */
+  .toei-accordion__body .video {
+    position: relative;
+    width: 100% !important;
+    max-width: 720px;
+    margin: 0 auto;
+    padding-top: 56.25%;
+    height: 0;
+  }
+
+  .toei-accordion__body .video iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
   }
 
 {% endstylesheet %}
@@ -1582,6 +1664,13 @@
           "available": {{ variant.available | json }},
           "price": {{ variant.price | json }},
           "price_formatted": {{ variant.price | money | json }},
+          "compare_at_price": {{ variant.compare_at_price | json }},
+          "compare_at_price_formatted":
+            {% if variant.compare_at_price > variant.price %}
+              {{ variant.compare_at_price | money | json }}
+            {% else %}
+              null
+            {% endif %},
           "badges": {
             "preorder": {{ v_preorder | json }},
             "first_bonus": {{ v_first_bonus | json }},
@@ -1773,6 +1862,8 @@
     var badgesRoot = root.querySelector('[data-toei-badges]');
     var baseBadgesHTML = badgesRoot ? badgesRoot.innerHTML : '';
     var baseBtnText = btn ? btn.textContent : '';
+    var priceCurrentEl = root.querySelector('[data-toei-price-current]');
+    var priceCompareEl = root.querySelector('[data-toei-price-compare]');
 
     function renderVariant(id) {
       var v = findVariant(id);
@@ -1780,8 +1871,18 @@
 
       if (hiddenId) hiddenId.value = v.id;
 
-      if (priceEl) {
-        priceEl.textContent = v.price_formatted || '';
+      if (priceCurrentEl) {
+        priceCurrentEl.textContent = v.price_formatted || '';
+      }
+
+      if (priceCompareEl) {
+        if (v.compare_at_price && v.compare_at_price > v.price) {
+          priceCompareEl.style.display = 'inline';
+          priceCompareEl.textContent = v.compare_at_price_formatted || '';
+        } else {
+          priceCompareEl.style.display = 'none';
+          priceCompareEl.textContent = '';
+        }
       }
 
       if (releaseValueEl) {
@@ -1843,15 +1944,16 @@
           v.metafields.variant &&
           v.metafields.variant.initial_preorder_cutoff_note;
 
-        var suffix = 'までに予約頂いた場合は発売日にお届け予定です。';
+        // 表示文言（initial_preorder_cutoff_note を 2 回使う）
+        var suffix1 = 'までに予約頂いた場合は配送予定日にお届け予定です。';
+        var suffix2 = 'を過ぎると発売日より数日後のお届けとなります。';
         var isPreorderVariant2 = !!(v.badges && v.badges.preorder);
 
         if (isPreorderVariant2 && t3) {
-          // 予約 & 文言あり → 表示
-          cutoffNoteEl.textContent = t3 + suffix;
+          // 例）「2025年1月31日までに予約頂いた場合は配送予定日にお届け予定です。2025年1月31日を過ぎると発売日より数日後のお届けとなります。」
+          cutoffNoteEl.textContent = t3 + suffix1 + t3 + suffix2;
           if (cutoffRow) cutoffRow.style.display = '';
         } else {
-          // それ以外 → 非表示
           cutoffNoteEl.textContent = '';
           if (cutoffRow) cutoffRow.style.display = 'none';
         }

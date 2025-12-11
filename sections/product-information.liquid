@@ -95,24 +95,50 @@
 
 {%- comment -%}
   wb03 add start 最近見た：拡張保存
-  - localStorage('recentlyViewedEx') に詳細情報＋ロックフラグを保存
+  - localStorage('recentlyViewedEx') に詳細情報＋バッジ用フラグ＋ロックフラグを保存
 {%- endcomment -%}
 
 {%- liquid
   assign now_ts = 'now' | date: '%s' | plus: 0
 
-  # ▼ 初回特典 / 早期予約特典 / 締切間近 用の集計
+  # ================================
+  # NEW 判定（display_start_at ベース／60日以内）
+  # ================================
+  assign is_new = false
+  assign new_days  = 60 | plus: 0
+  assign days_sec  = new_days | times: 86400
+  assign cutoff_ts = now_ts | minus: days_sec
+
+  assign ds_new = product.metafields.product.display_start_at
+  if ds_new != blank
+    assign ds_new_ts = ds_new | date: '%s' | plus: 0
+    if ds_new_ts >= cutoff_ts and ds_new_ts <= now_ts
+      assign is_new = true
+    endif
+  endif
+
+  # ================================
+  # 初回特典 / 早期予約特典 / 締切間近 / 予約受付中
+  # ================================
   assign first_bonus_total = 0
-  assign early_bonus = false
-  assign min_end_ts = 0
-  # 10日分（秒）
-  assign ten_days_sec = 864000 | plus: 0
+  assign first_bonus_flag  = false
+  assign first_bonus_low   = false
+  assign early_bonus       = false
+  assign pre_ok            = false
+  assign min_end_ts        = 0
+  assign ten_days_sec      = 10 | times: 86400
 
   for v in product.variants
     assign v_inv = v.inventory_quantity | default: 0 | plus: 0
 
-    # 初回特典残りわずか用
-    if v.metafields.custom.is_first_bonus and v_inv > 0
+    # 予約商品か
+    if v.metafields.variant.is_preorder.value
+      assign pre_ok = true
+    endif
+
+    # 初回特典フラグ（在庫有無に関わらずフラグは true）
+    if v.metafields.custom.is_first_bonus
+      assign first_bonus_flag = true
       assign first_bonus_total = first_bonus_total | plus: v_inv
     endif
 
@@ -131,6 +157,15 @@
     endif
   endfor
 
+  # ★「初回特典残りわずか」フラグ
+  #   - is_first_bonus が一つでも付いている
+  #   - その在庫合計が 10 個以下（0 個も含める仕様ならそのまま）
+  assign first_bonus_low = false
+  if first_bonus_flag and first_bonus_total <= 10
+    assign first_bonus_low = true
+  endif
+
+  # 締切間近
   assign closing_soon = false
   if min_end_ts != 0
     assign closing_from_ts = min_end_ts | minus: ten_days_sec
@@ -139,7 +174,9 @@
     endif
   endif
 
-  # ▼ display_start_at / display_end_at によるロック判定
+  # ================================
+  # display_start_at / display_end_at によるロック判定
+  # ================================
   assign ds_raw = product.metafields.product.display_start_at
   assign de_raw = product.metafields.product.display_end_at
 
@@ -147,30 +184,22 @@
   assign de_ts = 0
   assign display_lock = false
 
-  # 日時をタイムスタンプ化
   if ds_raw != blank
     assign ds_ts = ds_raw | date: '%s' | plus: 0
   endif
-
   if de_raw != blank
     assign de_ts = de_raw | date: '%s' | plus: 0
   endif
 
-  # 期間外かどうか判定
   if ds_raw != blank and de_raw != blank
-    # start & end → 期間外はロック
     if now_ts < ds_ts or now_ts > de_ts
       assign display_lock = true
     endif
-
   elsif ds_raw != blank
-    # start のみ → その日時より前はロック
     if now_ts < ds_ts
       assign display_lock = true
     endif
-
   elsif de_raw != blank
-    # end のみ → その日時より後はロック
     if now_ts > de_ts
       assign display_lock = true
     endif
@@ -198,9 +227,12 @@
 
       // Liquid で計算した各フラグ
       var locked      = {{ display_lock      | json }};
+      var isNew       = {{ is_new           | json }};
+      var preOk       = {{ pre_ok           | json }};
       var firstTotal  = {{ first_bonus_total | json }};
-      var earlyBonus  = {{ early_bonus       | json }};
-      var closingSoon = {{ closing_soon      | json }};
+      var firstLow    = {{ first_bonus_low   | json }};
+      var earlyBonus  = {{ early_bonus      | json }};
+      var closingSoon = {{ closing_soon     | json }};
 
       var entry = {
         handle: {{ product.handle | json }},
@@ -220,7 +252,12 @@
         },
         image: {% if product.featured_image %}{{ product.featured_image | image_url: width: 700 | json }}{% else %}null{% endif %},
         display_locked:    locked,
+
+        // ▼ バッジ用フラグ
+        is_new:          isNew,
+        pre_ok:          preOk,
         first_bonus_total: firstTotal,
+        first_bonus_low:   firstLow,
         early_bonus:       earlyBonus,
         closing_soon:      closingSoon
       };
@@ -235,8 +272,17 @@
       localStorage.setItem(exKey, JSON.stringify(exArr));
       localStorage.setItem(key,  JSON.stringify(simple));
 
-      console.log('[rv] saved', entry.handle, 'locked=', entry.display_locked,
-        'first=', entry.first_bonus_total, 'early=', entry.early_bonus, 'closing=', entry.closing_soon);
+      console.log(
+        '[rv] saved',
+        entry.handle,
+        'locked=', entry.display_locked,
+        'is_new=', entry.is_new,
+        'pre=', entry.pre_ok,
+        'first_low=', entry.first_bonus_low,
+        'first_total=', entry.first_bonus_total,
+        'early=', entry.early_bonus,
+        'closing=', entry.closing_soon
+      );
     }catch(e){
       console.warn('[rv] save error', e);
     }
@@ -260,6 +306,7 @@
 </script>
 
 {%- comment -%} wb03 add end 最近見た：拡張保存（template/tags/metafields/ロックフラグを保存） {%- endcomment -%}
+
 
 {% stylesheet %}
   .product-information {

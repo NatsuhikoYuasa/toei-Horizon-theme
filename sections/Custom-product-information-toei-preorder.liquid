@@ -540,7 +540,7 @@
   endif
 -%}
 
-<script>
+{% comment %} <script>
   (function(){
     try{
       var exKey  = 'recentlyViewedEx';
@@ -601,7 +601,7 @@
       console.warn('[rv] save error', e);
     }
   })();
-</script>
+</script> {% endcomment %}
 
 {%- comment -%} ここまで 最近見た：拡張保存 {%- endcomment -%}
 

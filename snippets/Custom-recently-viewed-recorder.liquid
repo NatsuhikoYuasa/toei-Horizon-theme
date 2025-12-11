@@ -4,7 +4,7 @@
   - バッジ判定は商品バッジ（Custom-product-badges）と同じロジック
     * NEW … product.metafields.product.display_start_at から 60 日以内
     * 予約受付中 … いずれかのバリアントの metafields.variant.is_preorder = true
-    * 初回特典残りわずか … いずれかのバリアントの metafields.custom.is_first_bonus = true
+    * 初回特典残りわずか … いずれかのバリアントの metafields.custom.is_first_bonus = true（在庫は見ない）
     * 早期予約特典あり … いずれかのバリアントの metafields.custom.is_early_bonus = true
     * 締切間近 … 各バリアントの metafields.variant.sell_end_at の最短が 10 日以内
 {% endcomment %}
@@ -34,32 +34,26 @@
       endif
     endif
 
-    ##### --- 予約受付中 ---
-    assign pre_ok = false
-
-    ##### --- 初回特典残りわずか ---
+    ##### --- 予約受付中 / 初回特典 / 早期予約 / 締切間近 ---
+    assign pre_ok          = false
     assign first_bonus_low = false
-
-    ##### --- 早期予約特典あり ---
-    assign early_bonus = false
-
-    ##### --- 締切間近 ---
-    assign closing_soon = false
-    assign min_end_ts   = 0
+    assign early_bonus     = false
+    assign closing_soon    = false
+    assign min_end_ts      = 0
 
     for v in p.variants
       # 予約商品か
-      if v.metafields.variant.is_preorder.value
+      if v.metafields.variant.is_preorder.value or v.metafields.variant.is_preorder
         assign pre_ok = true
       endif
 
-      # 初回特典あり（※ここでは「残りわずか」までは判定せず、フラグだけ true）
-      if v.metafields.custom.is_first_bonus.value
+      # ★ 初回特典あり → 在庫は見ず、フラグが立っていれば OK
+      if v.metafields.custom.is_first_bonus.value or v.metafields.custom.is_first_bonus
         assign first_bonus_low = true
       endif
 
       # 早期予約特典あり
-      if v.metafields.custom.is_early_bonus.value
+      if v.metafields.custom.is_early_bonus.value or v.metafields.custom.is_early_bonus
         assign early_bonus = true
       endif
 
@@ -74,8 +68,8 @@
     endfor
 
     if min_end_ts != 0
-      assign ten_days_sec     = 10 | times: 86400
-      assign closing_from_ts  = min_end_ts | minus: ten_days_sec
+      assign ten_days_sec    = 10 | times: 86400
+      assign closing_from_ts = min_end_ts | minus: ten_days_sec
       if now_ts >= closing_from_ts and now_ts <= min_end_ts
         assign closing_soon = true
       endif
@@ -141,11 +135,12 @@
       var earlyBonus  = {{ early_bonus      | json }};
       var closingSoon = {{ closing_soon     | json }};
 
-      console.log('[rv-recorder] handle=%s locked=%s new=%s pre=%s first=%s early=%s closing=%s',
+      console.log('[rv-recorder v2] handle=%s locked=%s new=%s pre=%s first=%s early=%s closing=%s',
         handle, locked, isNew, preOk, firstBonus, earlyBonus, closingSoon);
 
       // セクション側で使う情報を保存
       exArr.push({
+        rv_version: 2,
         handle: {{ product.handle | json }},
         url: {{ product.url | json }},
         title: {{ product.title | json }},

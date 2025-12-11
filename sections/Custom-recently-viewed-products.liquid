@@ -28,17 +28,17 @@
     <div class="rv-band" aria-hidden="true"></div>
 
     <div class="rv-list" data-limit="{{ section.settings.limit | default: 6 }}">
-     {% comment %} JSでカードを挿入 {% endcomment %}
+      {% comment %} JSでカードを挿入 {% endcomment %}
     </div>
   </div>
 
   <style>
     /* ====== 見出し ====== */
-    #custom-rv-{{ section.id }} .rv-header{ margin-bottom:16px; }
+    #custom-rv-{{ section.id }} .rv-header{ margin-bottom:40px; }
     #custom-rv-{{ section.id }} .rv-header.align-center{ text-align:center; }
     #custom-rv-{{ section.id }} .rv-title{
       font-size:22px; line-height:1.35; font-weight:700; margin:0;
-      border-bottom:1px solid rgba(0,0,0,.1); padding-bottom:10px;
+      border-bottom:1px solid rgba(0,0,0,.1); padding-bottom:24px;
     }
     .color-scheme-2 #custom-rv-{{ section.id }} .rv-title,
     .color-scheme-3 #custom-rv-{{ section.id }} .rv-title { border-color: rgba(255,255,255,.12); }
@@ -52,13 +52,24 @@
 
     /* ====== カード ====== */
     #custom-rv-{{ section.id }} .rv-card{
-      display:flex; flex-direction:column; text-decoration:none; color:inherit;
+      display:flex;
+      flex-direction:column;
+      text-decoration:none;
+      color:inherit;
     }
     #custom-rv-{{ section.id }} .rv-thumb{
-      display:flex; align-items:center; justify-content:center;
-      border-radius:5px; overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:5px;
+      overflow:hidden;
     }
-    #custom-rv-{{ section.id }} .rv-img{ width:100%; height:auto; border-radius:5px; display:block; }
+    #custom-rv-{{ section.id }} .rv-img{
+      width:100%;
+      height:auto;
+      border-radius:5px;
+      display:block;
+    }
 
     /* グレーアウト & クリック不可 */
     #custom-rv-{{ section.id }} .rv-card--disabled,
@@ -67,47 +78,65 @@
       opacity:.45;
     }
 
-    /* ▼ バッジ（画像の下） */
-    #custom-rv-{{ section.id }} .rv-badges{
-      display:flex; gap:6px; margin-top:8px;
-    }
-    #custom-rv-{{ section.id }} .rv-badge{
-      font-size:10px; font-weight:700; line-height:1; padding:6px 8px;
-      box-shadow:0 1px 2px rgba(0,0,0,.15);
-    }
-
+    /* 本文部分 */
     #custom-rv-{{ section.id }} .rv-meta{
-      padding:8px 12px 10px 0; display:grid; gap:6px;
+      padding:8px 12px 10px 0;
+      display:grid;
+      gap:6px;
     }
     #custom-rv-{{ section.id }} .rv-title-link{
-      font-size:13px; line-height:1.4; display:-webkit-box;
-      -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; color:inherit;
+      font-size:13px;
+      line-height:1.4;
+      display:-webkit-box;
+      -webkit-line-clamp:2;
+      -webkit-box-orient:vertical;
+      overflow:hidden;
+      color:inherit;
     }
-    #custom-rv-{{ section.id }} .rv-price{ font-size:12px; opacity:.9; }
-
-    #custom-rv-{{ section.id }}{ background: {{ section.settings.bg_color | default: '#F5F6F9' }}; }
-
+    #custom-rv-{{ section.id }} .rv-price{
+      font-size:12px;
+      opacity:.9;
+    }
     #custom-rv-{{ section.id }} .rv-price-tax{
       font-size:10px;
     }
+
+    #custom-rv-{{ section.id }}{
+      background: {{ section.settings.bg_color | default: '#F5F6F9' }};
+    }
+
     /* ====== SP：横スクロール ====== */
     @media (max-width: 768px){
-      #custom-rv-{{ section.id }}{ position:relative; overflow:visible; }
+      #custom-rv-{{ section.id }}{
+        position:relative;
+        overflow:visible;
+      }
       #custom-rv-{{ section.id }} .rv-band{
-        position:absolute; top:0; bottom:0; right:calc(50% - 50vw);
-        width:48px; background:linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.06));
-        pointer-events:none; opacity:0;
+        position:absolute;
+        top:0;
+        bottom:0;
+        right:calc(50% - 50vw);
+        width:48px;
+        background:linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.06));
+        pointer-events:none;
+        opacity:0;
       }
       #custom-rv-{{ section.id }} .rv-list{
-        display:flex !important; gap: var(--rv-gap-sp);
-        overflow-x:auto; overflow-y:visible; -webkit-overflow-scrolling:touch;
-        scroll-snap-type:x proximity; scroll-snap-stop:normal; scrollbar-gutter:stable;
+        display:flex !important;
+        gap: var(--rv-gap-sp);
+        overflow-x:auto;
+        overflow-y:visible;
+        -webkit-overflow-scrolling:touch;
+        scroll-snap-type:x proximity;
+        scroll-snap-stop:normal;
+        scrollbar-gutter:stable;
         scroll-padding-right: var(--rv-safe-inline);
         width: calc(100vw - var(--rv-safe-inline));
         margin-right: calc(50% - 50vw - var(--rv-gap-sp));
       }
       #custom-rv-{{ section.id }} .rv-list::after{
-        content:""; flex: 0 0 calc(max(0px, var(--rv-safe-inline) - var(--rv-gap-sp)));
+        content:"";
+        flex: 0 0 calc(max(0px, var(--rv-safe-inline) - var(--rv-gap-sp)));
       }
       #custom-rv-{{ section.id }} .rv-list::-webkit-scrollbar{ display:none; }
       #custom-rv-{{ section.id }} .rv-card{
@@ -116,19 +145,6 @@
         scroll-snap-align:start;
       }
       #custom-rv-{{ section.id }} .rv-title{ font-size:18px; }
-    }
-
-    /* バッジの折り返し */
-    #custom-rv-{{ section.id }} .rv-badges{
-      display:flex !important;
-      flex-wrap:wrap !important;
-      gap:6px 6px !important;
-    }
-    #custom-rv-{{ section.id }} .rv-badges .rv-badge{
-      display:inline-flex !important;
-      align-items:center;
-      white-space:nowrap !important;
-      min-width:max-content;
     }
   </style>
 
@@ -164,7 +180,7 @@
         // ★ display_locked（truthy）な商品は「そもそも表示対象にしない」
         var locked = !!p.display_locked;
         if (locked) continue;
-        
+
         seen[h] = 1;
         picked.push(p);
       }
@@ -261,46 +277,32 @@
         return !!(p && p.closing_soon);
       }
 
-            // 2) カード描画
-            picked.forEach(function(p){
+      // 2) カード描画
+      picked.forEach(function(p){
         if (!p || !p.title) return;
 
-        // ---- バッジ用フラグを統一して計算 ----
-        // NEW：まず recorder で保存した is_new を使う
-        var bNew;
-        if (typeof p.is_new !== 'undefined') {
-          bNew = !!p.is_new;
-        } else {
-          // 旧データ用フォールバック（published_at ＋ NEW_DAYS）
-          bNew = false;
-          try {
-            var pub = p.published_at;
-            if (pub) {
-              var pubTs  = Date.parse(pub);
-              var cutoff = Date.now() - NEW_DAYS * 86400000;
-              if (!isNaN(pubTs) && pubTs >= cutoff && pubTs <= Date.now()) {
-                bNew = true;
-              }
-            }
-          } catch(e) {}
-        }
+        // デバッグログ
+        console.log(
+          '[rv-badges]',
+          p.handle,
+          'is_new=', p.is_new,
+          'first_bonus_low=', p.first_bonus_low,
+          'pre_ok=', p.pre_ok,
+          'early=', p.early_bonus,
+          'closing=', p.closing_soon
+        );
 
-        // 初回特典：新形式(first_bonus_low) があればそれを優先、
-        // なければ first_bonus_total>0 を見る（将来用のフォールバック）
-        var bFirst;
-        if (typeof p.first_bonus_low !== 'undefined') {
-          bFirst = !!p.first_bonus_low;
-        } else {
-          bFirst = !!(p.first_bonus_total && Number(p.first_bonus_total) > 0);
-        }
+        // --- NEW ---
+        var bNew   = !!p.is_new;
 
-        // 早期予約特典 / 締切間近
+        // --- 初回特典残りわずか ---
+        var bFirst = !!p.first_bonus_low;
+
+        // --- 早期予約特典 / 締切間近 ---
         var bEarly   = !!p.early_bonus;
         var bClosing = !!p.closing_soon;
 
-        // 予約受付中：
-        // 1) 新形式の pre_ok があればそれを使う
-        // 2) なければ「初回特典・早期特典・締切間近」のいずれかが立っていれば予約とみなす
+        // --- 予約受付中 ---
         var bPre;
         if (typeof p.pre_ok !== 'undefined') {
           bPre = !!p.pre_ok;
@@ -308,7 +310,7 @@
           bPre = !!(bFirst || bEarly || bClosing);
         }
 
-        // ---- HTML生成 ----
+        // --- バッジHTML ---
         var badges = '';
         if (SHOW_BADGES && (bNew || bPre || bFirst || bEarly || bClosing)) {
           badges =
@@ -321,12 +323,9 @@
             + '</div>';
         }
 
-        // （この下の el の生成〜 appendChild までは現状のまま使ってOK）
-
         var el = document.createElement('a');
         el.className = 'rv-card';
 
-        // display_locked の反映
         var locked = !!p.display_locked;
         if (locked){
           el.classList.add('rv-locked');
@@ -336,7 +335,6 @@
           el.href = p.url || ('/products/' + (p.handle || ''));
         }
 
-        // 画像あり・なしに関わらず必ず rv-thumb を出す
         var imgHtml =
           '<div class="rv-thumb">'
           + (p.image
@@ -344,7 +342,6 @@
               : '<span class="rv-thumb__placeholder">NO IMAGE</span>')
           + '</div>';
 
-        // ---- 価格表示（セール価格・範囲・税込 の表記を他セクションと合わせる）----
         var priceHtml = '';
         if (SHOW_PRICE) {
           var priceMin   = Number(p && p.price_min || 0);
@@ -353,7 +350,6 @@
           var hasSale    = compareMax > priceMin && priceMin > 0;
 
           if (hasSale) {
-            // セール中：現在価格＋取り消し線付きの元値
             priceHtml =
               '<div class="rv-price">'
               +   '<span class="rv-price-current">' + formatMoney(priceMin) + '</span>'
@@ -361,7 +357,6 @@
               +   '<span class="rv-price-tax">（税込）</span>'
               + '</div>';
           } else {
-            // 通常価格：バリアントで価格差があれば「〜」表記
             var mainPrice;
             if (priceMin > 0 && priceMax > 0 && priceMin !== priceMax) {
               mainPrice = formatMoney(priceMin) + ' — ' + formatMoney(priceMax);

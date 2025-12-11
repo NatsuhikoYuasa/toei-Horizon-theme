@@ -171,6 +171,21 @@
                             </a>
                           </li>
                         {%- endfor -%}
+
+                        {%- comment -%} wb03 add 親リンクに飛ぶ「もっと見る」 {%- endcomment -%}
+                        {%- if link.url != blank -%}
+                          <li class="menu-drawer__list-item menu-drawer__list-item--more">
+                            <a
+                              href="{{ link.url }}"
+                              class="menu-drawer__menu-item menu-drawer__menu-item--child menu-drawer__menu-item--more focus-inset"
+                            >
+                              <span class="menu-drawer__menu-item-text wrap-text">もっと見る</span>
+                              <span class="svg-wrapper icon-caret icon-caret--forward">
+                                {{- 'icon-caret.svg' | inline_asset_content -}}
+                              </span>
+                            </a>
+                          </li>
+                        {%- endif -%}
                       </ul>
                     </details>
                   </accordion-custom>
@@ -224,7 +239,23 @@
                         </a>
                       </li>
                     {%- endfor -%}
+
+                    {%- comment -%} wb03 add 親リンクに飛ぶ「もっと見る」 {%- endcomment -%}
+                    {%- if link.url != blank -%}
+                      <li class="menu-drawer__list-item menu-drawer__list-item--more">
+                        <a
+                          href="{{ link.url }}"
+                          class="menu-drawer__menu-item menu-drawer__menu-item--child menu-drawer__menu-item--more focus-inset"
+                        >
+                          <span class="menu-drawer__menu-item-text wrap-text">もっと見る</span>
+                          <span class="svg-wrapper icon-caret icon-caret--forward">
+                            {{- 'icon-caret.svg' | inline_asset_content -}}
+                          </span>
+                        </a>
+                      </li>
+                    {%- endif -%}
                   </ul>
+
                 {% else %}
                   {%- comment -%}
                     Simple links for links with no children (regardless of accordion setting), in menus with fewer than 3 levels of links
@@ -736,9 +767,13 @@
     }
   }
 
-  .menu-drawer:has(details[open]) {
+  /* .menu-drawer:has(details[open]) {
     overflow: initial;
-  }
+  } */
+
+    .menu-drawer:has(.menu-drawer__submenu details[open]) {
+      overflow: initial;
+    }
 
   .menu-drawer__backdrop {
     position: fixed;
@@ -1165,4 +1200,34 @@
       transform: translateX(-1rem);
     }
   }
+
+  .menu-drawer__list-item--more {
+    margin-block-start: var(--margin-xs);
+  }
+
+  /* 「もっと見る」の矢印を PC と同じ丸付きにする */
+  .menu-drawer__menu-item--more {
+    position: relative;
+    justify-content: flex-start;
+    gap: var(--gap-xs);
+  }
+
+  /* 既存の SVG 矢印は非表示にする */
+  .menu-drawer__menu-item--more .svg-wrapper {
+    display: none;
+  }
+
+  /* 右側に丸背景の “›” を表示 */
+  .menu-drawer__menu-item--more::after {
+    content: '›';
+    display: inline-flex;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin-left: var(--padding-xs);
+    border-radius: 999px;
+    background-color: rgb(var(--color-foreground-rgb) / 0.06);
+    font-size: 14px;
+  }
+
 {% endstylesheet %}
